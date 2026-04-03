@@ -1,0 +1,86 @@
+@import "tailwindcss";
+
+:root {
+  --background: 195 24% 97%; /* #F4F8F9 */
+  --foreground: 167 30% 17%; /* #1F3A34 */
+  
+  --muted: 195 24% 92%;
+  --muted-foreground: 167 30% 35%;
+  
+  --border: 167 30% 10% / 0.08;
+  --input: 167 30% 10% / 0.08;
+  
+  --primary: 167 30% 17%;
+  --primary-foreground: 195 24% 97%;
+  
+  --secondary: 195 24% 94%;
+  --secondary-foreground: 167 30% 17%;
+  
+  --accent: 195 24% 92%;
+  --accent-foreground: 167 30% 17%;
+  
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 210 40% 98%;
+  
+  --ring: 167 30% 17% / 0.1;
+  --radius: 1.25rem;
+
+  /* Apple-specific additions */
+  --apple-blur: 20px;
+}
+
+@theme inline {
+  --color-background: hsl(var(--background));
+  --color-foreground: hsl(var(--foreground));
+  --color-muted: hsl(var(--muted));
+  --color-muted-foreground: hsl(var(--muted-foreground));
+  --color-border: hsla(var(--border));
+  --color-primary: hsl(var(--primary));
+  --color-secondary: hsl(var(--secondary));
+  --color-accent: hsl(var(--accent));
+  --color-accent-foreground: hsl(var(--accent-foreground));
+  --radius-2xl: var(--radius);
+  --radius-3xl: 1.5rem;
+}
+
+body {
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  letter-spacing: -0.015em;
+}
+
+@layer utilities {
+  .apple-glass {
+    background: rgba(255, 255, 255, 0.6);
+    backdrop-filter: blur(var(--apple-blur));
+    -webkit-backdrop-filter: blur(var(--apple-blur));
+    border: 1px solid rgba(0, 0, 0, 0.05);
+  }
+
+  .apple-shadow {
+    box-shadow: 0 10px 30px -10px rgba(31, 58, 52, 0.08);
+  }
+
+  .apple-shadow-hover {
+    box-shadow: 0 20px 40px -15px rgba(31, 58, 52, 0.12);
+  }
+}
+
+* {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+::-webkit-scrollbar {
+  width: 5px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(31, 58, 52, 0.1);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(31, 58, 52, 0.2);
+}
