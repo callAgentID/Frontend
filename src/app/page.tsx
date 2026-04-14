@@ -16,7 +16,7 @@ import {
 import { InputSection } from "@/components/InputSection";
 import { ConfigurationPanel } from "@/components/ConfigurationPanel";
 import { ResultsPanel } from "@/components/ResultsPanel";
-import { cn } from "@/lib/utils";
+import { cn } from "../lib/utils";
 
 const STATS = [
   { name: "Total Intelligence Signals", value: "2,431", change: "+12.4%", status: "up", icon: Activity },
@@ -29,6 +29,14 @@ export default function Home() {
   const [pipelineState, setPipelineState] = useState<"input" | "processing" | "results">("input");
   const [transcript, setTranscript] = useState("");
   const [analysisResult, setAnalysisResult] = useState<any>(null);
+
+  const handleTranscriptReady = (t: string) => {
+    setTranscript(t);
+    // Smooth scroll to configuration section
+    setTimeout(() => {
+      document.getElementById("config-section")?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }, 100);
+  };
 
   const startAnalysis = async (config: { campaign: string; template: string; callId: string }) => {
     if (!transcript) return;
@@ -111,14 +119,16 @@ export default function Home() {
            </div>
 
            {/* Section 2: Audio/Transcript Input */}
-           <InputSection onTranscriptReady={(t) => setTranscript(t)} />
+           <InputSection onTranscriptReady={handleTranscriptReady} />
 
            {/* Section 3: Configuration & Processing Button */}
            {transcript && (
-              <ConfigurationPanel 
-                 onProcess={startAnalysis}
-                 disabled={!transcript}
-              />
+              <div id="config-section" className="scroll-mt-20">
+                <ConfigurationPanel 
+                   onProcess={startAnalysis}
+                   disabled={!transcript}
+                />
+              </div>
            )}
 
            {/* Secondary Stats Summary (Visible in input state) */}
