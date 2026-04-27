@@ -10,12 +10,16 @@ import {
   MessageSquare,
   ShieldCheck,
   Command,
+  Layers,
+  FileSearch
 } from "lucide-react";
 import { cn } from "../lib/utils";
 
 const NAV_ITEMS = [
   { name: "Summary", href: "/", icon: LayoutDashboard },
   { name: "Analytics", href: "/analytics", icon: BarChart3 },
+  { name: "Campaigns", href: "/campaigns", icon: Layers },
+  { name: "Questionnaires", href: "/questionnaires", icon: FileSearch },
   { name: "Feed", href: "/conversations", icon: MessageSquare },
   { name: "Team", href: "/users", icon: Users },
   { name: "Security", href: "/security", icon: ShieldCheck },
@@ -44,7 +48,7 @@ export function Sidebar() {
         <div>
           <h2 className="px-4 text-[11px] font-bold uppercase tracking-widest text-[#1F3A3470] mb-4">Navigation</h2>
           <nav className="space-y-1">
-            {NAV_ITEMS.slice(0, 3).map((item) => {
+            {NAV_ITEMS.slice(0, 4).map((item) => {
               const isActive = pathname === item.href;
               const Icon = item.icon;
 
@@ -75,7 +79,7 @@ export function Sidebar() {
         <div>
           <h2 className="px-4 text-[11px] font-bold uppercase tracking-widest text-[#1F3A3470] mb-4">Management</h2>
           <nav className="space-y-1">
-            {NAV_ITEMS.slice(3).map((item) => {
+            {NAV_ITEMS.slice(4).map((item) => {
               const isActive = pathname === item.href;
               const Icon = item.icon;
 
