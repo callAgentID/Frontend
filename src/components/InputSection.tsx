@@ -94,7 +94,7 @@ export function InputSection({
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://daughterlike-eddy-unmental.ngrok-free.dev";
+        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://zk1354qz0k.execute-api.eu-central-1.amazonaws.com";
         const headers = { "ngrok-skip-browser-warning": "true" };
 
         const [campRes, profRes, questRes] = await Promise.all([
@@ -157,7 +157,7 @@ export function InputSection({
 
     const poll = async () => {
       try {
-        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://daughterlike-eddy-unmental.ngrok-free.dev";
+        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://zk1354qz0k.execute-api.eu-central-1.amazonaws.com";
         const response = await fetch(`${baseUrl}/api/v1/calls/${callId}`, {
           method: "GET",
           headers: {
@@ -262,7 +262,7 @@ export function InputSection({
         formData.append("custom_questions", JSON.stringify(customQuestions));
       }
 
-      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://daughterlike-eddy-unmental.ngrok-free.dev";
+      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://zk1354qz0k.execute-api.eu-central-1.amazonaws.com";
       const response = await fetch(`${baseUrl}/api/v1/calls/`, {
         method: "POST",
         headers: {
@@ -340,7 +340,7 @@ export function InputSection({
         formData.append("custom_questions", JSON.stringify(customQuestions));
       }
 
-      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://daughterlike-eddy-unmental.ngrok-free.dev";
+      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://zk1354qz0k.execute-api.eu-central-1.amazonaws.com";
       const response = await fetch(`${baseUrl}/api/v1/ingest/manual`, {
         method: "POST",
         headers: {
@@ -672,20 +672,7 @@ export function InputSection({
                   <span className="text-[9px] font-bold text-[#1F3A3430] uppercase tracking-wider">Press Enter to Add</span>
                 </div>
                 <div className="space-y-3">
-                  <div className="flex flex-wrap gap-2 min-h-[40px] p-3 rounded-xl bg-[#1F3A3405] border border-[#1f3a3408]">
-                    {metaTags.map((tag, idx) => (
-                      <span key={idx} className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-700 border border-blue-200 rounded-lg text-xs font-bold">
-                        #{tag}
-                        <button
-                          type="button"
-                          onClick={() => setMetaTags(metaTags.filter((_, i) => i !== idx))}
-                          className="hover:bg-blue-200 rounded-full p-0.5 transition-colors"
-                        >
-                          <X className="w-3 h-3" />
-                        </button>
-                      </span>
-                    ))}
-                  </div>
+
                   <input
                     type="text"
                     placeholder="Type a tag and press Enter..."

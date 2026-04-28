@@ -15,7 +15,9 @@ import {
   MoreVertical,
   Activity,
   CheckCircle2,
-  AlertCircle
+  AlertCircle,
+  Loader2,
+  X
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
@@ -53,25 +55,57 @@ export default function QuestionnairesPage() {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
 
-  useEffect(() => {
-    const fetchQuestionnaires = async () => {
-      try {
-        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://zk1354qz0k.execute-api.eu-central-1.amazonaws.com";
-        const res = await fetch(`${baseUrl}/api/v1/questionnaires/?skip=0&limit=100`, {
-          headers: { "ngrok-skip-browser-warning": "true" }
-        });
-        if (!res.ok) throw new Error("Failed to fetch strategic schemas");
-        const data = await res.json();
-        setQuestionnaires(data);
-      } catch (err: any) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
-    };
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [createForm, setCreateForm] = useState({ name: "", description: "" });
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const fetchQuestionnaires = async () => {
+    setLoading(true);
+    try {
+      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://zk1354qz0k.execute-api.eu-central-1.amazonaws.com";
+      const res = await fetch(`${baseUrl}/api/v1/questionnaires/?skip=0&limit=100`, {
+        headers: { "ngrok-skip-browser-warning": "true" }
+      });
+      if (!res.ok) throw new Error("Failed to fetch strategic schemas");
+      const data = await res.json();
+      setQuestionnaires(data);
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchQuestionnaires();
   }, []);
+
+  const handleCreateQuestionnaire = async () => {
+    if (!createForm.name) return;
+    setIsSubmitting(true);
+    try {
+      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://zk1354qz0k.execute-api.eu-central-1.amazonaws.com";
+      const res = await fetch(`${baseUrl}/api/v1/questionnaires/`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "ngrok-skip-browser-warning": "true" },
+        body: JSON.stringify({
+          name: createForm.name,
+          description: createForm.description,
+          schema_definition: { sections: [] },
+          active: true
+        })
+      });
+      if (res.ok) {
+        setIsCreateModalOpen(false);
+        setCreateForm({ name: "", description: "" });
+        fetchQuestionnaires();
+      }
+    } catch (err: any) {
+      console.error("Failed to create schema:", err);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   const filtered = questionnaires.filter(q => 
     q.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -92,7 +126,7 @@ export default function QuestionnairesPage() {
           <p className="text-[#1F3A3470] text-sm font-medium">Manage neural intelligence questionnaires and compliance schemas.</p>
         </div>
 
-        <button className="flex items-center gap-2 px-6 py-3.5 bg-[#1F3A34] text-white rounded-2xl font-bold text-sm uppercase tracking-widest transition-all hover:bg-[#1F3A34E0] apple-shadow active:scale-[0.98]">
+        <button onClick={() => setIsCreateModalOpen(true)} className="flex items-center gap-2 px-6 py-3.5 bg-[#1F3A34] text-white rounded-2xl font-bold text-sm uppercase tracking-widest transition-all hover:bg-[#1F3A34E0] apple-shadow active:scale-[0.98]">
           <Plus className="w-5 h-5" />
           Create Schema
         </button>
@@ -211,6 +245,51 @@ export default function QuestionnairesPage() {
           ))
         )}
       </div>
+
+      {isCreateModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-[#11231f20] backdrop-blur-md animate-in fade-in duration-300">
+           <div className="bg-white w-full max-w-xl rounded-[2.5rem] shadow-2xl border border-[#1f3a3410] overflow-hidden animate-in zoom-in-95 duration-300">
+              <div className="p-8 border-b border-[#1f3a3405] bg-[#1F3A3402] flex items-center justify-between">
+                 <div>
+                    <h3 className="text-2xl font-[850] text-[#1F3A34] tracking-tight">Create Neural Schema</h3>
+                    <p className="text-sm font-semibold text-[#1F3A3440] mt-1">Define a new strategic audit framework.</p>
+                 </div>
+                 <button onClick={() => setIsCreateModalOpen(false)} className="w-10 h-10 rounded-xl hover:bg-[#1F3A3410] flex items-center justify-center transition-all text-[#1F3A3420]">
+                    <X className="w-5 h-5" />
+                 </button>
+              </div>
+
+              <div className="p-10 space-y-6">
+                 <div className="space-y-2">
+                   <label className="text-[10px] font-black uppercase tracking-[0.2em] text-[#1F3A3440]">Schema Name</label>
+                   <input
+                    type="text"
+                    value={createForm.name}
+                    onChange={(e) => setCreateForm({ ...createForm, name: e.target.value })}
+                    placeholder="e.g. Sales Discovery Audit"
+                    className="w-full h-14 bg-[#1F3A3403] border border-[#1f3a3410] rounded-xl px-4 outline-none focus:border-[#1F3A34] transition-all text-[#1F3A34] font-semibold"
+                   />
+                 </div>
+                 <div className="space-y-2">
+                   <label className="text-[10px] font-black uppercase tracking-[0.2em] text-[#1F3A3440]">Description</label>
+                   <input
+                    type="text"
+                    value={createForm.description}
+                    onChange={(e) => setCreateForm({ ...createForm, description: e.target.value })}
+                    placeholder="What does this schema evaluate?"
+                    className="w-full h-14 bg-[#1F3A3403] border border-[#1f3a3410] rounded-xl px-4 outline-none focus:border-[#1F3A34] transition-all text-[#1F3A34] font-semibold"
+                   />
+                 </div>
+                 
+                 <div className="pt-4">
+                   <button onClick={handleCreateQuestionnaire} disabled={isSubmitting || !createForm.name} className="w-full h-14 bg-[#1F3A34] text-white disabled:opacity-50 disabled:cursor-not-allowed rounded-2xl font-bold flex items-center justify-center gap-3 shadow-xl hover:scale-[1.02] transition-all">
+                      {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : <><Plus className="w-5 h-5" /> Initialize Schema</>}
+                   </button>
+                 </div>
+              </div>
+           </div>
+        </div>
+      )}
     </main>
   );
 }

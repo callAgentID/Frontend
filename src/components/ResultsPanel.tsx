@@ -144,7 +144,7 @@ export function ResultsPanel({ data, isHydrating = false }: { data: ResultData, 
 
     setIsMarkingReviewed(true);
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://daughterlike-eddy-unmental.ngrok-free.dev";
+      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://zk1354qz0k.execute-api.eu-central-1.amazonaws.com";
       const response = await fetch(`${baseUrl}/api/v1/results/calls/${safeData.call_id}/reviewed`, {
         method: "PATCH",
         headers: {
@@ -255,8 +255,8 @@ export function ResultsPanel({ data, isHydrating = false }: { data: ResultData, 
                     className={cn(
                       "px-2.5 py-1 text-[10px] font-black uppercase tracking-widest rounded-md border",
                       isUserTag && !isAiTag ? "bg-blue-50 text-blue-700 border-blue-200" :
-                      isAiTag && !isUserTag ? "bg-purple-50 text-purple-700 border-purple-200" :
-                      "bg-[#1F3A3408] text-[#1F3A34] border-[#1f3a3405]"
+                        isAiTag && !isUserTag ? "bg-purple-50 text-purple-700 border-purple-200" :
+                          "bg-[#1F3A3408] text-[#1F3A34] border-[#1f3a3405]"
                     )}
                     title={isUserTag && !isAiTag ? "User-provided tag" : isAiTag && !isUserTag ? "AI-generated tag" : "User + AI tag"}
                   >
@@ -303,21 +303,21 @@ export function ResultsPanel({ data, isHydrating = false }: { data: ResultData, 
       {/* High-Fidelity Audio Player Integration - Only show if audio is available */}
       {!isHydrating && safeData.call_id !== 'pending...' && hasAudio && (
         <div className="p-8 rounded-[2.5rem] bg-[#1F3A34] text-white apple-shadow-lg border border-[#1f3a3410] flex flex-col md:flex-row items-center gap-8 animate-in fade-in zoom-in-95 duration-700">
-           <div className="flex-1 space-y-2">
-              <h4 className="text-lg font-black uppercase tracking-widest text-white/50 flex items-center gap-2">
-                <Play className="w-4 h-4 fill-current" /> Call Audio Signal
-              </h4>
-              <p className="text-sm font-medium text-white/80">Stream high-fidelity conversation audio with seek support.</p>
-           </div>
-           <audio
-             id="call-audio-player"
-             controls
-             preload="metadata"
-             className="w-full md:w-2/3 h-10 accent-[#F4F8F9] bg-[#1F3A3405] rounded-xl"
-             src={`${process.env.NEXT_PUBLIC_BASE_URL || "https://daughterlike-eddy-unmental.ngrok-free.dev"}/api/v1/media/calls/${safeData.call_id}/audio`}
-           >
-             Your browser does not support audio playback.
-           </audio>
+          <div className="flex-1 space-y-2">
+            <h4 className="text-lg font-black uppercase tracking-widest text-white/50 flex items-center gap-2">
+              <Play className="w-4 h-4 fill-current" /> Call Audio Signal
+            </h4>
+            <p className="text-sm font-medium text-white/80">Stream high-fidelity conversation audio with seek support.</p>
+          </div>
+          <audio
+            id="call-audio-player"
+            controls
+            preload="metadata"
+            className="w-full md:w-2/3 h-10 accent-[#F4F8F9] bg-[#1F3A3405] rounded-xl"
+            src={`${process.env.NEXT_PUBLIC_BASE_URL || "https://zk1354qz0k.execute-api.eu-central-1.amazonaws.com"}/api/v1/media/calls/${safeData.call_id}/audio`}
+          >
+            Your browser does not support audio playback.
+          </audio>
         </div>
       )}
 
@@ -413,115 +413,115 @@ export function ResultsPanel({ data, isHydrating = false }: { data: ResultData, 
                         : null;
 
                       return (
-                  <div key={idx} className="group bg-white rounded-[2.5rem] border border-[#1f3a3410] shadow-2xl shadow-[#1f3a3405] overflow-hidden hover:border-[#1f3a3420] transition-all">
-                    <div className="p-10 space-y-6">
-                      <div className="flex justify-between items-start gap-8">
-                        <div className="space-y-4">
-                          <div className="flex items-center gap-2">
-                            <span className="text-[11px] font-black text-[#1F3A3440] uppercase tracking-[0.2em]">{answer.question_id}</span>
-                            <ChevronRight className="w-3 h-3 text-[#1F3A3420]" />
-                          </div>
-                          {questionText && (
-                            <p className="text-sm font-bold text-purple-600 bg-purple-50 px-3 py-2 rounded-lg border border-purple-200">
-                              Q: {questionText}
-                            </p>
-                          )}
-                          <h5 className="text-[19px] font-[850] text-[#1F3A34] tracking-tight leading-snug">{answer.reasoning_summary}</h5>
-                        </div>
-                        <div className={cn(
-                          "w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 shadow-lg transition-transform group-hover:scale-110",
-                          answer.answer?.toLowerCase() === 'yes' ? 'bg-green-500 text-white shadow-green-500/20' : 'bg-red-500 text-white shadow-red-500/20'
-                        )}>
-                          {answer.answer?.toLowerCase() === 'yes' ? <ShieldCheck className="w-7 h-7" /> : <XCircle className="w-7 h-7" />}
-                        </div>
-                      </div>
-
-                      {(answer.evidence?.length || 0) > 0 && (() => {
-                        const evidence = answer.evidence[0];
-                        const segmentId = `${answer.question_id}_${evidence?.start_ms}`;
-                        const isPlaying = playingSegment === segmentId;
-
-                        return (
-                        <div
-                          onClick={() => {
-                            if (!hasAudio) return;
-
-                            const player = document.getElementById('call-audio-player') as HTMLAudioElement;
-                            if (!player || !evidence) return;
-
-                            if (isPlaying) {
-                              // Pause
-                              player.pause();
-                              setPlayingSegment(null);
-                            } else {
-                              // Play chunk
-                              const startTime = (evidence.start_ms || 0) / 1000;
-                              const endTime = (evidence.end_ms || evidence.start_ms || 0) / 1000;
-
-                              player.currentTime = startTime;
-                              player.play();
-                              setPlayingSegment(segmentId);
-
-                              // Stop at end_ms
-                              const checkTime = () => {
-                                if (player.currentTime >= endTime) {
-                                  player.pause();
-                                  setPlayingSegment(null);
-                                } else if (playingSegment === segmentId) {
-                                  requestAnimationFrame(checkTime);
-                                }
-                              };
-                              requestAnimationFrame(checkTime);
-                            }
-                          }}
-                          className={cn(
-                            "p-6 rounded-2xl bg-[#1F3A3405] border border-[#1f3a3408] transition-all relative group/evidence",
-                            hasAudio && "group-hover:border-[#1F3A34] cursor-pointer hover:bg-[#1F3A3410]",
-                            isPlaying && "border-[#1F3A34] bg-[#1F3A3410]"
-                          )}
-                        >
-                          <div className="flex items-center justify-between mb-3">
-                            <div className="flex items-center gap-2">
-                              <MessageSquareQuote className="w-4 h-4 text-[#1F3A3440]" />
-                              <span className="text-[11px] font-black uppercase tracking-widest text-[#1F3A3450]">Evidence Trace</span>
-                            </div>
-                            {hasAudio && (
-                              <div className={cn(
-                                "flex items-center gap-1 text-[9px] font-black uppercase tracking-widest transition-colors",
-                                isPlaying ? "text-[#1F3A34]" : "text-[#1F3A3440] group-hover/evidence:text-[#1F3A34]"
-                              )}>
-                                {isPlaying ? (
-                                  <>
-                                    <Pause className="w-2.5 h-2.5 fill-current" /> Pause
-                                  </>
-                                ) : (
-                                  <>
-                                    <Play className="w-2.5 h-2.5 fill-current" /> Play Segment
-                                  </>
+                        <div key={idx} className="group bg-white rounded-[2.5rem] border border-[#1f3a3410] shadow-2xl shadow-[#1f3a3405] overflow-hidden hover:border-[#1f3a3420] transition-all">
+                          <div className="p-10 space-y-6">
+                            <div className="flex justify-between items-start gap-8">
+                              <div className="space-y-4">
+                                <div className="flex items-center gap-2">
+                                  <span className="text-[11px] font-black text-[#1F3A3440] uppercase tracking-[0.2em]">{answer.question_id}</span>
+                                  <ChevronRight className="w-3 h-3 text-[#1F3A3420]" />
+                                </div>
+                                {questionText && (
+                                  <p className="text-sm font-bold text-purple-600 bg-purple-50 px-3 py-2 rounded-lg border border-purple-200">
+                                    Q: {questionText}
+                                  </p>
                                 )}
+                                <h5 className="text-[19px] font-[850] text-[#1F3A34] tracking-tight leading-snug">{answer.reasoning_summary}</h5>
                               </div>
-                            )}
-                          </div>
-                          <p className="text-[15px] font-bold text-[#1F3A3490] italic leading-relaxed">
-                            "{evidence?.quote || 'No specific quote provided'}"
-                          </p>
-                          <div className="mt-3 text-[10px] font-black text-[#1F3A3440] uppercase tracking-tighter">
-                            {evidence?.start_ms && evidence?.end_ms ? (
-                              <>
-                                {((evidence.start_ms) / 1000).toFixed(1)}s - {((evidence.end_ms) / 1000).toFixed(1)}s
-                                <span className="ml-2 text-[#1F3A3420]">
-                                  ({(((evidence.end_ms - evidence.start_ms) / 1000).toFixed(1))}s duration)
-                                </span>
-                              </>
-                            ) : (
-                              <>Starts at {((evidence?.start_ms || 0) / 1000).toFixed(1)}s</>
-                            )}
+                              <div className={cn(
+                                "w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 shadow-lg transition-transform group-hover:scale-110",
+                                answer.answer?.toLowerCase() === 'yes' ? 'bg-green-500 text-white shadow-green-500/20' : 'bg-red-500 text-white shadow-red-500/20'
+                              )}>
+                                {answer.answer?.toLowerCase() === 'yes' ? <ShieldCheck className="w-7 h-7" /> : <XCircle className="w-7 h-7" />}
+                              </div>
+                            </div>
+
+                            {(answer.evidence?.length || 0) > 0 && (() => {
+                              const evidence = answer.evidence[0];
+                              const segmentId = `${answer.question_id}_${evidence?.start_ms}`;
+                              const isPlaying = playingSegment === segmentId;
+
+                              return (
+                                <div
+                                  onClick={() => {
+                                    if (!hasAudio) return;
+
+                                    const player = document.getElementById('call-audio-player') as HTMLAudioElement;
+                                    if (!player || !evidence) return;
+
+                                    if (isPlaying) {
+                                      // Pause
+                                      player.pause();
+                                      setPlayingSegment(null);
+                                    } else {
+                                      // Play chunk
+                                      const startTime = (evidence.start_ms || 0) / 1000;
+                                      const endTime = (evidence.end_ms || evidence.start_ms || 0) / 1000;
+
+                                      player.currentTime = startTime;
+                                      player.play();
+                                      setPlayingSegment(segmentId);
+
+                                      // Stop at end_ms
+                                      const checkTime = () => {
+                                        if (player.currentTime >= endTime) {
+                                          player.pause();
+                                          setPlayingSegment(null);
+                                        } else if (playingSegment === segmentId) {
+                                          requestAnimationFrame(checkTime);
+                                        }
+                                      };
+                                      requestAnimationFrame(checkTime);
+                                    }
+                                  }}
+                                  className={cn(
+                                    "p-6 rounded-2xl bg-[#1F3A3405] border border-[#1f3a3408] transition-all relative group/evidence",
+                                    hasAudio && "group-hover:border-[#1F3A34] cursor-pointer hover:bg-[#1F3A3410]",
+                                    isPlaying && "border-[#1F3A34] bg-[#1F3A3410]"
+                                  )}
+                                >
+                                  <div className="flex items-center justify-between mb-3">
+                                    <div className="flex items-center gap-2">
+                                      <MessageSquareQuote className="w-4 h-4 text-[#1F3A3440]" />
+                                      <span className="text-[11px] font-black uppercase tracking-widest text-[#1F3A3450]">Evidence Trace</span>
+                                    </div>
+                                    {hasAudio && (
+                                      <div className={cn(
+                                        "flex items-center gap-1 text-[9px] font-black uppercase tracking-widest transition-colors",
+                                        isPlaying ? "text-[#1F3A34]" : "text-[#1F3A3440] group-hover/evidence:text-[#1F3A34]"
+                                      )}>
+                                        {isPlaying ? (
+                                          <>
+                                            <Pause className="w-2.5 h-2.5 fill-current" /> Pause
+                                          </>
+                                        ) : (
+                                          <>
+                                            <Play className="w-2.5 h-2.5 fill-current" /> Play Segment
+                                          </>
+                                        )}
+                                      </div>
+                                    )}
+                                  </div>
+                                  <p className="text-[15px] font-bold text-[#1F3A3490] italic leading-relaxed">
+                                    "{evidence?.quote || 'No specific quote provided'}"
+                                  </p>
+                                  <div className="mt-3 text-[10px] font-black text-[#1F3A3440] uppercase tracking-tighter">
+                                    {evidence?.start_ms && evidence?.end_ms ? (
+                                      <>
+                                        {((evidence.start_ms) / 1000).toFixed(1)}s - {((evidence.end_ms) / 1000).toFixed(1)}s
+                                        <span className="ml-2 text-[#1F3A3420]">
+                                          ({(((evidence.end_ms - evidence.start_ms) / 1000).toFixed(1))}s duration)
+                                        </span>
+                                      </>
+                                    ) : (
+                                      <>Starts at {((evidence?.start_ms || 0) / 1000).toFixed(1)}s</>
+                                    )}
+                                  </div>
+                                </div>
+                              );
+                            })()}
                           </div>
                         </div>
-                        );
-                      })()}
-                    </div>
-                  </div>
                       );
                     })}
                   </div>
@@ -558,30 +558,30 @@ export function ResultsPanel({ data, isHydrating = false }: { data: ResultData, 
                     const isAgent = utt.speaker_id === "user_1";
 
                     return (
-                    <div key={i} className={cn(
-                      "flex gap-8 max-w-[85%]",
-                      isAgent ? "mr-auto" : "ml-auto flex-row-reverse text-right"
-                    )}>
-                      <div className={cn(
-                        "w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 font-black text-sm",
-                        isAgent ? "bg-[#1F3A34] text-white shadow-lg shadow-[#1f3a3420]" : "bg-[#1F3A3420] text-[#1F3A34]"
+                      <div key={i} className={cn(
+                        "flex gap-8 max-w-[85%]",
+                        isAgent ? "mr-auto" : "ml-auto flex-row-reverse text-right"
                       )}>
-                        {isAgent ? "A" : "C"}
-                      </div>
-                      <div className="space-y-2">
-                        <p className={cn(
-                          "text-[15px] font-[650] leading-relaxed p-6 rounded-[2rem]",
-                          isAgent
-                            ? "bg-white border border-[#1f3a3408] text-[#1F3A34] shadow-sm"
-                            : "bg-[#1F3A34] text-white shadow-xl shadow-[#1f3a3415]"
+                        <div className={cn(
+                          "w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 font-black text-sm",
+                          isAgent ? "bg-[#1F3A34] text-white shadow-lg shadow-[#1f3a3420]" : "bg-[#1F3A3420] text-[#1F3A34]"
                         )}>
-                          {utt.text}
-                        </p>
-                        <p className="text-[11px] font-extrabold text-[#1F3A3470] uppercase tracking-widest px-1 mt-1">
-                          At {(utt.start_ms / 1000).toFixed(1)}s
-                        </p>
+                          {isAgent ? "A" : "C"}
+                        </div>
+                        <div className="space-y-2">
+                          <p className={cn(
+                            "text-[15px] font-[650] leading-relaxed p-6 rounded-[2rem]",
+                            isAgent
+                              ? "bg-white border border-[#1f3a3408] text-[#1F3A34] shadow-sm"
+                              : "bg-[#1F3A34] text-white shadow-xl shadow-[#1f3a3415]"
+                          )}>
+                            {utt.text}
+                          </p>
+                          <p className="text-[11px] font-extrabold text-[#1F3A3470] uppercase tracking-widest px-1 mt-1">
+                            At {(utt.start_ms / 1000).toFixed(1)}s
+                          </p>
+                        </div>
                       </div>
-                    </div>
                     );
                   })
                 )}

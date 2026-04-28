@@ -21,8 +21,9 @@ import { cn } from "../../lib/utils";
 export default function CampaignsPage() {
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [modalType, setModalType] = useState<"campaign" | "script" | "questionnaire">("campaign");
+  const [modalType, setModalType] = useState<"campaign" | "script" | "questionnaire" | "view_script">("campaign");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [viewingScript, setViewingScript] = useState<{ loading: boolean; data: any; error?: string }>({ loading: false, data: null });
 
   // Form States
   const [campForm, setCampForm] = useState({ name: "", code: "" });
@@ -38,7 +39,7 @@ export default function CampaignsPage() {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://daughterlike-eddy-unmental.ngrok-free.dev";
+      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://zk1354qz0k.execute-api.eu-central-1.amazonaws.com";
       const headers = { "ngrok-skip-browser-warning": "true" };
 
       const [campRes, scriptRes, questRes] = await Promise.all([
@@ -71,7 +72,7 @@ export default function CampaignsPage() {
     if (!campForm.name || !campForm.code) return;
     setIsSubmitting(true);
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://daughterlike-eddy-unmental.ngrok-free.dev";
+      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://zk1354qz0k.execute-api.eu-central-1.amazonaws.com";
       const res = await fetch(`${baseUrl}/api/v1/campaigns/`, {
         method: "POST",
         headers: { "Content-Type": "application/json", "ngrok-skip-browser-warning": "true" },
@@ -99,7 +100,7 @@ export default function CampaignsPage() {
       formData.append("title", scriptForm.title || "New Script");
       formData.append("call_direction", "outbound");
 
-      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://daughterlike-eddy-unmental.ngrok-free.dev";
+      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://zk1354qz0k.execute-api.eu-central-1.amazonaws.com";
       const res = await fetch(`${baseUrl}/api/v1/scripts/upload`, {
         method: "POST",
         headers: { "ngrok-skip-browser-warning": "true" },
@@ -127,7 +128,7 @@ export default function CampaignsPage() {
       formData.append("name", questForm.name || "New Questionnaire");
       formData.append("description", questForm.description);
 
-      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://daughterlike-eddy-unmental.ngrok-free.dev";
+      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://zk1354qz0k.execute-api.eu-central-1.amazonaws.com";
       const res = await fetch(`${baseUrl}/api/v1/questionnaires/upload`, {
         method: "POST",
         headers: { "ngrok-skip-browser-warning": "true" },
@@ -142,6 +143,25 @@ export default function CampaignsPage() {
       console.error("Audit mapping failed:", err);
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleScriptClick = async (scriptId: string) => {
+    setModalType("view_script");
+    setIsModalOpen(true);
+    setViewingScript({ loading: true, data: null });
+    try {
+      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://zk1354qz0k.execute-api.eu-central-1.amazonaws.com";
+      const headers = { "ngrok-skip-browser-warning": "true" };
+      const res = await fetch(`${baseUrl}/api/v1/scripts/${scriptId}`, { headers });
+      if (res.ok) {
+        const data = await res.json();
+        setViewingScript({ loading: false, data });
+      } else {
+        setViewingScript({ loading: false, data: null, error: "Failed to fetch script details" });
+      }
+    } catch (err) {
+      setViewingScript({ loading: false, data: null, error: "Failed to fetch script details" });
     }
   };
 
@@ -214,78 +234,41 @@ export default function CampaignsPage() {
                   </div>
 
                   {/* Asset Classification Grid */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-px bg-[#1f3a3408]">
-                    {/* Scripts Section */}
-                    <div className="bg-white p-10 space-y-6">
-                      <div className="flex items-center justify-between border-b border-[#1f3a3405] pb-4">
-                        <div className="flex items-center gap-3">
-                          <FileCode className="w-5 h-5 text-[#1F3A3440]" />
-                          <h3 className="font-extrabold text-[#1F3A34] uppercase tracking-wider text-xs">Neural Scripts</h3>
-                        </div>
-                        <button
-                          onClick={() => {
-                            setScriptForm(prev => ({ ...prev, campaign_id: campaign.id }));
-                            setModalType("script");
-                            setIsModalOpen(true);
-                          }}
-                          className="bg-[#1F3A3410] text-[#1F3A34] text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-lg hover:bg-[#1F3A34] hover:text-white transition-all"
-                        >
-                          Add Logic
-                        </button>
+                  {/* Scripts Section */}
+                  <div className="bg-white p-10 space-y-6">
+                    <div className="flex items-center justify-between border-b border-[#1f3a3405] pb-4">
+                      <div className="flex items-center gap-3">
+                        <FileCode className="w-5 h-5 text-[#1F3A3440]" />
+                        <h3 className="font-extrabold text-[#1F3A34] uppercase tracking-wider text-xs">Neural Scripts</h3>
                       </div>
-                      <div className="space-y-3">
-                        {campaignScripts.map((s) => (
-                          <div key={s.id} className="p-4 rounded-2xl bg-[#1F3A3403] border border-transparent hover:border-[#1F3A3410] transition-all flex items-center justify-between group/row">
-                            <div className="flex items-center gap-4">
-                              <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center text-[#1F3A3420] group-hover/row:text-[#1F3A34]">
-                                <FileText className="w-4 h-4" />
-                              </div>
-                              <p className="text-sm font-bold text-[#1F3A34]">{s.title || "Standard Sales Script"}</p>
-                            </div>
-                            <ArrowRight className="w-4 h-4 text-[#1F3A3410] group-hover/row:translate-x-1 transition-all" />
-                          </div>
-                        ))}
-                        {campaignScripts.length === 0 && <p className="text-[11px] font-bold text-[#1F3A3420] italic py-2">No scripts mapped to this framework...</p>}
-                      </div>
+                      <button
+                        onClick={() => {
+                          setScriptForm(prev => ({ ...prev, campaign_id: campaign.id }));
+                          setModalType("script");
+                          setIsModalOpen(true);
+                        }}
+                        className="bg-[#1F3A3410] text-[#1F3A34] text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-lg hover:bg-[#1F3A34] hover:text-white transition-all"
+                      >
+                        Add Logic
+                      </button>
                     </div>
-
-                    {/* Questionnaires Section */}
-                    <div className="bg-white p-10 space-y-6 border-l border-[#1f3a3408]">
-                      <div className="flex items-center justify-between border-b border-[#1f3a3405] pb-4">
-                        <div className="flex items-center gap-3">
-                          <CheckCircle2 className="w-5 h-5 text-[#1F3A3440]" />
-                          <h3 className="font-extrabold text-[#1F3A34] uppercase tracking-wider text-xs">QA Blueprint</h3>
-                        </div>
-                        <button
-                          onClick={() => {
-                            setQuestForm(prev => ({ ...prev, campaign_id: campaign.id }));
-                            setModalType("questionnaire");
-                            setIsModalOpen(true);
-                          }}
-                          className="bg-[#1F3A3410] text-[#1F3A34] text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-lg hover:bg-[#1F3A34] hover:text-white transition-all"
-                        >
-                          Define Audit
-                        </button>
-                      </div>
-                      <div className="space-y-3">
-                        {campaignQuestionnaires.map((q) => (
-                          <div key={q.id} className="p-4 rounded-2xl bg-[#1F3A3403] border border-transparent hover:border-[#1F3A3410] transition-all flex items-center justify-between group/row">
-                            <div className="flex items-center gap-4">
-                              <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center text-[#1F3A3420] group-hover/row:text-[#1F3A34]">
-                                <FileText className="w-4 h-4" />
-                              </div>
-                              <div>
-                                <p className="text-sm font-bold text-[#1F3A34]">{q.name}</p>
-                                <p className="text-[10px] font-semibold text-[#1F3A3430] truncate max-w-[150px]">{q.description || "No description"}</p>
-                              </div>
+                    <div className="space-y-3">
+                      {campaignScripts.map((s) => (
+                        <div key={s.id} onClick={() => handleScriptClick(s.id)} className="p-4 rounded-2xl bg-[#1F3A3403] border border-transparent hover:border-[#1F3A3410] transition-all flex items-center justify-between group/row cursor-pointer">
+                          <div className="flex items-center gap-4">
+                            <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center text-[#1F3A3420] group-hover/row:text-[#1F3A34]">
+                              <FileText className="w-4 h-4" />
                             </div>
-                            <ArrowRight className="w-4 h-4 text-[#1F3A3410] group-hover/row:translate-x-1 transition-all" />
+                            <p className="text-sm font-bold text-[#1F3A34]">{s.title || "Standard Sales Script"}</p>
                           </div>
-                        ))}
-                        {campaignQuestionnaires.length === 0 && <p className="text-[11px] font-bold text-[#1F3A3420] italic py-2">No questionnaires linked...</p>}
-                      </div>
+                          <ArrowRight className="w-4 h-4 text-[#1F3A3410] group-hover/row:translate-x-1 transition-all" />
+                        </div>
+                      ))}
+                      {campaignScripts.length === 0 && <p className="text-[11px] font-bold text-[#1F3A3420] italic py-2">No scripts mapped to this framework...</p>}
                     </div>
                   </div>
+
+
                 </div>
               </div>
             );
@@ -300,8 +283,12 @@ export default function CampaignsPage() {
           <div className="bg-white w-full max-w-xl rounded-[2.5rem] shadow-2xl border border-[#1f3a3410] overflow-hidden animate-in zoom-in-95 duration-300">
             <div className="p-8 border-b border-[#1f3a3405] bg-[#1F3A3402] flex items-center justify-between">
               <div>
-                <h3 className="text-2xl font-[850] text-[#1F3A34] tracking-tight">Deploy New {modalType === 'campaign' ? 'Campaign Cluster' : modalType === 'script' ? 'Neural Script' : 'QA Blueprint'}</h3>
-                <p className="text-sm font-semibold text-[#1F3A3440] mt-1">Configure your intelligence assets below.</p>
+                <h3 className="text-2xl font-[850] text-[#1F3A34] tracking-tight">
+                  {modalType === 'view_script' ? 'Neural Script Details' : `Deploy New ${modalType === 'campaign' ? 'Campaign Cluster' : modalType === 'script' ? 'Neural Script' : 'QA Blueprint'}`}
+                </h3>
+                <p className="text-sm font-semibold text-[#1F3A3440] mt-1">
+                  {modalType === 'view_script' ? 'Reviewing deployed logic framework.' : 'Configure your intelligence assets below.'}
+                </p>
               </div>
               <button onClick={() => setIsModalOpen(false)} className="w-10 h-10 rounded-xl hover:bg-[#1F3A3410] flex items-center justify-center transition-all text-[#1F3A3420]">
                 <X className="w-5 h-5" />
@@ -349,6 +336,37 @@ export default function CampaignsPage() {
                   <button onClick={handleUploadQuest} disabled={isSubmitting} className="w-full h-14 bg-[#1F3A34] text-white rounded-2xl font-bold flex items-center justify-center gap-3 shadow-xl hover:scale-[1.02] transition-all">
                     {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : <><CheckCircle2 className="w-5 h-5" /> Define Audit</>}
                   </button>
+                </div>
+              )}
+
+              {modalType === "view_script" && (
+                <div className="space-y-6">
+                  {viewingScript.loading ? (
+                    <div className="flex flex-col items-center justify-center py-10 space-y-4">
+                      <Loader2 className="w-8 h-8 animate-spin text-[#1F3A3450]" />
+                      <p className="text-sm font-bold text-[#1F3A3450]">Decoding Neural Script...</p>
+                    </div>
+                  ) : viewingScript.error ? (
+                    <div className="p-4 bg-red-50 text-red-600 rounded-xl font-medium border border-red-100">{viewingScript.error}</div>
+                  ) : viewingScript.data ? (
+                    <div className="space-y-6">
+                      <div className="space-y-2">
+                        <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-[#1F3A3440]">Script Title</h4>
+                        <p className="text-lg font-bold text-[#1F3A34]">{viewingScript.data.title}</p>
+                      </div>
+                      <div className="space-y-2">
+                        <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-[#1F3A3440]">Source Text</h4>
+                        <div className="bg-[#F4F8F9] p-6 rounded-2xl border border-[#1f3a3410] max-h-[400px] overflow-y-auto subtle-grid">
+                          <p className="text-sm text-[#1F3A3480] whitespace-pre-wrap leading-relaxed">{viewingScript.data.source_text}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-4 text-[10px] font-bold text-[#1F3A3450] uppercase tracking-wider">
+                        <span className="bg-[#1F3A3405] px-2 py-1 rounded-md">Version {viewingScript.data.version}</span>
+                        <span className="bg-[#1F3A3405] px-2 py-1 rounded-md">{viewingScript.data.call_direction}</span>
+                        <span className="bg-[#1F3A3405] px-2 py-1 rounded-md">{viewingScript.data.status}</span>
+                      </div>
+                    </div>
+                  ) : null}
                 </div>
               )}
             </div>

@@ -1,13 +1,13 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { 
-  Plus, 
-  FileText, 
-  Settings, 
-  CheckCircle2, 
-  Loader2, 
-  Layout, 
+import {
+  Plus,
+  FileText,
+  Settings,
+  CheckCircle2,
+  Loader2,
+  Layout,
   ArrowRight,
   Upload,
   Globe
@@ -21,16 +21,16 @@ interface SetupPhaseProps {
 export function SetupPhase({ onComplete }: SetupPhaseProps) {
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
-  
+
   // Entity states
   const [campaignId, setCampaignId] = useState<string>("");
   const [questionnaireId, setQuestionnaireId] = useState<string>("");
   const [profileId, setProfileId] = useState<string>("");
-  
+
   // Form states for Campaign
   const [campaignName, setCampaignName] = useState("Marketing Outbound Q1");
   const [campaignCode, setCampaignCode] = useState("MKT_Q1");
-  
+
   // File states
   const [scriptFile, setScriptFile] = useState<File | null>(null);
   const [questionnaireFile, setQuestionnaireFile] = useState<File | null>(null);
@@ -40,10 +40,10 @@ export function SetupPhase({ onComplete }: SetupPhaseProps) {
   const handleCreateCampaign = async () => {
     setLoading(true);
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://daughterlike-eddy-unmental.ngrok-free.dev";
+      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://zk1354qz0k.execute-api.eu-central-1.amazonaws.com";
       const response = await fetch(`${baseUrl}/api/v1/campaigns/`, {
         method: "POST",
-        headers: { 
+        headers: {
           "Content-Type": "application/json",
           "ngrok-skip-browser-warning": "true"
         },
@@ -71,7 +71,7 @@ export function SetupPhase({ onComplete }: SetupPhaseProps) {
     if (!scriptFile || !campaignId) return;
     setLoading(true);
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://daughterlike-eddy-unmental.ngrok-free.dev";
+      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://zk1354qz0k.execute-api.eu-central-1.amazonaws.com";
       const formData = new FormData();
       formData.append("file", scriptFile);
       formData.append("campaign_id", campaignId);
@@ -96,7 +96,7 @@ export function SetupPhase({ onComplete }: SetupPhaseProps) {
     if (!questionnaireFile) return;
     setLoading(true);
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://daughterlike-eddy-unmental.ngrok-free.dev";
+      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://zk1354qz0k.execute-api.eu-central-1.amazonaws.com";
       const formData = new FormData();
       formData.append("file", questionnaireFile);
       formData.append("name", `${campaignName} Audit`);
@@ -124,7 +124,7 @@ export function SetupPhase({ onComplete }: SetupPhaseProps) {
     if (step === 4) {
       const fetchProfiles = async () => {
         try {
-          const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://daughterlike-eddy-unmental.ngrok-free.dev";
+          const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://zk1354qz0k.execute-api.eu-central-1.amazonaws.com";
           const response = await fetch(`${baseUrl}/api/v1/worker/profiles`, {
             headers: { "ngrok-skip-browser-warning": "true" }
           });
@@ -172,26 +172,26 @@ export function SetupPhase({ onComplete }: SetupPhaseProps) {
               <p className="text-[#1F3A3460] font-medium leading-relaxed">Create the strategic container for your intelligence signals.</p>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
-               <div className="space-y-3">
-                  <label className="text-[10px] font-black uppercase tracking-widest text-[#1F3A3440] ml-1">Campaign Name</label>
-                  <input 
-                    value={campaignName}
-                    onChange={(e) => setCampaignName(e.target.value)}
-                    className="w-full h-16 px-6 rounded-2xl bg-[#1F3A3405] border border-transparent focus:border-[#1F3A3415] focus:bg-white text-[#1F3A34] font-bold transition-all outline-none pl-12 relative" 
-                  />
-                  <Layout className="w-5 h-5 absolute mt-12 ml-4 text-[#1F3A3420]" />
-               </div>
-               <div className="space-y-3 relative">
-                  <label className="text-[10px] font-black uppercase tracking-widest text-[#1F3A3440] ml-1">Campaign Code</label>
-                  <input 
-                    value={campaignCode}
-                    onChange={(e) => setCampaignCode(e.target.value)}
-                    className="w-full h-16 px-6 rounded-2xl bg-[#1F3A3405] border border-transparent focus:border-[#1F3A3415] focus:bg-white text-[#1F3A34] font-bold transition-all outline-none pl-12" 
-                  />
-                  <Globe className="w-5 h-5 absolute top-12 left-4 text-[#1F3A3420]" />
-               </div>
+              <div className="space-y-3">
+                <label className="text-[10px] font-black uppercase tracking-widest text-[#1F3A3440] ml-1">Campaign Name</label>
+                <input
+                  value={campaignName}
+                  onChange={(e) => setCampaignName(e.target.value)}
+                  className="w-full h-16 px-6 rounded-2xl bg-[#1F3A3405] border border-transparent focus:border-[#1F3A3415] focus:bg-white text-[#1F3A34] font-bold transition-all outline-none pl-12 relative"
+                />
+                <Layout className="w-5 h-5 absolute mt-12 ml-4 text-[#1F3A3420]" />
+              </div>
+              <div className="space-y-3 relative">
+                <label className="text-[10px] font-black uppercase tracking-widest text-[#1F3A3440] ml-1">Campaign Code</label>
+                <input
+                  value={campaignCode}
+                  onChange={(e) => setCampaignCode(e.target.value)}
+                  className="w-full h-16 px-6 rounded-2xl bg-[#1F3A3405] border border-transparent focus:border-[#1F3A3415] focus:bg-white text-[#1F3A34] font-bold transition-all outline-none pl-12"
+                />
+                <Globe className="w-5 h-5 absolute top-12 left-4 text-[#1F3A3420]" />
+              </div>
             </div>
-            <button 
+            <button
               onClick={handleCreateCampaign}
               className="w-full h-16 rounded-2xl bg-[#1F3A34] text-white font-[850] shadow-xl shadow-[#1F3A3420] hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-3"
             >
@@ -203,25 +203,25 @@ export function SetupPhase({ onComplete }: SetupPhaseProps) {
         {/* STEP 2: SCRIPT */}
         {step === 2 && (
           <div className="space-y-8 animate-in fade-in slide-in-from-right-8 duration-500">
-             <div className="space-y-2">
+            <div className="space-y-2">
               <h3 className="text-3xl font-[850] text-[#1F3A34] tracking-tight">Magic Script Parser</h3>
               <p className="text-[#1F3A3460] font-medium leading-relaxed">Upload your outbound script instructions (.docx) for neural alignment.</p>
             </div>
             <div className="py-10 border-2 border-dashed border-[#1f3a3410] rounded-3xl flex flex-col items-center gap-4 bg-[#1F3A3402]">
-               <div className="p-4 bg-[#1F3A34] rounded-2xl text-white">
-                  <Upload className="w-6 h-6" />
-               </div>
-               <input 
-                 type="file" 
-                 accept=".docx" 
-                 onChange={(e) => setScriptFile(e.target.files?.[0] || null)}
-                 className="hidden" id="script-upload" 
-               />
-               <label htmlFor="script-upload" className="cursor-pointer group">
-                  <span className="text-lg font-extrabold text-[#1F3A34] group-hover:underline">{scriptFile ? scriptFile.name : "Select Word Document"}</span>
-               </label>
+              <div className="p-4 bg-[#1F3A34] rounded-2xl text-white">
+                <Upload className="w-6 h-6" />
+              </div>
+              <input
+                type="file"
+                accept=".docx"
+                onChange={(e) => setScriptFile(e.target.files?.[0] || null)}
+                className="hidden" id="script-upload"
+              />
+              <label htmlFor="script-upload" className="cursor-pointer group">
+                <span className="text-lg font-extrabold text-[#1F3A34] group-hover:underline">{scriptFile ? scriptFile.name : "Select Word Document"}</span>
+              </label>
             </div>
-            <button 
+            <button
               disabled={!scriptFile}
               onClick={handleUploadScript}
               className="w-full h-16 rounded-2xl bg-[#1F3A34] disabled:bg-[#1F3A3420] text-white font-[850] shadow-xl shadow-[#1F3A3420] transition-all flex items-center justify-center gap-3"
@@ -234,24 +234,24 @@ export function SetupPhase({ onComplete }: SetupPhaseProps) {
         {/* STEP 3: AUDIT */}
         {step === 3 && (
           <div className="space-y-8 animate-in fade-in slide-in-from-right-8 duration-500">
-             <div className="space-y-2">
+            <div className="space-y-2">
               <h3 className="text-3xl font-[850] text-[#1F3A34] tracking-tight">Questionnaire Blueprint</h3>
               <p className="text-[#1F3A3460] font-medium leading-relaxed">Upload the audit questions Gemini will use to evaluate your signals.</p>
             </div>
             <div className="py-10 border-2 border-dashed border-[#1f3a3410] rounded-3xl flex flex-col items-center gap-4 bg-[#1F3A3402]">
-               <div className="p-4 bg-[#1F3A34] rounded-2xl text-white">
-                  <FileText className="w-6 h-6" />
-               </div>
-               <input 
-                 type="file" 
-                 onChange={(e) => setQuestionnaireFile(e.target.files?.[0] || null)}
-                 className="hidden" id="audit-upload" 
-               />
-               <label htmlFor="audit-upload" className="cursor-pointer group">
-                  <span className="text-lg font-extrabold text-[#1F3A34] group-hover:underline">{questionnaireFile ? questionnaireFile.name : "Select Evaluation Sheet"}</span>
-               </label>
+              <div className="p-4 bg-[#1F3A34] rounded-2xl text-white">
+                <FileText className="w-6 h-6" />
+              </div>
+              <input
+                type="file"
+                onChange={(e) => setQuestionnaireFile(e.target.files?.[0] || null)}
+                className="hidden" id="audit-upload"
+              />
+              <label htmlFor="audit-upload" className="cursor-pointer group">
+                <span className="text-lg font-extrabold text-[#1F3A34] group-hover:underline">{questionnaireFile ? questionnaireFile.name : "Select Evaluation Sheet"}</span>
+              </label>
             </div>
-            <button 
+            <button
               disabled={!questionnaireFile}
               onClick={handleUploadQuestionnaire}
               className="w-full h-16 rounded-2xl bg-[#1F3A34] disabled:bg-[#1F3A3420] text-white font-[850] shadow-xl shadow-[#1F3A3420] transition-all flex items-center justify-center gap-3"
@@ -264,40 +264,40 @@ export function SetupPhase({ onComplete }: SetupPhaseProps) {
         {/* STEP 4: PROFILE */}
         {step === 4 && (
           <div className="space-y-8 animate-in fade-in slide-in-from-right-8 duration-500">
-             <div className="space-y-2">
+            <div className="space-y-2">
               <h3 className="text-3xl font-[850] text-[#1F3A34] tracking-tight">Intelligence Profile</h3>
               <p className="text-[#1F3A3460] font-medium leading-relaxed">Select the AI processing profile that will power the neural engine.</p>
             </div>
             <div className="grid grid-cols-1 gap-4 overflow-y-auto max-h-[300px] pr-2 custom-scrollbar">
-               {profiles.length > 0 ? profiles.map((p) => (
-                 <button 
-                   key={p.id}
-                   onClick={() => setProfileId(p.id)}
-                   className={cn(
-                     "flex items-center justify-between p-6 rounded-2xl border transition-all text-left group",
-                     profileId === p.id 
-                       ? "bg-[#1F3A34] border-[#1F3A34] text-white shadow-lg" 
-                       : "bg-[#1F3A3405] border-transparent hover:border-[#1F3A3410]"
-                   )}
-                 >
-                    <div>
-                       <p className="font-extrabold tracking-tight text-lg">{p.name || "Standard Engine"}</p>
-                       <p className={cn("text-xs font-bold uppercase tracking-widest mt-1 opacity-50", profileId === p.id ? "text-white" : "text-[#1F3A34]")}>
-                         STT: {p.stt_provider || "Neural"} · LLM: {p.llm_model || "Gemini"}
-                       </p>
-                    </div>
-                    <div className={cn(
-                      "w-8 h-8 rounded-full border-2 flex items-center justify-center transition-all",
-                      profileId === p.id ? "border-white bg-white/20" : "border-[#1F3A3410]"
-                    )}>
-                       {profileId === p.id && <CheckCircle2 className="w-5 h-5 text-white" />}
-                    </div>
-                 </button>
-               )) : (
-                 <div className="p-10 text-center text-[#1F3A3440] font-bold">No active profiles found... Using seed default.</div>
-               )}
+              {profiles.length > 0 ? profiles.map((p) => (
+                <button
+                  key={p.id}
+                  onClick={() => setProfileId(p.id)}
+                  className={cn(
+                    "flex items-center justify-between p-6 rounded-2xl border transition-all text-left group",
+                    profileId === p.id
+                      ? "bg-[#1F3A34] border-[#1F3A34] text-white shadow-lg"
+                      : "bg-[#1F3A3405] border-transparent hover:border-[#1F3A3410]"
+                  )}
+                >
+                  <div>
+                    <p className="font-extrabold tracking-tight text-lg">{p.name || "Standard Engine"}</p>
+                    <p className={cn("text-xs font-bold uppercase tracking-widest mt-1 opacity-50", profileId === p.id ? "text-white" : "text-[#1F3A34]")}>
+                      STT: {p.stt_provider || "Neural"} · LLM: {p.llm_model || "Gemini"}
+                    </p>
+                  </div>
+                  <div className={cn(
+                    "w-8 h-8 rounded-full border-2 flex items-center justify-center transition-all",
+                    profileId === p.id ? "border-white bg-white/20" : "border-[#1F3A3410]"
+                  )}>
+                    {profileId === p.id && <CheckCircle2 className="w-5 h-5 text-white" />}
+                  </div>
+                </button>
+              )) : (
+                <div className="p-10 text-center text-[#1F3A3440] font-bold">No active profiles found... Using seed default.</div>
+              )}
             </div>
-            <button 
+            <button
               disabled={!profileId}
               onClick={handleFinish}
               className="w-full h-16 rounded-2xl bg-[#1F3A34] disabled:bg-[#1F3A3420] text-white font-[850] shadow-xl shadow-[#1F3A3420] transition-all flex items-center justify-center gap-3"
@@ -314,18 +314,18 @@ export function SetupPhase({ onComplete }: SetupPhaseProps) {
 function SetupStep({ num, label, active, done }: { num: number; label: string; active: boolean; done: boolean }) {
   return (
     <div className="flex flex-col items-center gap-3 group">
-       <div className={cn(
-          "w-12 h-12 rounded-2xl flex items-center justify-center text-sm font-black transition-all border-2",
-          active ? "bg-[#1F3A34] text-white border-[#1F3A34] scale-110 shadow-lg" : 
+      <div className={cn(
+        "w-12 h-12 rounded-2xl flex items-center justify-center text-sm font-black transition-all border-2",
+        active ? "bg-[#1F3A34] text-white border-[#1F3A34] scale-110 shadow-lg" :
           done ? "bg-[#1F3A3410] text-[#1F3A34] border-transparent" :
-          "bg-transparent text-[#1F3A3420] border-[#1f3a3410]"
-       )}>
-          {done ? <CheckCircle2 className="w-5 h-5" /> : num}
-       </div>
-       <span className={cn(
-          "text-[10px] uppercase font-black tracking-widest transition-colors",
-          active ? "text-[#1F3A34]" : "text-[#1F3A3420]"
-       )}>{label}</span>
+            "bg-transparent text-[#1F3A3420] border-[#1f3a3410]"
+      )}>
+        {done ? <CheckCircle2 className="w-5 h-5" /> : num}
+      </div>
+      <span className={cn(
+        "text-[10px] uppercase font-black tracking-widest transition-colors",
+        active ? "text-[#1F3A34]" : "text-[#1F3A3420]"
+      )}>{label}</span>
     </div>
   );
 }
