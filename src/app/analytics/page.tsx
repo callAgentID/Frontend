@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import {
   BarChart3,
   Search,
@@ -24,7 +25,10 @@ import {
 import { cn } from "@/lib/utils";
 import { ResultsPanel } from "@/components/ResultsPanel";
 
-export default function AnalyticsPage() {
+function AnalyticsPageContent() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+
   const [calls, setCalls] = useState<any[]>([]);
   const [totalCalls, setTotalCalls] = useState<number>(0);
   const [isLoading, setIsLoading] = useState(true);
@@ -38,6 +42,14 @@ export default function AnalyticsPage() {
 
   // Filter state
   const [reviewFilter, setReviewFilter] = useState<'all' | 'reviewed' | 'unreviewed'>('all');
+
+  // Read call ID from URL on mount
+  useEffect(() => {
+    const callIdFromUrl = searchParams.get('callId');
+    if (callIdFromUrl) {
+      setSelectedCallId(callIdFromUrl);
+    }
+  }, [searchParams]);
 
   // Fetch historical calls with pagination
   useEffect(() => {
@@ -93,6 +105,9 @@ export default function AnalyticsPage() {
     setIsDetailLoading(true);
     setDetailedResult(null);
 
+    // Update URL with call ID
+    router.push(`/analytics?callId=${callId}`, { scroll: false });
+
     try {
       const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://zk1354qz0k.execute-api.eu-central-1.amazonaws.com";
       const response = await fetch(`${baseUrl}/api/v1/calls/${callId}`, {
@@ -110,7 +125,32 @@ export default function AnalyticsPage() {
   const closeDetail = () => {
     setSelectedCallId(null);
     setDetailedResult(null);
+
+    // Remove call ID from URL
+    router.push('/analytics', { scroll: false });
   };
+
+  // Fetch call detail when URL contains callId on mount or refresh
+  useEffect(() => {
+    if (selectedCallId && !detailedResult && !isDetailLoading) {
+      const fetchCallDetail = async () => {
+        setIsDetailLoading(true);
+        try {
+          const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://zk1354qz0k.execute-api.eu-central-1.amazonaws.com";
+          const response = await fetch(`${baseUrl}/api/v1/calls/${selectedCallId}`, {
+            headers: { "ngrok-skip-browser-warning": "true" }
+          });
+          const data = await response.json();
+          setDetailedResult(data);
+        } catch (err) {
+          console.error("Failed to fetch audit detail:", err);
+        } finally {
+          setIsDetailLoading(false);
+        }
+      };
+      fetchCallDetail();
+    }
+  }, [selectedCallId]);
 
   if (selectedCallId) {
     return (
@@ -437,5 +477,17 @@ export default function AnalyticsPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function AnalyticsPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex-1 flex items-center justify-center">
+        <div className="w-12 h-12 rounded-2xl border-4 border-[#1f3a3408] border-t-[#1F3A34] animate-spin" />
+      </div>
+    }>
+      <AnalyticsPageContent />
+    </Suspense>
   );
 }

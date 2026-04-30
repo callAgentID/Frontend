@@ -24,7 +24,8 @@ import {
   HelpCircle,
   Eye,
   EyeOff,
-  Loader2
+  Loader2,
+  CircleDot
 } from "lucide-react";
 import { cn } from "../lib/utils";
 import { ReactElement, JSXElementConstructor, ReactNode, ReactPortal, Key, useState } from "react";
@@ -552,10 +553,28 @@ export function ResultsPanel({ data, isHydrating = false }: { data: ResultData, 
                     </div>
                   ))
                 ) : (
-                  (safeData.transcript?.utterances || []).map((utt, i) => {
+                  (safeData.transcript?.utterances || []).map((utt, i, arr) => {
                     // Determine if this is agent or customer
-                    // user_1 = Agent (left side), user_2 = Customer (right side)
-                    const isAgent = utt.speaker_id === "user_1";
+                    // Try multiple detection methods:
+                    // 1. Check if speaker_id is "user_1" (Agent) or "user_2" (Customer)
+                    // 2. Check numeric IDs: speaker 0 = Agent, speaker 1 = Customer
+                    // 3. Fallback: alternate based on index and check for speaker changes
+
+                    let isAgent = false;
+
+                    if (utt.speaker_id === "user_1" || utt.speaker_id === "0" || utt.speaker_id === "speaker_0") {
+                      isAgent = true;
+                    } else if (utt.speaker_id === "user_2" || utt.speaker_id === "1" || utt.speaker_id === "speaker_1") {
+                      isAgent = false;
+                    } else {
+                      // Fallback: detect speaker changes
+                      if (i === 0) {
+                        isAgent = true; // First utterance is usually agent
+                      } else {
+                        // If speaker_id changed from previous, alternate
+                        isAgent = arr[i - 1].speaker_id !== utt.speaker_id ? !isAgent : isAgent;
+                      }
+                    }
 
                     return (
                       <div key={i} className={cn(
@@ -614,13 +633,24 @@ export function ResultsPanel({ data, isHydrating = false }: { data: ResultData, 
               <h4 className="text-xl font-[850] text-[#1F3A34] tracking-tight">Script Framework</h4>
             </div>
             <div className="space-y-4">
-              {(data.prepared_script?.sections || []).map((section) => (
+              {(data.prepared_script?.sections || []).map((section, index) => (
                 <div key={section.section_id} className="flex items-center gap-4 py-4 border-b border-[#1f3a3408] last:border-0 group">
-                  <div className="w-10 h-10 rounded-xl bg-[#1F3A3410] flex items-center justify-center shrink-0">
-                    <p className="text-[11px] font-black text-[#1F3A3480]">{section.section_id}</p>
+                  <div className="w-10 h-10 rounded-xl bg-[#1F3A3410] flex items-center justify-center shrink-0 group-hover:bg-[#1F3A34] transition-all">
+                    <CircleDot className="w-5 h-5 text-[#1F3A3480] group-hover:text-white transition-colors" />
                   </div>
-                  <p className="text-[14px] font-extrabold text-[#1F3A34] group-hover:text-[#1F3A34] transition-colors">{section.title}</p>
-                  {section.required && <div className="ml-auto w-2 h-2 rounded-full bg-yellow-500 shadow-sm shadow-yellow-500/50" />}
+                  <div className="flex-1">
+                    <p className="text-[14px] font-extrabold text-[#1F3A34] group-hover:text-[#1F3A34] transition-colors">{section.title}</p>
+                    <p className="text-[10px] font-bold text-[#1F3A3440] uppercase tracking-wider mt-0.5">
+                      Section {index + 1}
+                    </p>
+                  </div>
+                  {section.required && (
+                    <div className="flex items-center gap-2 ml-auto">
+                      <span className="text-[9px] font-black uppercase tracking-wider text-yellow-600 bg-yellow-50 px-2 py-1 rounded-md border border-yellow-200">
+                        Required
+                      </span>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>

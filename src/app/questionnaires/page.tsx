@@ -1,12 +1,13 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { 
-  FileSearch, 
-  Plus, 
-  ChevronRight, 
-  ChevronDown, 
-  ShieldCheck, 
+import { useState, useEffect, Suspense } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
+import {
+  FileSearch,
+  Plus,
+  ChevronRight,
+  ChevronDown,
+  ShieldCheck,
   Info,
   Calendar,
   Layers,
@@ -48,7 +49,10 @@ interface Questionnaire {
   created_at: string;
 }
 
-export default function QuestionnairesPage() {
+function QuestionnairesPageContent() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+
   const [questionnaires, setQuestionnaires] = useState<Questionnaire[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -58,6 +62,14 @@ export default function QuestionnairesPage() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [createForm, setCreateForm] = useState({ name: "", description: "" });
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Read expanded questionnaire ID from URL on mount
+  useEffect(() => {
+    const questionnaireIdFromUrl = searchParams.get('id');
+    if (questionnaireIdFromUrl) {
+      setExpandedId(questionnaireIdFromUrl);
+    }
+  }, [searchParams]);
 
   const fetchQuestionnaires = async () => {
     setLoading(true);
@@ -172,8 +184,18 @@ export default function QuestionnairesPage() {
                 expandedId === q.id ? "border-[#1F3A3420] apple-shadow-lg" : "border-[#1f3a3408] hover:border-[#1f3a3415] apple-shadow-sm"
               )}
             >
-              <div 
-                onClick={() => setExpandedId(expandedId === q.id ? null : q.id)}
+              <div
+                onClick={() => {
+                  const newExpandedId = expandedId === q.id ? null : q.id;
+                  setExpandedId(newExpandedId);
+
+                  // Update URL with questionnaire ID
+                  if (newExpandedId) {
+                    router.push(`/questionnaires?id=${newExpandedId}`, { scroll: false });
+                  } else {
+                    router.push('/questionnaires', { scroll: false });
+                  }
+                }}
                 className="p-8 flex flex-col md:flex-row items-start md:items-center gap-8 cursor-pointer"
               >
                 <div className="flex-1 space-y-2">
@@ -291,5 +313,17 @@ export default function QuestionnairesPage() {
         </div>
       )}
     </main>
+  );
+}
+
+export default function QuestionnairesPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex-1 flex items-center justify-center">
+        <div className="w-12 h-12 rounded-2xl border-4 border-[#1f3a3408] border-t-[#1F3A34] animate-spin" />
+      </div>
+    }>
+      <QuestionnairesPageContent />
+    </Suspense>
   );
 }

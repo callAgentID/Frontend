@@ -668,27 +668,79 @@ export function InputSection({
                 <div className="flex items-center justify-between px-1">
                   <label className="text-[10px] font-black uppercase tracking-[0.2em] text-[#1F3A3440] flex items-center gap-2">
                     <Tag className="w-3.5 h-3.5" /> Meta Tags (Optional)
+                    {metaTags.length > 0 && (
+                      <span className="text-[9px] font-black text-blue-600 bg-blue-50 px-2 py-0.5 rounded-md border border-blue-200">
+                        {metaTags.length} tag{metaTags.length !== 1 ? 's' : ''} added
+                      </span>
+                    )}
                   </label>
-                  <span className="text-[9px] font-bold text-[#1F3A3430] uppercase tracking-wider">Press Enter to Add</span>
+                  <span className="text-[9px] font-bold text-[#1F3A3430] uppercase tracking-wider">Comma-separated or Enter</span>
                 </div>
                 <div className="space-y-3">
-
                   <input
                     type="text"
-                    placeholder="Type a tag and press Enter..."
+                    placeholder="Type tags (comma-separated or press Enter)..."
                     className="w-full h-12 px-4 rounded-xl bg-[#1F3A3405] border border-transparent focus:border-[#1F3A3415] focus:bg-white text-[#1F3A34] font-medium transition-all outline-none placeholder:text-[#1F3A3430]"
                     onKeyDown={(e) => {
                       if (e.key === 'Enter') {
                         e.preventDefault();
                         const input = e.currentTarget;
-                        const value = input.value.trim().toLowerCase();
-                        if (value && !metaTags.includes(value)) {
-                          setMetaTags([...metaTags, value]);
+                        const value = input.value.trim();
+
+                        if (value) {
+                          // Split by comma and process each tag
+                          const newTags = value
+                            .split(',')
+                            .map(tag => tag.trim().toLowerCase())
+                            .filter(tag => tag && !metaTags.includes(tag));
+
+                          if (newTags.length > 0) {
+                            setMetaTags([...metaTags, ...newTags]);
+                          }
                           input.value = '';
                         }
                       }
                     }}
+                    onBlur={(e) => {
+                      // Also process on blur (when user clicks away)
+                      const input = e.currentTarget;
+                      const value = input.value.trim();
+
+                      if (value) {
+                        const newTags = value
+                          .split(',')
+                          .map(tag => tag.trim().toLowerCase())
+                          .filter(tag => tag && !metaTags.includes(tag));
+
+                        if (newTags.length > 0) {
+                          setMetaTags([...metaTags, ...newTags]);
+                        }
+                        input.value = '';
+                      }
+                    }}
                   />
+
+                  {/* Display Added Tags */}
+                  {metaTags.length > 0 && (
+                    <div className="flex flex-wrap gap-2 p-3 rounded-xl bg-[#1F3A3405] border border-[#1f3a3408]">
+                      {metaTags.map((tag, idx) => (
+                        <span
+                          key={idx}
+                          className="flex items-center gap-2 px-3 py-1.5 bg-blue-50 text-blue-700 border border-blue-200 rounded-lg text-xs font-bold group hover:bg-blue-100 transition-all"
+                        >
+                          #{tag}
+                          <button
+                            type="button"
+                            onClick={() => setMetaTags(metaTags.filter((_, i) => i !== idx))}
+                            className="w-4 h-4 rounded-full hover:bg-blue-200 flex items-center justify-center transition-all"
+                            title="Remove tag"
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
 

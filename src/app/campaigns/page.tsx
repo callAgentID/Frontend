@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import {
   Layers,
   FileText,
@@ -18,17 +19,46 @@ import {
 } from "lucide-react";
 import { cn } from "../../lib/utils";
 
-export default function CampaignsPage() {
+function CampaignsPageContent() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [modalType, setModalType] = useState<"campaign" | "script" | "questionnaire" | "view_script">("campaign");
+  const [modalType, setModalType] = useState<"campaign" | "script" | "questionnaire" | "view_script" | "assign_script">("campaign");
+  const [selectedCampaignForAssign, setSelectedCampaignForAssign] = useState<string>("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [viewingScript, setViewingScript] = useState<{ loading: boolean; data: any; error?: string }>({ loading: false, data: null });
 
+  // Read script ID from URL on mount
+  useEffect(() => {
+    const scriptIdFromUrl = searchParams.get('scriptId');
+    if (scriptIdFromUrl) {
+      handleScriptClick(scriptIdFromUrl);
+    }
+  }, [searchParams]);
+
   // Form States
   const [campForm, setCampForm] = useState({ name: "", code: "" });
-  const [scriptForm, setScriptForm] = useState({ title: "", campaign_id: "", file: null as File | null });
-  const [questForm, setQuestForm] = useState({ name: "", description: "", campaign_id: "", file: null as File | null });
+  const [scriptForm, setScriptForm] = useState({
+    title: "",
+    campaign_id: "",
+    file: null as File | null,
+    text: "",
+    call_direction: "outbound",
+    status: "active",
+    set_as_campaign_default: false,
+    inputMode: "file" as "file" | "text"
+  });
+  const [questForm, setQuestForm] = useState({
+    name: "",
+    description: "",
+    campaign_id: "",
+    file: null as File | null,
+    text: "",
+    active: true,
+    inputMode: "file" as "file" | "text"
+  });
 
   const [data, setData] = useState<{ campaigns: any[]; scripts: any[]; questionnaires: any[] }>({
     campaigns: [],
@@ -91,56 +121,116 @@ export default function CampaignsPage() {
   };
 
   const handleUploadScript = async () => {
-    if (!scriptForm.file || !scriptForm.campaign_id) return;
+    // Validation based on input mode
+    if (scriptForm.inputMode === "file" && (!scriptForm.file || !scriptForm.campaign_id)) return;
+    if (scriptForm.inputMode === "text" && (!scriptForm.text.trim() || !scriptForm.campaign_id)) return;
+
     setIsSubmitting(true);
     try {
       const formData = new FormData();
-      formData.append("file", scriptForm.file);
+      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://zk1354qz0k.execute-api.eu-central-1.amazonaws.com";
+
+      // Common fields for both endpoints
       formData.append("campaign_id", scriptForm.campaign_id);
       formData.append("title", scriptForm.title || "New Script");
-      formData.append("call_direction", "outbound");
+      formData.append("call_direction", scriptForm.call_direction);
+      formData.append("status", scriptForm.status);
+      formData.append("set_as_campaign_default", String(scriptForm.set_as_campaign_default));
 
-      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://zk1354qz0k.execute-api.eu-central-1.amazonaws.com";
-      const res = await fetch(`${baseUrl}/api/v1/scripts/upload`, {
+      let endpoint = "";
+      if (scriptForm.inputMode === "file") {
+        // File upload endpoint
+        formData.append("file", scriptForm.file!);
+        endpoint = `${baseUrl}/api/v1/scripts/upload`;
+      } else {
+        // Raw text parse endpoint
+        formData.append("text", scriptForm.text);
+        endpoint = `${baseUrl}/api/v1/scripts/parse`;
+      }
+
+      const res = await fetch(endpoint, {
         method: "POST",
         headers: { "ngrok-skip-browser-warning": "true" },
         body: formData
       });
+
       if (res.ok) {
         setIsModalOpen(false);
-        setScriptForm({ title: "", campaign_id: "", file: null });
+        setScriptForm({
+          title: "",
+          campaign_id: "",
+          file: null,
+          text: "",
+          call_direction: "outbound",
+          status: "active",
+          set_as_campaign_default: false,
+          inputMode: "file"
+        });
         fetchData();
+      } else if (res.status === 400) {
+        const error = await res.json();
+        alert(error.detail || "Invalid input. Please check your data.");
       }
     } catch (err) {
-      console.error("Script mapping failed:", err);
+      console.error("Script upload failed:", err);
+      alert("Failed to upload script. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
   };
 
   const handleUploadQuest = async () => {
-    if (!questForm.file || !questForm.campaign_id) return;
+    // Validation based on input mode
+    if (questForm.inputMode === "file" && !questForm.file) return;
+    if (questForm.inputMode === "text" && !questForm.text.trim()) return;
+    if (!questForm.name) return;
+
     setIsSubmitting(true);
     try {
       const formData = new FormData();
-      formData.append("file", questForm.file);
-      formData.append("campaign_id", questForm.campaign_id);
-      formData.append("name", questForm.name || "New Questionnaire");
-      formData.append("description", questForm.description);
-
       const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://zk1354qz0k.execute-api.eu-central-1.amazonaws.com";
-      const res = await fetch(`${baseUrl}/api/v1/questionnaires/upload`, {
+
+      // Common fields for both endpoints
+      formData.append("name", questForm.name);
+      formData.append("description", questForm.description);
+      formData.append("active", String(questForm.active));
+
+      let endpoint = "";
+      if (questForm.inputMode === "file") {
+        // File upload endpoint
+        formData.append("file", questForm.file!);
+        endpoint = `${baseUrl}/api/v1/questionnaires/upload`;
+      } else {
+        // Raw text parse endpoint
+        formData.append("text", questForm.text);
+        endpoint = `${baseUrl}/api/v1/questionnaires/parse`;
+      }
+
+      const res = await fetch(endpoint, {
         method: "POST",
         headers: { "ngrok-skip-browser-warning": "true" },
         body: formData
       });
+
       if (res.ok) {
         setIsModalOpen(false);
-        setQuestForm({ name: "", description: "", campaign_id: "", file: null });
+        setQuestForm({
+          name: "",
+          description: "",
+          campaign_id: "",
+          file: null,
+          text: "",
+          active: true,
+          inputMode: "file"
+        });
         fetchData();
+      } else if (res.status === 400) {
+        const error = await res.json();
+        alert(error.detail || "Invalid input. Please check your data.");
       }
     } catch (err) {
-      console.error("Audit mapping failed:", err);
+      console.error("Questionnaire upload failed:", err);
+      alert("Failed to upload questionnaire. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -150,6 +240,10 @@ export default function CampaignsPage() {
     setModalType("view_script");
     setIsModalOpen(true);
     setViewingScript({ loading: true, data: null });
+
+    // Update URL with script ID
+    router.push(`/campaigns?scriptId=${scriptId}`, { scroll: false });
+
     try {
       const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://zk1354qz0k.execute-api.eu-central-1.amazonaws.com";
       const headers = { "ngrok-skip-browser-warning": "true" };
@@ -290,7 +384,16 @@ export default function CampaignsPage() {
                   {modalType === 'view_script' ? 'Reviewing deployed logic framework.' : 'Configure your intelligence assets below.'}
                 </p>
               </div>
-              <button onClick={() => setIsModalOpen(false)} className="w-10 h-10 rounded-xl hover:bg-[#1F3A3410] flex items-center justify-center transition-all text-[#1F3A3420]">
+              <button
+                onClick={() => {
+                  setIsModalOpen(false);
+                  // Clear URL when closing modal
+                  if (modalType === 'view_script') {
+                    router.push('/campaigns', { scroll: false });
+                  }
+                }}
+                className="w-10 h-10 rounded-xl hover:bg-[#1F3A3410] flex items-center justify-center transition-all text-[#1F3A3420]"
+              >
                 <X className="w-5 h-5" />
               </button>
             </div>
@@ -315,8 +418,69 @@ export default function CampaignsPage() {
                     value={scriptForm.campaign_id}
                     onChange={(v) => setScriptForm({ ...scriptForm, campaign_id: v })}
                   />
-                  <FileUpload label="Script Document (.docx)" onChange={(f) => setScriptForm({ ...scriptForm, file: f })} />
-                  <button onClick={handleUploadScript} disabled={isSubmitting} className="w-full h-14 bg-[#1F3A34] text-white rounded-2xl font-bold flex items-center justify-center gap-3 shadow-xl hover:scale-[1.02] transition-all">
+
+                  {/* Input Mode Toggle */}
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black uppercase tracking-[0.2em] text-[#1F3A3440]">Input Method</label>
+                    <div className="flex p-1.5 bg-[#1F3A3408] rounded-xl border border-[#1f3a3405]">
+                      <button
+                        type="button"
+                        onClick={() => setScriptForm({ ...scriptForm, inputMode: "file" })}
+                        className={cn(
+                          "flex-1 py-2 rounded-lg text-xs font-extrabold transition-all",
+                          scriptForm.inputMode === "file"
+                            ? "bg-[#1F3A34] text-white shadow-sm"
+                            : "text-[#1F3A3450] hover:text-[#1F3A34]"
+                        )}
+                      >
+                        <Upload className="w-3.5 h-3.5 inline-block mr-1.5" />
+                        Upload File
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setScriptForm({ ...scriptForm, inputMode: "text" })}
+                        className={cn(
+                          "flex-1 py-2 rounded-lg text-xs font-extrabold transition-all",
+                          scriptForm.inputMode === "text"
+                            ? "bg-[#1F3A34] text-white shadow-sm"
+                            : "text-[#1F3A3450] hover:text-[#1F3A34]"
+                        )}
+                      >
+                        <FileText className="w-3.5 h-3.5 inline-block mr-1.5" />
+                        Paste Text
+                      </button>
+                    </div>
+                  </div>
+
+                  {scriptForm.inputMode === "file" ? (
+                    <FileUpload label="Script Document (.docx)" onChange={(f) => setScriptForm({ ...scriptForm, file: f })} />
+                  ) : (
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black uppercase tracking-[0.2em] text-[#1F3A3440]">Script Text</label>
+                      <textarea
+                        value={scriptForm.text}
+                        onChange={(e) => setScriptForm({ ...scriptForm, text: e.target.value })}
+                        placeholder="Paste your script content here..."
+                        rows={8}
+                        className="w-full bg-[#1F3A3403] border border-[#1f3a3410] rounded-xl p-4 outline-none focus:border-[#1F3A34] transition-all text-[#1F3A34] font-medium text-sm resize-none"
+                      />
+                    </div>
+                  )}
+
+                  <div className="flex items-center gap-3 p-3 rounded-xl bg-[#1F3A3405]">
+                    <input
+                      type="checkbox"
+                      id="set_default"
+                      checked={scriptForm.set_as_campaign_default}
+                      onChange={(e) => setScriptForm({ ...scriptForm, set_as_campaign_default: e.target.checked })}
+                      className="w-4 h-4 rounded border-[#1F3A3415] text-[#1F3A34]"
+                    />
+                    <label htmlFor="set_default" className="text-xs font-bold text-[#1F3A34] cursor-pointer">
+                      Set as campaign default script
+                    </label>
+                  </div>
+
+                  <button onClick={handleUploadScript} disabled={isSubmitting} className="w-full h-14 bg-[#1F3A34] text-white disabled:opacity-50 rounded-2xl font-bold flex items-center justify-center gap-3 shadow-xl hover:scale-[1.02] transition-all">
                     {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : <><Upload className="w-5 h-5" /> Deploy Logic</>}
                   </button>
                 </div>
@@ -326,14 +490,69 @@ export default function CampaignsPage() {
                 <div className="space-y-6">
                   <InputField label="Name" placeholder="e.g. Compliance Audit v1" value={questForm.name} onChange={(v) => setQuestForm({ ...questForm, name: v })} />
                   <InputField label="Description" placeholder="What does this audit measure?" value={questForm.description} onChange={(v) => setQuestForm({ ...questForm, description: v })} />
-                  <SelectField
-                    label="Home Campaign"
-                    options={data.campaigns}
-                    value={questForm.campaign_id}
-                    onChange={(v) => setQuestForm({ ...questForm, campaign_id: v })}
-                  />
-                  <FileUpload label="Question Sheet (.xlsx / .csv)" onChange={(f) => setQuestForm({ ...questForm, file: f })} />
-                  <button onClick={handleUploadQuest} disabled={isSubmitting} className="w-full h-14 bg-[#1F3A34] text-white rounded-2xl font-bold flex items-center justify-center gap-3 shadow-xl hover:scale-[1.02] transition-all">
+
+                  {/* Input Mode Toggle */}
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black uppercase tracking-[0.2em] text-[#1F3A3440]">Input Method</label>
+                    <div className="flex p-1.5 bg-[#1F3A3408] rounded-xl border border-[#1f3a3405]">
+                      <button
+                        type="button"
+                        onClick={() => setQuestForm({ ...questForm, inputMode: "file" })}
+                        className={cn(
+                          "flex-1 py-2 rounded-lg text-xs font-extrabold transition-all",
+                          questForm.inputMode === "file"
+                            ? "bg-[#1F3A34] text-white shadow-sm"
+                            : "text-[#1F3A3450] hover:text-[#1F3A34]"
+                        )}
+                      >
+                        <Upload className="w-3.5 h-3.5 inline-block mr-1.5" />
+                        Upload File
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setQuestForm({ ...questForm, inputMode: "text" })}
+                        className={cn(
+                          "flex-1 py-2 rounded-lg text-xs font-extrabold transition-all",
+                          questForm.inputMode === "text"
+                            ? "bg-[#1F3A34] text-white shadow-sm"
+                            : "text-[#1F3A3450] hover:text-[#1F3A34]"
+                        )}
+                      >
+                        <FileText className="w-3.5 h-3.5 inline-block mr-1.5" />
+                        Paste Text
+                      </button>
+                    </div>
+                  </div>
+
+                  {questForm.inputMode === "file" ? (
+                    <FileUpload label="Questionnaire Document (.docx)" onChange={(f) => setQuestForm({ ...questForm, file: f })} />
+                  ) : (
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black uppercase tracking-[0.2em] text-[#1F3A3440]">Questionnaire Text</label>
+                      <textarea
+                        value={questForm.text}
+                        onChange={(e) => setQuestForm({ ...questForm, text: e.target.value })}
+                        placeholder="Paste your questionnaire content here..."
+                        rows={8}
+                        className="w-full bg-[#1F3A3403] border border-[#1f3a3410] rounded-xl p-4 outline-none focus:border-[#1F3A34] transition-all text-[#1F3A34] font-medium text-sm resize-none"
+                      />
+                    </div>
+                  )}
+
+                  <div className="flex items-center gap-3 p-3 rounded-xl bg-[#1F3A3405]">
+                    <input
+                      type="checkbox"
+                      id="active_quest"
+                      checked={questForm.active}
+                      onChange={(e) => setQuestForm({ ...questForm, active: e.target.checked })}
+                      className="w-4 h-4 rounded border-[#1F3A3415] text-[#1F3A34]"
+                    />
+                    <label htmlFor="active_quest" className="text-xs font-bold text-[#1F3A34] cursor-pointer">
+                      Mark as active questionnaire
+                    </label>
+                  </div>
+
+                  <button onClick={handleUploadQuest} disabled={isSubmitting} className="w-full h-14 bg-[#1F3A34] text-white disabled:opacity-50 rounded-2xl font-bold flex items-center justify-center gap-3 shadow-xl hover:scale-[1.02] transition-all">
                     {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : <><CheckCircle2 className="w-5 h-5" /> Define Audit</>}
                   </button>
                 </div>
@@ -374,6 +593,18 @@ export default function CampaignsPage() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function CampaignsPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex-1 flex items-center justify-center">
+        <div className="w-12 h-12 rounded-2xl border-4 border-[#1f3a3408] border-t-[#1F3A34] animate-spin" />
+      </div>
+    }>
+      <CampaignsPageContent />
+    </Suspense>
   );
 }
 
