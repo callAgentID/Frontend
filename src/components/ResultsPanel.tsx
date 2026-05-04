@@ -431,9 +431,9 @@ export function ResultsPanel({ data, isHydrating = false }: { data: ResultData, 
                               </div>
                               <div className={cn(
                                 "w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 shadow-lg transition-transform group-hover:scale-110",
-                                answer.answer?.toLowerCase() === 'yes' ? 'bg-green-500 text-white shadow-green-500/20' : 'bg-red-500 text-white shadow-red-500/20'
+                                String(answer.answer || '').toLowerCase() === 'yes' ? 'bg-green-500 text-white shadow-green-500/20' : 'bg-red-500 text-white shadow-red-500/20'
                               )}>
-                                {answer.answer?.toLowerCase() === 'yes' ? <ShieldCheck className="w-7 h-7" /> : <XCircle className="w-7 h-7" />}
+                                {String(answer.answer || '').toLowerCase() === 'yes' ? <ShieldCheck className="w-7 h-7" /> : <XCircle className="w-7 h-7" />}
                               </div>
                             </div>
 
