@@ -2,6 +2,7 @@
 
 import { useEffect, useState, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
+import { useTranslations } from 'next-intl';
 import {
   BarChart3,
   Search,
@@ -24,10 +25,12 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ResultsPanel } from "@/components/ResultsPanel";
+import { CallListItemSkeleton } from "@/components/Skeleton";
 
 function AnalyticsPageContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
+  const t = useTranslations('analytics');
 
   const [calls, setCalls] = useState<any[]>([]);
   const [totalCalls, setTotalCalls] = useState<number>(0);
@@ -171,7 +174,7 @@ function AnalyticsPageContent() {
         {isDetailLoading ? (
           <div className="h-[60vh] flex flex-col items-center justify-center space-y-6">
             <div className="w-16 h-16 rounded-3xl border-4 border-[#1f3a3408] border-t-[#1F3A34] animate-spin" />
-            <p className="text-[12px] font-extrabold text-[#1F3A3450] uppercase tracking-[0.2em] animate-pulse">Decrypting High-Fidelity Audit...</p>
+            <p className="text-[12px] font-extrabold text-[#1F3A3450] uppercase tracking-[0.2em] animate-pulse">{t('decryptingAudit')}</p>
           </div>
         ) : (
           detailedResult && <ResultsPanel data={detailedResult} />
@@ -189,9 +192,9 @@ function AnalyticsPageContent() {
             <span className="px-3 py-1 bg-[#1F3A34] text-white text-[10px] uppercase font-[900] tracking-widest rounded-lg">Historical Command</span>
             <span className="text-[11px] font-bold text-[#1F3A3460] uppercase tracking-widest leading-none">Global Signal Archive</span>
           </div>
-          <h2 className="text-[52px] font-[850] text-[#1F3A34] tracking-tight leading-none mb-6">Signal Timeline</h2>
+          <h2 className="text-[52px] font-[850] text-[#1F3A34] tracking-tight leading-none mb-6">{t('title')}</h2>
           <p className="text-[#1F3A3480] text-[16px] font-medium max-w-lg leading-relaxed">
-            Monitoring the evolution of conversation intelligence across all strategically mapped ingestions.
+            {t('subtitle')}
           </p>
         </div>
 
@@ -202,7 +205,7 @@ function AnalyticsPageContent() {
               <div className="p-2 rounded-xl bg-[#1F3A3408] text-[#1F3A3440]"><Activity className="w-4 h-4" /></div>
               <span className="text-[10px] font-black text-blue-500 bg-blue-50 px-2 py-0.5 rounded-md">Page {currentPage}</span>
             </div>
-            <p className="text-[10px] font-black text-[#1F3A3430] uppercase tracking-widest mb-1">Showing Records</p>
+            <p className="text-[10px] font-black text-[#1F3A3430] uppercase tracking-widest mb-1">{t('showingRecords')}</p>
             <h4 className="text-2xl font-[850] text-[#1F3A34]">{calls.length}</h4>
             {totalCalls > 0 && (
               <p className="text-[9px] font-bold text-[#1F3A3440] mt-1">of ~{totalCalls} total</p>
@@ -215,10 +218,10 @@ function AnalyticsPageContent() {
       <div className="space-y-8">
         <div className="flex items-center justify-between px-2">
           <div className="flex items-center gap-4">
-            <h4 className="text-xl font-[850] text-[#1F3A34] tracking-tight">Signal History</h4>
+            <h4 className="text-xl font-[850] text-[#1F3A34] tracking-tight">{t('signalHistory')}</h4>
             <div className="h-6 w-[1px] bg-[#1f3a3410]" />
             <div className="flex items-center gap-2 text-[10px] font-black px-3 py-1 bg-[#1F3A3408] rounded-full text-[#1F3A3450]">
-              <Database className="w-3 h-3" /> LIVE
+              <Database className="w-3 h-3" /> {t('live')}
             </div>
           </div>
           <div className="flex items-center gap-4">
@@ -228,10 +231,10 @@ function AnalyticsPageContent() {
                 setIsLoading(true);
               }}
               className="flex items-center gap-2 px-4 h-11 bg-[#1F3A3408] hover:bg-[#1F3A3415] text-[#1F3A34] rounded-xl font-bold text-xs uppercase tracking-wider transition-all"
-              title="Refresh list"
+              title={t('refresh')}
             >
               <RefreshCw className="w-4 h-4" />
-              Refresh
+              {t('refresh')}
             </button>
 
             {/* Review Status Filter */}
@@ -245,9 +248,9 @@ function AnalyticsPageContent() {
                 }}
                 className="h-11 pl-11 pr-4 bg-[#1F3A3405] hover:bg-[#1F3A3408] border border-[#1f3a3410] rounded-xl text-sm font-bold text-[#1F3A34] outline-none focus:border-[#1F3A3415] transition-all cursor-pointer appearance-none"
               >
-                <option value="all">All Calls</option>
-                <option value="reviewed">Reviewed</option>
-                <option value="unreviewed">Unreviewed</option>
+                <option value="all">{t('showAll')}</option>
+                <option value="reviewed">{t('showReviewed')}</option>
+                <option value="unreviewed">{t('showUnreviewed')}</option>
               </select>
               <ChevronRight className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#1F3A3420] rotate-90 pointer-events-none" />
             </div>
@@ -256,7 +259,7 @@ function AnalyticsPageContent() {
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#1F3A3420] group-hover:text-[#1F3A34] transition-colors" />
               <input
                 disabled
-                placeholder="Search Archive..."
+                placeholder={t('searchArchive')}
                 className="h-11 bg-[#1F3A3405] border border-transparent focus:border-[#1F3A3415] rounded-xl pl-11 pr-6 text-sm font-bold text-[#1F3A34] outline-none transition-all w-64 placeholder:text-[#1F3A3420]"
               />
             </div>
@@ -265,9 +268,10 @@ function AnalyticsPageContent() {
 
         <div className="w-full bg-white apple-shadow rounded-[3rem] border border-[#1f3a3403] overflow-hidden">
           {isLoading ? (
-            <div className="p-20 flex flex-col items-center justify-center space-y-6">
-              <div className="w-12 h-12 rounded-2xl border-4 border-[#1f3a3408] border-t-[#1F3A34] animate-spin" />
-              <p className="text-[11px] font-black text-[#1F3A3430] uppercase tracking-[0.2em]">Synchronizing Archive...</p>
+            <div className="divide-y divide-[#1f3a3405]">
+              {[1, 2, 3, 4, 5].map((i) => (
+                <CallListItemSkeleton key={i} />
+              ))}
             </div>
           ) : (
             <div className="divide-y divide-[#1f3a3405]">
@@ -349,13 +353,13 @@ function AnalyticsPageContent() {
           <div className="flex items-center justify-between px-4 py-6">
             <div className="flex items-center gap-4">
               <p className="text-sm font-bold text-[#1F3A3460]">
-                Showing <span className="text-[#1F3A34] font-extrabold">{((currentPage - 1) * itemsPerPage) + 1}</span> to <span className="text-[#1F3A34] font-extrabold">{Math.min(currentPage * itemsPerPage, ((currentPage - 1) * itemsPerPage) + calls.length)}</span>
-                {totalCalls > 0 && <span> of <span className="text-[#1F3A34] font-extrabold">{totalCalls}</span></span>}
+                {t('showing')} <span className="text-[#1F3A34] font-extrabold">{((currentPage - 1) * itemsPerPage) + 1}</span> {t('to')} <span className="text-[#1F3A34] font-extrabold">{Math.min(currentPage * itemsPerPage, ((currentPage - 1) * itemsPerPage) + calls.length)}</span>
+                {totalCalls > 0 && <span> {t('of')} <span className="text-[#1F3A34] font-extrabold">{totalCalls}</span></span>}
               </p>
 
               {/* Items per page selector */}
               <div className="flex items-center gap-2">
-                <span className="text-xs font-bold text-[#1F3A3440] uppercase tracking-wider">Per page:</span>
+                <span className="text-xs font-bold text-[#1F3A3440] uppercase tracking-wider">{t('perPage')}</span>
                 <select
                   value={itemsPerPage}
                   onChange={(e) => {

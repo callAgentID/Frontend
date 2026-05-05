@@ -2,6 +2,7 @@
 
 import { useState, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
+import { useTranslations } from 'next-intl';
 import {
   FileCode,
   Plus,
@@ -19,6 +20,7 @@ import {
   MoreVertical
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { ScriptCardSkeleton } from "@/components/Skeleton";
 
 interface Script {
   id: string;
@@ -36,6 +38,7 @@ interface Script {
 function ScriptsPageContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
+  const t = useTranslations('scripts');
 
   const [scripts, setScripts] = useState<Script[]>([]);
   const [campaigns, setCampaigns] = useState<any[]>([]);
@@ -191,10 +194,10 @@ function ScriptsPageContent() {
             <div className="w-10 h-10 rounded-2xl bg-[#1F3A34] flex items-center justify-center text-white apple-shadow">
               <FileCode className="w-6 h-6" />
             </div>
-            <h1 className="text-3xl font-[900] text-[#1F3A34] tracking-tight">Neural Scripts</h1>
+            <h1 className="text-3xl font-[900] text-[#1F3A34] tracking-tight">{t('title')}</h1>
           </div>
           <p className="text-[#1F3A3470] text-sm font-medium">
-            Manage conversation scripts and call flow structures.
+            {t('subtitle')}
           </p>
         </div>
 
@@ -203,7 +206,7 @@ function ScriptsPageContent() {
           className="flex items-center gap-2 px-6 py-3.5 bg-[#1F3A34] text-white rounded-2xl font-bold text-sm uppercase tracking-widest transition-all hover:bg-[#1F3A34E0] apple-shadow active:scale-[0.98]"
         >
           <Plus className="w-5 h-5" />
-          Create Script
+          {t('createScript')}
         </button>
       </div>
 
@@ -212,7 +215,7 @@ function ScriptsPageContent() {
         <Search className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-[#1F3A3430] group-focus-within:text-[#1F3A34] transition-colors" />
         <input
           type="text"
-          placeholder="Filter scripts by title or content..."
+          placeholder={t('filterPlaceholder')}
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           className="w-full h-16 bg-white border border-[#1f3a3410] rounded-[1.25rem] pl-16 pr-6 text-[#1F3A34] font-bold tracking-tight placeholder:text-[#1F3A3430] outline-none focus:border-[#1F3A3420] transition-all apple-shadow-sm"
@@ -222,9 +225,9 @@ function ScriptsPageContent() {
       {/* Scripts List */}
       <div className="space-y-6">
         {loading ? (
-          <div className="space-y-4">
-            {[1, 2, 3].map(i => (
-              <div key={i} className="h-24 bg-white/50 border border-[#1f3a3405] rounded-3xl animate-pulse" />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {[1, 2, 3, 4].map(i => (
+              <ScriptCardSkeleton key={i} />
             ))}
           </div>
         ) : error ? (

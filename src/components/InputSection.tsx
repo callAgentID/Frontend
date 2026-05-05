@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
+import { useTranslations } from 'next-intl';
 import {
   FileAudio,
   FileText,
@@ -47,6 +48,7 @@ export function InputSection({
   onAnalysisComplete?: (data: any) => void;
   onPartialResult?: (data: any) => void;
 }) {
+  const t = useTranslations('input');
   const [mode, setMode] = useState<InputMode>("audio");
   const [audioFile, setAudioFile] = useState<File | null>(null);
   const [manualTranscript, setManualTranscript] = useState("");
@@ -421,8 +423,8 @@ export function InputSection({
     <section className="max-w-4xl mx-auto w-full space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-1000">
       {/* Header & Subtext */}
       <div className="flex flex-col gap-2 items-center text-center px-4">
-        <h3 className="text-3xl font-[850] text-[#1F3A34] tracking-tight">Signal Input</h3>
-        <p className="text-[#1F3A3450] text-sm font-semibold max-w-sm">Provide your conversation data for deep intelligence analysis.</p>
+        <h3 className="text-3xl font-[850] text-[#1F3A34] tracking-tight">{t('signalInput')}</h3>
+        <p className="text-[#1F3A3450] text-sm font-semibold max-w-sm">{t('provideData')}</p>
       </div>
 
       {/* Mode Toggle Tabs */}
@@ -438,7 +440,7 @@ export function InputSection({
             )}
           >
             <FileAudio className="w-4 h-4 opacity-70" />
-            Audio Upload
+            {t('uploadAudio')}
           </button>
           <button
             onClick={() => handleModeChange("transcript")}
@@ -450,7 +452,7 @@ export function InputSection({
             )}
           >
             <FileText className="w-4 h-4 opacity-70" />
-            Manual Entry
+            {t('manualEntry')}
           </button>
         </div>
       </div>
@@ -469,8 +471,8 @@ export function InputSection({
                     <Upload className="w-7 h-7 text-[#1F3A3460] group-hover:text-white transition-colors" />
                   </div>
                   <div className="text-center">
-                    <p className="text-lg font-extrabold text-[#1F3A34] group-hover:translate-y-[-2px] transition-transform">Upload Signal File</p>
-                    <p className="text-xs font-bold text-[#1F3A3440] uppercase tracking-widest mt-1.5">MP3, WAV, M4A up to 50MB</p>
+                    <p className="text-lg font-extrabold text-[#1F3A34] group-hover:translate-y-[-2px] transition-transform">{t('uploadSignalFile')}</p>
+                    <p className="text-xs font-bold text-[#1F3A3440] uppercase tracking-widest mt-1.5">{t('mp3WavInfo')}</p>
                   </div>
                   <input
                     type="file"
@@ -504,10 +506,10 @@ export function InputSection({
               <div className="flex flex-col gap-4">
                 <div className="flex items-center justify-between">
                   <h4 className="text-sm font-extrabold uppercase tracking-widest text-[#1F3A34] flex items-center gap-2">
-                    <FileText className="w-4 h-4" /> Bypassed Input
+                    <FileText className="w-4 h-4" /> {t('bypassedInput')}
                   </h4>
                   <label className="flex items-center gap-2 px-3 py-1.5 bg-[#1F3A3408] hover:bg-[#1F3A3415] text-[#1F3A3480] text-[10px] font-black uppercase tracking-widest rounded-xl transition-all cursor-pointer">
-                    <FileUp className="w-3.5 h-3.5" /> {manualFile ? manualFile.name : "Upload Document (PDF, DOCX) "}
+                    <FileUp className="w-3.5 h-3.5" /> {manualFile ? manualFile.name : t('uploadDocument')}
                     <input
                       type="file"
                       accept=".txt,.pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
@@ -519,7 +521,7 @@ export function InputSection({
                 <textarea
                   value={manualTranscript}
                   onChange={(e) => setManualTranscript(e.target.value)}
-                  placeholder="Paste your conversation transcript here for immediate analysis..."
+                  placeholder={t('transcriptPlaceholderImmediate')}
                   className="w-full h-48 p-8 rounded-[2.5rem] bg-[#1F3A3405] border border-transparent focus:border-[#1f3a3410] focus:bg-white focus:apple-shadow transition-all text-base font-medium leading-relaxed resize-none text-[#1F3A34] outline-none placeholder:text-[#1F3A3430]"
                 />
               </div>
@@ -642,7 +644,7 @@ export function InputSection({
                     onChange={(e) => setSelectedCampaignId(e.target.value)}
                     className="w-full h-16 bg-[#1F3A3405] border border-transparent focus:border-[#1F3A3415] rounded-2xl px-14 appearance-none text-[#1F3A34] font-bold tracking-tight text-base cursor-pointer outline-none transition-all"
                   >
-                    <option value="">Select Campaign...</option>
+                    <option value="">{t('selectPlaceholder')}</option>
                     {campaigns.map(c => <option key={c.id || c._id} value={c.id || c._id}>{c.name}</option>)}
                   </select>
                   <Layers className="absolute left-5 top-[65%] -translate-y-1/2 w-5 h-5 text-[#1F3A3420]" />
@@ -667,7 +669,7 @@ export function InputSection({
               <div className="space-y-4 pt-6 border-t border-[#1f3a3408]">
                 <div className="flex items-center justify-between px-1">
                   <label className="text-[10px] font-black uppercase tracking-[0.2em] text-[#1F3A3440] flex items-center gap-2">
-                    <Tag className="w-3.5 h-3.5" /> Meta Tags (Optional)
+                    <Tag className="w-3.5 h-3.5" /> {t('metaTags')}
                     {metaTags.length > 0 && (
                       <span className="text-[9px] font-black text-blue-600 bg-blue-50 px-2 py-0.5 rounded-md border border-blue-200">
                         {metaTags.length} tag{metaTags.length !== 1 ? 's' : ''} added
@@ -679,7 +681,7 @@ export function InputSection({
                 <div className="space-y-3">
                   <input
                     type="text"
-                    placeholder="Type tags (comma-separated or press Enter)..."
+                    placeholder={t('metaTagsPlaceholder')}
                     className="w-full h-12 px-4 rounded-xl bg-[#1F3A3405] border border-transparent focus:border-[#1F3A3415] focus:bg-white text-[#1F3A34] font-medium transition-all outline-none placeholder:text-[#1F3A3430]"
                     onKeyDown={(e) => {
                       if (e.key === 'Enter') {
@@ -809,7 +811,7 @@ export function InputSection({
                 className="w-full h-16 bg-[#1F3A34] hover:bg-[#1F3A34E0] disabled:bg-[#1F3A3450] text-white rounded-[1.25rem] font-bold text-sm uppercase tracking-widest transition-all apple-shadow active:scale-[0.98] flex items-center justify-center gap-3 mt-4"
               >
                 <ArrowRight className="w-5 h-5 opacity-50" />
-                {mode === "audio" ? "Process Neural Signal" : "Analyze Manual Signal"}
+                {t('analyze')}
               </button>
             </div>
           )}

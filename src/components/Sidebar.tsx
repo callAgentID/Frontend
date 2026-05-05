@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useTranslations } from 'next-intl';
 import {
   LayoutDashboard,
   BarChart3,
@@ -18,20 +19,21 @@ import {
 import { cn } from "../lib/utils";
 
 const NAV_ITEMS = [
-  { name: "Summary", href: "/", icon: LayoutDashboard },
-  { name: "Call Analytics", href: "/analytics", icon: BarChart3 },
-  { name: "Red Flags", href: "/red-flags", icon: ShieldAlert },
-  { name: "Campaigns", href: "/campaigns", icon: Layers },
-  { name: "Scripts", href: "/scripts", icon: FileCode },
-  { name: "Questionnaires", href: "/questionnaires", icon: FileSearch },
-  { name: "Feed", href: "/conversations", icon: MessageSquare },
-  { name: "Team", href: "/users", icon: Users },
-  { name: "Security", href: "/security", icon: ShieldCheck },
-  { name: "Preferences", href: "/settings", icon: Settings },
+  { name: "summary", href: "/", icon: LayoutDashboard },
+  { name: "callAnalytics", href: "/analytics", icon: BarChart3 },
+  { name: "redFlags", href: "/red-flags", icon: ShieldAlert },
+  { name: "campaigns", href: "/campaigns", icon: Layers },
+  { name: "scripts", href: "/scripts", icon: FileCode },
+  { name: "questionnaires", href: "/questionnaires", icon: FileSearch },
+  { name: "feed", href: "/conversations", icon: MessageSquare },
+  { name: "team", href: "/users", icon: Users },
+  { name: "security", href: "/security", icon: ShieldCheck },
+  { name: "preferences", href: "/settings", icon: Settings },
 ];
 
 export function Sidebar() {
   const pathname = usePathname();
+  const t = useTranslations('nav');
 
   return (
     <aside className="w-[280px] h-screen flex-shrink-0 flex flex-col p-6 border-r border-[#1f3a3410] bg-white/40 glass-blur apple-blur">
@@ -50,7 +52,7 @@ export function Sidebar() {
       {/* Navigation Groups */}
       <div className="space-y-8 flex-1">
         <div>
-          <h2 className="px-4 text-[11px] font-bold uppercase tracking-widest text-[#1F3A3470] mb-4">Navigation</h2>
+          <h2 className="px-4 text-[11px] font-bold uppercase tracking-widest text-[#1F3A3470] mb-4">{t('navigation')}</h2>
           <nav className="space-y-1">
             {NAV_ITEMS.slice(0, 6).map((item) => {
               const isActive = pathname === item.href;
@@ -73,7 +75,7 @@ export function Sidebar() {
                       isActive ? "text-white" : "text-[#1F3A3470]"
                     )}
                   />
-                  {item.name}
+                  {t(item.name as any)}
                 </Link>
               );
             })}
@@ -81,7 +83,7 @@ export function Sidebar() {
         </div>
 
         <div>
-          <h2 className="px-4 text-[11px] font-bold uppercase tracking-widest text-[#1F3A3470] mb-4">Management</h2>
+          <h2 className="px-4 text-[11px] font-bold uppercase tracking-widest text-[#1F3A3470] mb-4">{t('management')}</h2>
           <nav className="space-y-1">
             {NAV_ITEMS.slice(6).map((item) => {
               const isActive = pathname === item.href;
@@ -104,7 +106,7 @@ export function Sidebar() {
                       isActive ? "text-white" : "text-[#1F3A3470]"
                     )}
                   />
-                  {item.name}
+                  {t(item.name as any)}
                 </Link>
               );
             })}

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
+import { useTranslations } from 'next-intl';
 import {
   Layers,
   FileText,
@@ -18,10 +19,12 @@ import {
   ChevronRight
 } from "lucide-react";
 import { cn } from "../../lib/utils";
+import { CampaignCardSkeleton } from "@/components/Skeleton";
 
 function CampaignsPageContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
+  const t = useTranslations('campaigns');
 
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -264,12 +267,12 @@ function CampaignsPageContent() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="space-y-1">
-          <h1 className="text-4xl font-[850] text-[#1F3A34] tracking-tight">Intelligence Hierarchy</h1>
-          <p className="text-[#1F3A3460] font-medium">Classifying neural scripts and audit blueprints by campaign relationship.</p>
+          <h1 className="text-4xl font-[850] text-[#1F3A34] tracking-tight">{t('title')}</h1>
+          <p className="text-[#1F3A3460] font-medium">{t('subtitle')}</p>
         </div>
         <div className="flex gap-4">
           <button onClick={fetchData} className="h-12 px-6 bg-[#1F3A3408] text-[#1F3A34] rounded-2xl font-bold flex items-center gap-2 hover:bg-[#1F3A3415] transition-all text-sm">
-            Refresh Data
+            {t('refreshData')}
           </button>
           <button
             onClick={() => {
@@ -278,15 +281,16 @@ function CampaignsPageContent() {
             }}
             className="h-12 px-6 bg-[#1F3A34] text-white rounded-2xl font-bold flex items-center gap-2 shadow-xl shadow-[#1F3A3420] hover:scale-105 active:scale-95 transition-all text-sm"
           >
-            <Plus className="w-5 h-5" /> New Asset
+            <Plus className="w-5 h-5" /> {t('newAsset')}
           </button>
         </div>
       </div>
 
       {loading ? (
-        <div className="h-[500px] flex flex-col items-center justify-center gap-4">
-          <Loader2 className="w-10 h-10 text-[#1F3A34] animate-spin" />
-          <p className="text-[#1F3A3440] font-bold uppercase tracking-widest text-xs">Mapping Relationships...</p>
+        <div className="space-y-10">
+          {[1, 2, 3].map((i) => (
+            <CampaignCardSkeleton key={i} />
+          ))}
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-10">

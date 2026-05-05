@@ -2,6 +2,7 @@
 
 import { useState, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
+import { useTranslations } from 'next-intl';
 import {
   Zap,
   Activity,
@@ -21,6 +22,7 @@ import { cn } from "../lib/utils";
 function HomeContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
+  const t = useTranslations('home');
 
   const [pipelineState, setPipelineState] = useState<"input" | "processing" | "results">("input");
   const [analysisResult, setAnalysisResult] = useState<any>(null);
@@ -90,11 +92,11 @@ function HomeContent() {
       {/* Dynamic Navigation Indicator */}
       <div className="flex justify-center border-b border-[#1f3a3408] pb-8 mb-4">
         <div className="flex items-center gap-6">
-          <StepIndicator step={1} active={pipelineState === 'input'} done={pipelineState !== 'input'} label="Ingestion" />
+          <StepIndicator step={1} active={pipelineState === 'input'} done={pipelineState !== 'input'} label={t('ingestion')} />
           <div className="w-8 h-[2px] bg-[#1F3A3410]" />
-          <StepIndicator step={2} active={pipelineState === 'processing'} done={pipelineState === 'results'} label="AI Engine" />
+          <StepIndicator step={2} active={pipelineState === 'processing'} done={pipelineState === 'results'} label={t('aiEngine')} />
           <div className="w-8 h-[2px] bg-[#1F3A3410]" />
-          <StepIndicator step={3} active={pipelineState === 'results'} done={false} label="Intelligence" />
+          <StepIndicator step={3} active={pipelineState === 'results'} done={false} label={t('intelligence')} />
         </div>
       </div>
 
@@ -104,14 +106,14 @@ function HomeContent() {
             {/* Section 1: Header */}
             <div className="flex flex-col gap-4 text-center items-center">
               <div className="flex items-center gap-2 mb-2">
-                <span className="px-3 py-1 bg-[#1F3A3410] text-[#11231f] text-[10px] uppercase font-[900] tracking-widest rounded-full">Signal Ingestion</span>
+                <span className="px-3 py-1 bg-[#1F3A3410] text-[#11231f] text-[10px] uppercase font-[900] tracking-widest rounded-full">{t('signalIngestion')}</span>
                 <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
               </div>
               <h2 className="text-[52px] font-[850] tracking-tight leading-none text-[#1F3A34]">
-                Analyze Your Conversation
+                {t('title')}
               </h2>
               <p className="text-[#1F3A3460] text-lg font-medium max-w-xl leading-relaxed">
-                Select a strategic campaign and upload your audio signal for deep intelligence extraction.
+                {t('subtitle')}
               </p>
             </div>
 
@@ -132,8 +134,8 @@ function HomeContent() {
               </div>
             </div>
             <div className="text-center space-y-4">
-              <h3 className="text-3xl font-[850] text-[#1F3A34] tracking-tight">AI Signal Analysis in Progress</h3>
-              <p className="text-[#1F3A3450] text-sm font-bold uppercase tracking-widest animate-pulse">Cognitive Engine Synchronization...</p>
+              <h3 className="text-3xl font-[850] text-[#1F3A34] tracking-tight">{t('aiAnalysis')}</h3>
+              <p className="text-[#1F3A3450] text-sm font-bold uppercase tracking-widest animate-pulse">{t('syncMessage')}</p>
             </div>
           </div>
         )}
@@ -145,7 +147,7 @@ function HomeContent() {
                 onClick={resetPipeline}
                 className="flex items-center gap-2.5 px-6 py-3 bg-[#1F3A3408] hover:bg-[#1F3A34] text-[#1F3A34] hover:text-white rounded-2xl font-bold text-xs uppercase tracking-widest transition-all apple-shadow active:scale-95"
               >
-                <RotateCcw className="w-4 h-4" /> Reset Analysis Framework
+                <RotateCcw className="w-4 h-4" /> {t('resetFramework')}
               </button>
             </div>
             <ResultsPanel

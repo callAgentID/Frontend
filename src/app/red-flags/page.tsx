@@ -2,6 +2,7 @@
 
 import { useState, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
+import { useTranslations } from 'next-intl';
 import {
   ShieldAlert,
   Search,
@@ -22,6 +23,7 @@ import {
   User
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { RedFlagItemSkeleton } from "@/components/Skeleton";
 
 interface RedFlagSummary {
   id: string;
@@ -57,6 +59,7 @@ interface Stats {
 function RedFlagsPageContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
+  const t = useTranslations('redFlags');
 
   const [redFlags, setRedFlags] = useState<RedFlagSummary[]>([]);
   const [stats, setStats] = useState<Stats | null>(null);
@@ -235,7 +238,7 @@ function RedFlagsPageContent() {
         {detailLoading ? (
           <div className="h-[60vh] flex flex-col items-center justify-center space-y-6">
             <div className="w-16 h-16 rounded-3xl border-4 border-[#1f3a3408] border-t-red-500 animate-spin" />
-            <p className="text-[12px] font-extrabold text-[#1F3A3450] uppercase tracking-[0.2em] animate-pulse">Loading Red Flag Analysis...</p>
+            <p className="text-[12px] font-extrabold text-[#1F3A3450] uppercase tracking-[0.2em] animate-pulse">{t('loadingRedFlags')}</p>
           </div>
         ) : detailData ? (
           <div className="max-w-6xl mx-auto space-y-8">
@@ -392,10 +395,10 @@ function RedFlagsPageContent() {
             <div className="w-10 h-10 rounded-2xl bg-red-500 flex items-center justify-center text-white apple-shadow">
               <ShieldAlert className="w-6 h-6" />
             </div>
-            <h1 className="text-3xl font-[900] text-[#1F3A34] tracking-tight">Red Flags Analysis</h1>
+            <h1 className="text-3xl font-[900] text-[#1F3A34] tracking-tight">{t('title')}</h1>
           </div>
           <p className="text-[#1F3A3470] text-sm font-medium">
-            Monitor critical compliance issues and behavioral alerts across all calls.
+            {t('subtitle')}
           </p>
         </div>
       </div>
@@ -408,7 +411,7 @@ function RedFlagsPageContent() {
               <Activity className="w-5 h-5 text-[#1F3A3460]" />
               <div className="w-2 h-2 rounded-full bg-blue-500" />
             </div>
-            <p className="text-[10px] font-black uppercase tracking-widest text-[#1F3A3440] mb-1">Total Red Flag Calls</p>
+            <p className="text-[10px] font-black uppercase tracking-widest text-[#1F3A3440] mb-1">{t('totalCalls')}</p>
             <p className="text-2xl font-[850] text-[#1F3A34]">{stats.total_red_flag_calls}</p>
           </div>
 
@@ -417,7 +420,7 @@ function RedFlagsPageContent() {
               <XCircle className="w-5 h-5 text-red-500" />
               <div className="w-2 h-2 rounded-full bg-red-500" />
             </div>
-            <p className="text-[10px] font-black uppercase tracking-widest text-[#1F3A3440] mb-1">Critical Issues</p>
+            <p className="text-[10px] font-black uppercase tracking-widest text-[#1F3A3440] mb-1">{t('criticalIssues')}</p>
             <p className="text-2xl font-[850] text-[#1F3A34]">{stats.critical_issues_count}</p>
           </div>
 
@@ -426,7 +429,7 @@ function RedFlagsPageContent() {
               <AlertCircle className="w-5 h-5 text-orange-500" />
               <div className="w-2 h-2 rounded-full bg-orange-500" />
             </div>
-            <p className="text-[10px] font-black uppercase tracking-widest text-[#1F3A3440] mb-1">Needs Attention</p>
+            <p className="text-[10px] font-black uppercase tracking-widest text-[#1F3A3440] mb-1">{t('needsAttention')}</p>
             <p className="text-2xl font-[850] text-[#1F3A34]">{stats.immediate_attention_count}</p>
           </div>
 
@@ -435,7 +438,7 @@ function RedFlagsPageContent() {
               <BarChart3 className="w-5 h-5 text-[#1F3A3460]" />
               <div className="w-2 h-2 rounded-full bg-green-500" />
             </div>
-            <p className="text-[10px] font-black uppercase tracking-widest text-[#1F3A3440] mb-1">Average Score</p>
+            <p className="text-[10px] font-black uppercase tracking-widest text-[#1F3A3440] mb-1">{t('avgScore')}</p>
             <p className="text-2xl font-[850] text-[#1F3A34]">{stats.average_score.toFixed(1)}</p>
           </div>
         </div>
@@ -444,37 +447,37 @@ function RedFlagsPageContent() {
       {/* Filters */}
       <div className="bg-white rounded-2xl border border-[#1f3a3410] p-6 apple-shadow space-y-4">
         <h3 className="text-sm font-black uppercase tracking-widest text-[#1F3A34] flex items-center gap-2">
-          <Filter className="w-4 h-4" /> Filters
+          <Filter className="w-4 h-4" /> {t('filters')}
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div className="space-y-2">
-            <label className="text-[10px] font-black uppercase tracking-[0.2em] text-[#1F3A3440]">Critical Issues</label>
+            <label className="text-[10px] font-black uppercase tracking-[0.2em] text-[#1F3A3440]">{t('criticalFilter')}</label>
             <select
               value={filterCritical === null ? "" : String(filterCritical)}
               onChange={(e) => setFilterCritical(e.target.value === "" ? null : e.target.value === "true")}
               className="w-full h-12 bg-[#1F3A3405] border border-[#1f3a3410] rounded-xl px-4 text-[#1F3A34] font-semibold text-sm outline-none cursor-pointer"
             >
-              <option value="">All</option>
+              <option value="">{t('all')}</option>
               <option value="true">Yes</option>
               <option value="false">No</option>
             </select>
           </div>
 
           <div className="space-y-2">
-            <label className="text-[10px] font-black uppercase tracking-[0.2em] text-[#1F3A3440]">Needs Attention</label>
+            <label className="text-[10px] font-black uppercase tracking-[0.2em] text-[#1F3A3440]">{t('attentionFilter')}</label>
             <select
               value={filterAttention === null ? "" : String(filterAttention)}
               onChange={(e) => setFilterAttention(e.target.value === "" ? null : e.target.value === "true")}
               className="w-full h-12 bg-[#1F3A3405] border border-[#1f3a3410] rounded-xl px-4 text-[#1F3A34] font-semibold text-sm outline-none cursor-pointer"
             >
-              <option value="">All</option>
+              <option value="">{t('all')}</option>
               <option value="true">Yes</option>
               <option value="false">No</option>
             </select>
           </div>
 
           <div className="space-y-2">
-            <label className="text-[10px] font-black uppercase tracking-[0.2em] text-[#1F3A3440]">Min Score</label>
+            <label className="text-[10px] font-black uppercase tracking-[0.2em] text-[#1F3A3440]">{t('minScore')}</label>
             <input
               type="number"
               min="0"
@@ -487,7 +490,7 @@ function RedFlagsPageContent() {
           </div>
 
           <div className="space-y-2">
-            <label className="text-[10px] font-black uppercase tracking-[0.2em] text-[#1F3A3440]">Max Score</label>
+            <label className="text-[10px] font-black uppercase tracking-[0.2em] text-[#1F3A3440]">{t('maxScore')}</label>
             <input
               type="number"
               min="0"
@@ -504,9 +507,10 @@ function RedFlagsPageContent() {
       {/* Red Flags List */}
       <div className="bg-white rounded-[2.5rem] border border-[#1f3a3408] overflow-hidden apple-shadow">
         {loading ? (
-          <div className="p-20 flex flex-col items-center justify-center space-y-6">
-            <div className="w-12 h-12 rounded-2xl border-4 border-[#1f3a3408] border-t-red-500 animate-spin" />
-            <p className="text-[11px] font-black text-[#1F3A3430] uppercase tracking-[0.2em]">Loading Red Flags...</p>
+          <div className="divide-y divide-[#1f3a3405]">
+            {[1, 2, 3, 4].map((i) => (
+              <RedFlagItemSkeleton key={i} />
+            ))}
           </div>
         ) : error ? (
           <div className="p-20 text-center space-y-4">

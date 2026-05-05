@@ -1,6 +1,9 @@
 import { Search, Bell, Menu, Plus } from "lucide-react";
+import { useTranslations } from 'next-intl';
 
 export function Navbar() {
+  const t = useTranslations('common');
+
   return (
     <header className="h-14 flex items-center justify-between px-8 bg-white/40 border-b border-[#1f3a3408] glass-blur apple-blur sticky top-0 z-10">
       {/* Page Context */}
@@ -9,9 +12,9 @@ export function Navbar() {
           <Menu className="w-5 h-5" />
         </button>
         <div className="hidden lg:flex items-center gap-2">
-           <h3 className="text-sm font-bold text-[#1F3A34]">Summary Overview</h3>
+           <h3 className="text-sm font-bold text-[#1F3A34]">{t('summaryOverview')}</h3>
            <span className="w-1 h-1 rounded-full bg-[#1F3A3420]" />
-           <span className="text-xs font-bold text-[#1F3A3470] uppercase tracking-wider">Dashboard</span>
+           <span className="text-xs font-bold text-[#1F3A3470] uppercase tracking-wider">{t('dashboard')}</span>
         </div>
       </div>
 
@@ -22,7 +25,7 @@ export function Navbar() {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#1F3A3460] group-focus-within:text-[#1F3A34] transition-colors" />
           <input
             type="text"
-            placeholder="Search Intelligence..."
+            placeholder={t('searchIntelligence')}
             className="w-48 h-8 pl-9 pr-4 bg-[#1F3A3408] border border-transparent rounded-lg text-xs font-medium focus:outline-none focus:w-64 focus:bg-white focus:apple-shadow focus:border-[#1f3a3410] transition-all placeholder:text-[#1F3A3470] text-[#1F3A34]"
           />
         </div>
