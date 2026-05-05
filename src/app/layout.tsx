@@ -33,7 +33,11 @@ export default async function RootLayout({
     <html
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      translate="no"
     >
+      <head>
+        <meta name="google" content="notranslate" />
+      </head>
       <body className="h-screen overflow-hidden flex text-foreground bg-background">
         <NextIntlClientProvider messages={messages}>
           <Sidebar aria-hidden="true" />
