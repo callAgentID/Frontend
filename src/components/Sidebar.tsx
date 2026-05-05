@@ -17,6 +17,7 @@ import {
   ShieldAlert
 } from "lucide-react";
 import { cn } from "../lib/utils";
+import { LanguageSwitcher } from "./LanguageSwitcher";
 
 const NAV_ITEMS = [
   { name: "summary", href: "/", icon: LayoutDashboard },
@@ -114,8 +115,9 @@ export function Sidebar() {
         </div>
       </div>
 
-      {/* User Section */}
-      <div className="mt-auto px-2">
+      {/* Language Switcher & User Section */}
+      <div className="mt-auto space-y-3 px-2">
+        <LanguageSwitcher />
         <div className="p-4 rounded-3xl bg-[#1F3A3408] border border-[#1f3a3408] flex items-center gap-3">
           <div className="w-9 h-9 rounded-full bg-[#1F3A3420] flex items-center justify-center text-[#1F3A34] font-bold text-xs">
             JD
