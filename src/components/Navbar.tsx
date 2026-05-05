@@ -1,20 +1,17 @@
-import { Search, Bell, Menu, Plus } from "lucide-react";
+import { Search, Bell, Plus } from "lucide-react";
 import { useTranslations } from 'next-intl';
 
 export function Navbar() {
   const t = useTranslations('common');
 
   return (
-    <header className="h-14 flex items-center justify-between px-8 bg-white/40 border-b border-[#1f3a3408] glass-blur apple-blur sticky top-0 z-10">
+    <header className="h-14 flex items-center justify-between px-4 sm:px-8 bg-white/40 border-b border-[#1f3a3408] glass-blur apple-blur sticky top-0 z-10">
       {/* Page Context */}
       <div className="flex-1 flex items-center gap-6">
-        <button className="lg:hidden p-2 text-[#1F3A3480] hover:text-[#1F3A34] transition-colors rounded-xl hover:bg-[#1f3a3408]">
-          <Menu className="w-5 h-5" />
-        </button>
-        <div className="hidden lg:flex items-center gap-2">
+        <div className="flex items-center gap-2">
            <h3 className="text-sm font-bold text-[#1F3A34]">{t('summaryOverview')}</h3>
-           <span className="w-1 h-1 rounded-full bg-[#1F3A3420]" />
-           <span className="text-xs font-bold text-[#1F3A3470] uppercase tracking-wider">{t('dashboard')}</span>
+           <span className="w-1 h-1 rounded-full bg-[#1F3A3420] hidden sm:block" />
+           <span className="text-xs font-bold text-[#1F3A3470] uppercase tracking-wider hidden sm:block">{t('dashboard')}</span>
         </div>
       </div>
 

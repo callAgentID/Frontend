@@ -25,7 +25,8 @@ import {
   Eye,
   EyeOff,
   Loader2,
-  CircleDot
+  CircleDot,
+  MinusCircle
 } from "lucide-react";
 import { cn } from "../lib/utils";
 import { ReactElement, JSXElementConstructor, ReactNode, ReactPortal, Key, useState } from "react";
@@ -174,29 +175,29 @@ export function ResultsPanel({ data, isHydrating = false }: { data: ResultData, 
       {/* Header Pipeline State */}
       <div className="flex flex-col md:flex-row gap-8 items-start justify-between border-b border-[#1f3a3408] pb-12">
         <div className="flex-1">
-          <div className="flex items-center gap-3 mb-4 px-1">
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-4 px-1">
             <span className={cn(
-              "px-3 py-1 text-[10px] uppercase font-[900] tracking-widest rounded-lg transition-all duration-700",
+              "px-2 sm:px-3 py-1 text-[8px] sm:text-[10px] uppercase font-[900] tracking-widest rounded-lg transition-all duration-700 whitespace-nowrap",
               isHydrating ? "bg-[#1F3A3420] text-[#1F3A3440] animate-pulse" : "bg-[#1F3A34] text-white shadow-lg shadow-[#1F3A3420]"
             )}>
               {isHydrating ? 'Hydrating Signal...' : 'Audit Ready'}
             </span>
             {safeData.call_success !== null && (
               <span className={cn(
-                "px-3 py-1 text-[10px] uppercase font-[900] tracking-widest rounded-lg",
+                "px-2 sm:px-3 py-1 text-[8px] sm:text-[10px] uppercase font-[900] tracking-widest rounded-lg whitespace-nowrap",
                 safeData.call_success ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
               )}>
                 {safeData.call_success ? '✅ Success' : '❌ Failed'}
               </span>
             )}
             <span className={cn(
-              "px-3 py-1 text-[10px] uppercase font-[900] tracking-widest rounded-lg flex items-center gap-1.5",
+              "px-2 sm:px-3 py-1 text-[8px] sm:text-[10px] uppercase font-[900] tracking-widest rounded-lg flex items-center gap-1.5 whitespace-nowrap",
               reviewStatus === 'reviewed' ? "bg-blue-100 text-blue-700" : "bg-amber-100 text-amber-700"
             )}>
-              {reviewStatus === 'reviewed' ? <Eye className="w-3 h-3" /> : <EyeOff className="w-3 h-3" />}
+              {reviewStatus === 'reviewed' ? <Eye className="w-2.5 h-2.5 sm:w-3 sm:h-3" /> : <EyeOff className="w-2.5 h-2.5 sm:w-3 sm:h-3" />}
               {reviewStatus === 'reviewed' ? 'Reviewed' : 'Unreviewed'}
             </span>
-            <span className="text-[10px] font-bold text-[#1F3A3440] uppercase tracking-widest">
+            <span className="text-[9px] sm:text-[10px] font-bold text-[#1F3A3440] uppercase tracking-widest whitespace-nowrap">
               Trace ID: {safeData.call_id?.split('-')[0] || '...'}...
             </span>
           </div>
@@ -246,7 +247,7 @@ export function ResultsPanel({ data, isHydrating = false }: { data: ResultData, 
             </div>
           )}
           {safeData.final_meta_tags && safeData.final_meta_tags.length > 0 && (
-            <div className="flex flex-wrap gap-2 mt-6">
+            <div className="flex flex-wrap gap-1.5 sm:gap-2 mt-6">
               {safeData.final_meta_tags.map((tag: string) => {
                 const isUserTag = safeData.user_meta_tags?.includes(tag);
                 const isAiTag = safeData.ai_meta_tags?.includes(tag);
@@ -254,7 +255,7 @@ export function ResultsPanel({ data, isHydrating = false }: { data: ResultData, 
                   <span
                     key={tag}
                     className={cn(
-                      "px-2.5 py-1 text-[10px] font-black uppercase tracking-widest rounded-md border",
+                      "px-2 sm:px-2.5 py-0.5 sm:py-1 text-[8px] sm:text-[10px] font-black uppercase tracking-widest rounded-md border whitespace-nowrap",
                       isUserTag && !isAiTag ? "bg-blue-50 text-blue-700 border-blue-200" :
                         isAiTag && !isUserTag ? "bg-purple-50 text-purple-700 border-purple-200" :
                           "bg-[#1F3A3408] text-[#1F3A34] border-[#1f3a3405]"
@@ -349,20 +350,20 @@ export function ResultsPanel({ data, isHydrating = false }: { data: ResultData, 
                         'bg-blue-200/40 text-blue-800';
 
                   return (
-                    <div key={i} className="flex items-start gap-4 p-5 rounded-2xl bg-white border border-[#1f3a3408] shadow-sm hover:apple-shadow transition-all group">
+                    <div key={i} className="flex items-start gap-3 sm:gap-4 p-4 sm:p-5 rounded-2xl bg-white border border-[#1f3a3408] shadow-sm hover:apple-shadow transition-all group">
                       <div className={cn(
-                        "p-2 rounded-xl mt-0.5",
+                        "p-1.5 sm:p-2 rounded-xl mt-0.5 shrink-0",
                         sev === 'critical' || sev === 'high' ? 'bg-red-50 text-red-400' :
                           sev === 'medium' ? 'bg-orange-50 text-orange-400' :
                             'bg-blue-50 text-blue-400'
                       )}>
-                        <AlertCircle className="w-4 h-4" />
+                        <AlertCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-[13px] font-black uppercase tracking-widest text-[#1F3A34]">{flag.label}</p>
-                        <p className="text-xs font-semibold text-[#1F3A3460] mt-1 leading-relaxed">{flag.evidence}</p>
+                        <p className="text-[11px] sm:text-[13px] font-black uppercase tracking-widest text-[#1F3A34]">{flag.label}</p>
+                        <p className="text-[11px] sm:text-xs font-semibold text-[#1F3A3460] mt-1 leading-relaxed">{flag.evidence}</p>
                       </div>
-                      <span className={cn("px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider", sevStyles)}>
+                      <span className={cn("px-1.5 sm:px-2 py-0.5 rounded-md text-[8px] sm:text-[9px] font-black uppercase tracking-wider shrink-0 whitespace-nowrap self-start", sevStyles)}>
                         {flag.severity || 'Critical'}
                       </span>
                     </div>
@@ -427,13 +428,35 @@ export function ResultsPanel({ data, isHydrating = false }: { data: ResultData, 
                                     Q: {questionText}
                                   </p>
                                 )}
-                                <h5 className="text-[19px] font-[850] text-[#1F3A34] tracking-tight leading-snug">{answer.reasoning_summary}</h5>
+                                {/* Show actual answer for custom questions, otherwise reasoning summary */}
+                                {templateResult.template_id === 'custom_questions' && answer.answer && answer.answer !== 'yes' && answer.answer !== 'no' ? (
+                                  <div className="space-y-2">
+                                    <h5 className="text-[19px] font-[850] text-[#1F3A34] tracking-tight leading-snug">{answer.answer}</h5>
+                                    <p className="text-sm text-[#1F3A3470] font-medium">{answer.reasoning_summary}</p>
+                                  </div>
+                                ) : (
+                                  <h5 className="text-[19px] font-[850] text-[#1F3A34] tracking-tight leading-snug">{answer.reasoning_summary}</h5>
+                                )}
                               </div>
                               <div className={cn(
                                 "w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 shadow-lg transition-transform group-hover:scale-110",
-                                String(answer.answer || '').toLowerCase() === 'yes' ? 'bg-green-500 text-white shadow-green-500/20' : 'bg-red-500 text-white shadow-red-500/20'
+                                templateResult.template_id === 'custom_questions' && answer.answer && answer.answer !== 'yes' && answer.answer !== 'no'
+                                  ? 'bg-blue-500 text-white shadow-blue-500/20'
+                                  : String(answer.answer || '').toLowerCase() === 'yes'
+                                    ? 'bg-green-500 text-white shadow-green-500/20'
+                                    : answer.skipped
+                                      ? 'bg-gray-400 text-white shadow-gray-400/20'
+                                      : 'bg-red-500 text-white shadow-red-500/20'
                               )}>
-                                {String(answer.answer || '').toLowerCase() === 'yes' ? <ShieldCheck className="w-7 h-7" /> : <XCircle className="w-7 h-7" />}
+                                {templateResult.template_id === 'custom_questions' && answer.answer && answer.answer !== 'yes' && answer.answer !== 'no' ? (
+                                  <CheckCircle2 className="w-7 h-7" />
+                                ) : String(answer.answer || '').toLowerCase() === 'yes' ? (
+                                  <ShieldCheck className="w-7 h-7" />
+                                ) : answer.skipped ? (
+                                  <MinusCircle className="w-7 h-7" />
+                                ) : (
+                                  <XCircle className="w-7 h-7" />
+                                )}
                               </div>
                             </div>
 
@@ -634,22 +657,20 @@ export function ResultsPanel({ data, isHydrating = false }: { data: ResultData, 
             </div>
             <div className="space-y-4">
               {(data.prepared_script?.sections || []).map((section, index) => (
-                <div key={section.section_id} className="flex items-center gap-4 py-4 border-b border-[#1f3a3408] last:border-0 group">
-                  <div className="w-10 h-10 rounded-xl bg-[#1F3A3410] flex items-center justify-center shrink-0 group-hover:bg-[#1F3A34] transition-all">
-                    <CircleDot className="w-5 h-5 text-[#1F3A3480] group-hover:text-white transition-colors" />
+                <div key={section.section_id} className="flex items-start sm:items-center gap-3 sm:gap-4 py-4 border-b border-[#1f3a3408] last:border-0 group">
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-[#1F3A3410] flex items-center justify-center shrink-0 group-hover:bg-[#1F3A34] transition-all">
+                    <CircleDot className="w-4 h-4 sm:w-5 sm:h-5 text-[#1F3A3480] group-hover:text-white transition-colors" />
                   </div>
-                  <div className="flex-1">
-                    <p className="text-[14px] font-extrabold text-[#1F3A34] group-hover:text-[#1F3A34] transition-colors">{section.title}</p>
-                    <p className="text-[10px] font-bold text-[#1F3A3440] uppercase tracking-wider mt-0.5">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[13px] sm:text-[14px] font-extrabold text-[#1F3A34] group-hover:text-[#1F3A34] transition-colors">{section.title}</p>
+                    <p className="text-[9px] sm:text-[10px] font-bold text-[#1F3A3440] uppercase tracking-wider mt-0.5">
                       Section {index + 1}
                     </p>
                   </div>
                   {section.required && (
-                    <div className="flex items-center gap-2 ml-auto">
-                      <span className="text-[9px] font-black uppercase tracking-wider text-yellow-600 bg-yellow-50 px-2 py-1 rounded-md border border-yellow-200">
-                        Required
-                      </span>
-                    </div>
+                    <span className="text-[8px] sm:text-[9px] font-black uppercase tracking-wider text-yellow-600 bg-yellow-50 px-1.5 py-0.5 sm:px-2 sm:py-1 rounded-md border border-yellow-200 shrink-0 whitespace-nowrap">
+                      Required
+                    </span>
                   )}
                 </div>
               ))}
@@ -664,9 +685,9 @@ export function ResultsPanel({ data, isHydrating = false }: { data: ResultData, 
             </div>
             <div className="space-y-4">
               {(data.prepared_script?.compliance_requirements || []).map((rule, i) => (
-                <div key={i} className="flex items-center justify-between p-4 rounded-xl bg-white border border-[#1f3a3408] shadow-sm">
-                  <span className="text-[13px] font-extrabold text-[#1F3A34]">{rule.label}</span>
-                  <span className="text-[10px] font-black uppercase tracking-widest text-red-500/60">{rule.severity} Risk</span>
+                <div key={i} className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3 sm:p-4 rounded-xl bg-white border border-[#1f3a3408] shadow-sm">
+                  <span className="text-[12px] sm:text-[13px] font-extrabold text-[#1F3A34]">{rule.label}</span>
+                  <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-red-500/60 shrink-0 self-start sm:self-auto">{rule.severity} Risk</span>
                 </div>
               ))}
             </div>
