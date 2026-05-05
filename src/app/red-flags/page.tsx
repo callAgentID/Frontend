@@ -23,7 +23,7 @@ import {
   User
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { RedFlagItemSkeleton } from "@/components/Skeleton";
+import { RedFlagItemSkeleton, DetailViewSkeleton } from "@/components/Skeleton";
 
 interface RedFlagSummary {
   id: string;
@@ -236,10 +236,7 @@ function RedFlagsPageContent() {
         </div>
 
         {detailLoading ? (
-          <div className="h-[60vh] flex flex-col items-center justify-center space-y-6">
-            <div className="w-16 h-16 rounded-3xl border-4 border-[#1f3a3408] border-t-red-500 animate-spin" />
-            <p className="text-[12px] font-extrabold text-[#1F3A3450] uppercase tracking-[0.2em] animate-pulse">{t('loadingRedFlags')}</p>
-          </div>
+          <DetailViewSkeleton />
         ) : detailData ? (
           <div className="max-w-6xl mx-auto space-y-8">
             {/* Header */}

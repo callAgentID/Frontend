@@ -19,7 +19,7 @@ import {
   ChevronRight
 } from "lucide-react";
 import { cn } from "../../lib/utils";
-import { CampaignCardSkeleton } from "@/components/Skeleton";
+import { CampaignCardSkeleton, ScriptDetailSkeleton } from "@/components/Skeleton";
 
 function CampaignsPageContent() {
   const searchParams = useSearchParams();
@@ -565,10 +565,7 @@ function CampaignsPageContent() {
               {modalType === "view_script" && (
                 <div className="space-y-6">
                   {viewingScript.loading ? (
-                    <div className="flex flex-col items-center justify-center py-10 space-y-4">
-                      <Loader2 className="w-8 h-8 animate-spin text-[#1F3A3450]" />
-                      <p className="text-sm font-bold text-[#1F3A3450]">Decoding Neural Script...</p>
-                    </div>
+                    <ScriptDetailSkeleton />
                   ) : viewingScript.error ? (
                     <div className="p-4 bg-red-50 text-red-600 rounded-xl font-medium border border-red-100">{viewingScript.error}</div>
                   ) : viewingScript.data ? (
