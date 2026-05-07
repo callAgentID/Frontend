@@ -292,7 +292,9 @@ function AnalyticsPageContent() {
                   {/* Main Info */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-3 mb-1.5">
-                      <h5 className="text-[17px] font-extrabold text-[#1F3A34] tracking-tight truncate group-hover:text-[#1F3A34] transition-colors">Signal #{call.call_id.split('-')[0]}</h5>
+                      <h5 className="text-[17px] font-extrabold text-[#1F3A34] tracking-tight truncate group-hover:text-[#1F3A34] transition-colors">
+                        {call.file_name || `Call #${call.call_id.split('-')[0]}`}
+                      </h5>
                       {call.has_red_flags && <ShieldAlert className="w-5 h-5 text-red-500 fill-red-500/10" />}
                       {call.call_success !== null && call.call_success !== undefined && (
                         <span className={cn(
@@ -314,6 +316,10 @@ function AnalyticsPageContent() {
                       </p>
                     )}
                     <div className="flex items-center gap-5">
+                      <span className="text-[10px] font-bold text-[#1F3A3430] uppercase tracking-widest">
+                        ID: {call.call_id.split('-')[0]}
+                      </span>
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#1F3A3415]" />
                       <span className="flex items-center gap-2 text-[11px] font-black text-[#1F3A3460] uppercase tracking-widest">
                         <Calendar className="w-3.5 h-3.5" /> {new Date(call.created_at).toLocaleDateString()}
                       </span>
