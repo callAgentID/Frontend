@@ -20,7 +20,11 @@ import {
   ChevronRight,
   XCircle,
   Calendar,
-  User
+  User,
+  Play,
+  Pause,
+  Clock,
+  Shield
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { RedFlagItemSkeleton, DetailViewSkeleton } from "@/components/Skeleton";
@@ -32,6 +36,7 @@ interface RedFlagSummary {
   has_critical_issues: boolean;
   requires_immediate_attention: boolean;
   flags_count: number;
+  file_name?: string;
   created_at: string;
   reviewed_at?: string;
   reviewed_by?: string;
@@ -44,6 +49,7 @@ interface RedFlagDetail {
   has_critical_issues: boolean;
   requires_immediate_attention: boolean;
   full_result: any;
+  file_name?: string;
   created_at: string;
   reviewed_at?: string;
   reviewed_by?: string;
@@ -70,6 +76,7 @@ function RedFlagsPageContent() {
   const [selectedCallId, setSelectedCallId] = useState<string | null>(null);
   const [detailData, setDetailData] = useState<RedFlagDetail | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
+  const [playingSegment, setPlayingSegment] = useState<string | null>(null);
 
   // Filter state
   const [filterCritical, setFilterCritical] = useState<boolean | null>(null);
@@ -110,7 +117,11 @@ function RedFlagsPageContent() {
 
       if (response.ok) {
         const data = await response.json();
-        setRedFlags(Array.isArray(data) ? data : []);
+        // Sort by score ascending (lower scores first - worse compliance)
+        const sortedData = Array.isArray(data)
+          ? data.sort((a, b) => a.score - b.score)
+          : [];
+        setRedFlags(sortedData);
       } else {
         throw new Error("Failed to fetch red flags");
       }
@@ -179,6 +190,7 @@ function RedFlagsPageContent() {
   const closeDetail = () => {
     setSelectedCallId(null);
     setDetailData(null);
+    setPlayingSegment(null);
     router.push('/red-flags', { scroll: false });
   };
 
@@ -246,7 +258,9 @@ function RedFlagsPageContent() {
                   <h2 className="text-3xl font-[850] text-[#1F3A34] tracking-tight mb-2">
                     Red Flag Analysis
                   </h2>
-                  <p className="text-sm font-medium text-[#1F3A3460]">Call ID: {detailData.call_id}</p>
+                  <p className="text-sm font-medium text-[#1F3A3460]">
+                    {detailData.file_name || `Call ID: ${detailData.call_id}`}
+                  </p>
                 </div>
                 <div className="flex items-center gap-3">
                   {detailData.has_critical_issues && (
@@ -285,6 +299,27 @@ function RedFlagsPageContent() {
                 )}
               </div>
             </div>
+
+            {/* Audio Player - Check if audio is available */}
+            {detailData.full_result?.provider_metadata?.provider !== 'manual' && (
+              <div className="p-8 rounded-[2.5rem] bg-[#1F3A34] text-white apple-shadow-lg border border-[#1f3a3410] flex flex-col md:flex-row items-center gap-8">
+                <div className="flex-1 space-y-2">
+                  <h4 className="text-lg font-black uppercase tracking-widest text-white/50 flex items-center gap-2">
+                    <Play className="w-4 h-4 fill-current" /> Call Audio Signal
+                  </h4>
+                  <p className="text-sm font-medium text-white/80">Stream high-fidelity conversation audio with seek support.</p>
+                </div>
+                <audio
+                  id="red-flag-audio-player"
+                  controls
+                  preload="metadata"
+                  className="w-full md:w-2/3 h-10 accent-[#F4F8F9] bg-[#1F3A3405] rounded-xl"
+                  src={`${process.env.NEXT_PUBLIC_BASE_URL || "https://zk1354qz0k.execute-api.eu-central-1.amazonaws.com"}/api/v1/media/calls/${detailData.call_id}/audio`}
+                >
+                  Your browser does not support audio playback.
+                </audio>
+              </div>
+            )}
 
             {/* Questionnaire Results */}
             {detailData.full_result?.answers && (
@@ -347,21 +382,80 @@ function RedFlagsPageContent() {
                         <div className="mt-4 pt-4 border-t border-[#1f3a3410]">
                           <p className="text-[9px] font-black uppercase tracking-widest text-[#1F3A3460] mb-3">Evidence</p>
                           <div className="space-y-2">
-                            {answer.evidence.map((ev: any, evIdx: number) => (
-                              <div key={evIdx} className="p-3 bg-white rounded-xl border border-[#1f3a3408]">
-                                <p className="text-xs text-[#1F3A34] leading-relaxed italic">"{ev.quote}"</p>
-                                <div className="flex items-center gap-4 mt-2">
-                                  <span className="text-[9px] font-bold text-[#1F3A3460] uppercase tracking-wider">
-                                    Match Score: {(ev.score * 100).toFixed(1)}%
-                                  </span>
-                                  {ev.start_ms > 0 && (
-                                    <span className="text-[9px] font-bold text-[#1F3A3460] uppercase tracking-wider">
-                                      {Math.floor(ev.start_ms / 1000)}s - {Math.floor(ev.end_ms / 1000)}s
-                                    </span>
+                            {answer.evidence.map((ev: any, evIdx: number) => {
+                              const hasAudio = detailData.full_result?.provider_metadata?.provider !== 'manual';
+                              const segmentId = `${answer.question_id}_${ev.start_ms}`;
+                              const isPlaying = playingSegment === segmentId;
+
+                              return (
+                                <div
+                                  key={evIdx}
+                                  onClick={() => {
+                                    if (!hasAudio || ev.start_ms < 0) return;
+
+                                    const player = document.getElementById('red-flag-audio-player') as HTMLAudioElement;
+                                    if (!player) return;
+
+                                    if (isPlaying) {
+                                      player.pause();
+                                      setPlayingSegment(null);
+                                    } else {
+                                      const startTime = (ev.start_ms || 0) / 1000;
+                                      const endTime = (ev.end_ms || ev.start_ms || 0) / 1000;
+
+                                      player.currentTime = startTime;
+                                      player.play();
+                                      setPlayingSegment(segmentId);
+
+                                      // Stop at end_ms
+                                      const checkTime = () => {
+                                        if (player.currentTime >= endTime) {
+                                          player.pause();
+                                          setPlayingSegment(null);
+                                        } else if (playingSegment === segmentId) {
+                                          requestAnimationFrame(checkTime);
+                                        }
+                                      };
+                                      requestAnimationFrame(checkTime);
+                                    }
+                                  }}
+                                  className={cn(
+                                    "p-3 bg-white rounded-xl border border-[#1f3a3408] transition-all",
+                                    hasAudio && ev.start_ms >= 0 && "cursor-pointer hover:border-[#1F3A3420] hover:bg-[#F4F8F9]",
+                                    isPlaying && "border-[#1F3A34] bg-[#1F3A3410]"
                                   )}
+                                >
+                                  <p className="text-xs text-[#1F3A34] leading-relaxed italic mb-2">"{ev.quote}"</p>
+                                  <div className="flex items-center justify-between gap-4">
+                                    <div className="flex items-center gap-4">
+                                      <span className="text-[9px] font-bold text-[#1F3A3460] uppercase tracking-wider">
+                                        Match: {(ev.score * 100).toFixed(1)}%
+                                      </span>
+                                      {ev.start_ms >= 0 && (
+                                        <span className="text-[9px] font-bold text-[#1F3A3460] uppercase tracking-wider">
+                                          {Math.floor(ev.start_ms / 1000)}s - {Math.floor(ev.end_ms / 1000)}s
+                                        </span>
+                                      )}
+                                    </div>
+                                    {hasAudio && ev.start_ms >= 0 && (
+                                      <div className="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-wider">
+                                        {isPlaying ? (
+                                          <>
+                                            <Pause className="w-3 h-3 fill-current text-[#1F3A34]" />
+                                            <span className="text-[#1F3A34]">Playing</span>
+                                          </>
+                                        ) : (
+                                          <>
+                                            <Play className="w-3 h-3 fill-current text-[#1F3A3460]" />
+                                            <span className="text-[#1F3A3460]">Play</span>
+                                          </>
+                                        )}
+                                      </div>
+                                    )}
+                                  </div>
                                 </div>
-                              </div>
-                            ))}
+                              );
+                            })}
                           </div>
                         </div>
                       )}
@@ -533,12 +627,20 @@ function RedFlagsPageContent() {
                 onClick={() => viewDetail(flag.call_id)}
                 className="flex items-center gap-6 p-8 hover:bg-[#1F3A3403] transition-all cursor-pointer group"
               >
+                {/* Priority Icon */}
+                {flag.has_critical_issues && (
+                  <div className="w-10 h-10 rounded-xl bg-red-500 flex items-center justify-center shadow-lg shadow-red-500/30 shrink-0">
+                    <Shield className="w-5 h-5 text-white fill-white" />
+                  </div>
+                )}
+
                 {/* Score Badge */}
                 <div className={cn(
                   "w-14 h-14 rounded-2xl flex items-center justify-center font-black text-base shrink-0 shadow-lg",
-                  flag.score >= 70 ? "bg-red-500 text-white shadow-red-500/20" :
-                    flag.score >= 40 ? "bg-orange-500 text-white shadow-orange-500/20" :
-                      "bg-yellow-500 text-white shadow-yellow-500/20"
+                  flag.score >= 80 ? "bg-green-500 text-white shadow-green-500/20" :
+                    flag.score >= 60 ? "bg-yellow-500 text-white shadow-yellow-500/20" :
+                      flag.score >= 40 ? "bg-orange-500 text-white shadow-orange-500/20" :
+                        "bg-red-500 text-white shadow-red-500/20"
                 )}>
                   {flag.score.toFixed(0)}
                 </div>
@@ -547,25 +649,24 @@ function RedFlagsPageContent() {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-3 mb-2">
                     <h5 className="text-[17px] font-extrabold text-[#1F3A34] tracking-tight truncate">
-                      Call #{flag.call_id.split('-')[0]}
+                      {flag.file_name || `Call #${flag.call_id.split('-')[0]}`}
                     </h5>
-                    {flag.has_critical_issues && (
-                      <span className="px-2 py-0.5 text-[9px] font-black uppercase tracking-wider rounded-md bg-red-100 text-red-700 border border-red-200">
-                        Critical
+                    {!flag.reviewed_at ? (
+                      <span className="px-2 py-0.5 text-[9px] font-black uppercase tracking-wider rounded-md bg-orange-50 text-orange-700 border border-orange-200">
+                        Pending Review
                       </span>
-                    )}
-                    {flag.requires_immediate_attention && (
-                      <span className="px-2 py-0.5 text-[9px] font-black uppercase tracking-wider rounded-md bg-orange-100 text-orange-700 border border-orange-200">
-                        Urgent
-                      </span>
-                    )}
-                    {flag.reviewed_at && (
+                    ) : (
                       <span className="flex items-center gap-1 px-2 py-0.5 text-[9px] font-black uppercase tracking-wider rounded-md bg-blue-50 text-blue-600 border border-blue-200">
                         <Eye className="w-3 h-3" />
+                        Reviewed
                       </span>
                     )}
                   </div>
                   <div className="flex items-center gap-5">
+                    <span className="text-[10px] font-bold text-[#1F3A3430] uppercase tracking-widest">
+                      ID: {flag.call_id.split('-')[0]}
+                    </span>
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#1F3A3415]" />
                     <span className="flex items-center gap-2 text-[11px] font-black text-[#1F3A3460] uppercase tracking-widest">
                       <AlertCircle className="w-3.5 h-3.5" /> {flag.flags_count} Flag{flag.flags_count !== 1 ? 's' : ''}
                     </span>
