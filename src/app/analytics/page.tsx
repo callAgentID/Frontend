@@ -26,6 +26,7 @@ import {
 import { cn } from "@/lib/utils";
 import { ResultsPanel } from "@/components/ResultsPanel";
 import { CallListItemSkeleton, DetailViewSkeleton } from "@/components/Skeleton";
+import { CallFilters, CallFilterParams } from "@/components/CallFilters";
 
 function AnalyticsPageContent() {
   const searchParams = useSearchParams();
@@ -44,7 +45,7 @@ function AnalyticsPageContent() {
   const [itemsPerPage, setItemsPerPage] = useState(20);
 
   // Filter state
-  const [reviewFilter, setReviewFilter] = useState<'all' | 'reviewed' | 'unreviewed'>('all');
+  const [filters, setFilters] = useState<CallFilterParams>({});
 
   // Read call ID from URL on mount
   useEffect(() => {
@@ -54,33 +55,51 @@ function AnalyticsPageContent() {
     }
   }, [searchParams]);
 
-  // Fetch historical calls with pagination
+  // Build query string from filters
+  const buildQueryString = () => {
+    const params = new URLSearchParams();
+    params.append('limit', itemsPerPage.toString());
+    params.append('offset', ((currentPage - 1) * itemsPerPage).toString());
+
+    // Add all filter parameters
+    if (filters.status) filters.status.forEach(s => params.append('status', s));
+    if (filters.review_status) filters.review_status.forEach(rs => params.append('review_status', rs));
+    if (filters.campaign_id) filters.campaign_id.forEach(cid => params.append('campaign_id', cid));
+    if (filters.questionnaire_id) filters.questionnaire_id.forEach(qid => params.append('questionnaire_id', qid));
+    if (filters.agent_id) filters.agent_id.forEach(aid => params.append('agent_id', aid));
+    if (filters.customer_id) filters.customer_id.forEach(cid => params.append('customer_id', cid));
+    if (filters.call_success !== undefined && filters.call_success !== null) params.append('call_success', filters.call_success.toString());
+    if (filters.min_score !== undefined) params.append('min_score', filters.min_score.toString());
+    if (filters.max_score !== undefined) params.append('max_score', filters.max_score.toString());
+    if (filters.language) params.append('language', filters.language);
+    if (filters.batch_id) params.append('batch_id', filters.batch_id);
+    if (filters.tag) filters.tag.forEach(t => params.append('tag', t));
+    if (filters.search) params.append('search', filters.search);
+    if (filters.sentiment) params.append('sentiment', filters.sentiment);
+    if (filters.created_after) params.append('created_after', filters.created_after);
+    if (filters.created_before) params.append('created_before', filters.created_before);
+
+    return params.toString();
+  };
+
+  // Fetch historical calls with pagination and filters
   useEffect(() => {
     const fetchHistory = async () => {
       setIsLoading(true);
       try {
         const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://zk1354qz0k.execute-api.eu-central-1.amazonaws.com";
-        const offset = (currentPage - 1) * itemsPerPage;
-        const response = await fetch(`${baseUrl}/api/v1/calls/?limit=${itemsPerPage}&offset=${offset}`, {
+        const queryString = buildQueryString();
+        const response = await fetch(`${baseUrl}/api/v1/calls/?${queryString}`, {
           headers: { "ngrok-skip-browser-warning": "true" }
         });
         const data = await response.json();
         if (Array.isArray(data)) {
           // Sort by created_at descending (newest first)
-          let sortedData = data.sort((a, b) => {
+          const sortedData = data.sort((a, b) => {
             const dateA = new Date(a.created_at || a.ready_at || 0).getTime();
             const dateB = new Date(b.created_at || b.ready_at || 0).getTime();
             return dateB - dateA; // Descending order
           });
-
-          // Apply review filter
-          if (reviewFilter !== 'all') {
-            sortedData = sortedData.filter(call =>
-              reviewFilter === 'reviewed'
-                ? call.review_status === 'reviewed'
-                : call.review_status !== 'reviewed'
-            );
-          }
 
           setCalls(sortedData);
 
@@ -100,7 +119,7 @@ function AnalyticsPageContent() {
       }
     };
     fetchHistory();
-  }, [currentPage, itemsPerPage, reviewFilter]);
+  }, [currentPage, itemsPerPage, filters]);
 
   // Fetch specific call detail
   const viewDetail = async (callId: string) => {
@@ -234,34 +253,17 @@ function AnalyticsPageContent() {
               {t('refresh')}
             </button>
 
-            {/* Review Status Filter */}
-            <div className="relative">
-              <Filter className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#1F3A3440] pointer-events-none" />
-              <select
-                value={reviewFilter}
-                onChange={(e) => {
-                  setReviewFilter(e.target.value as 'all' | 'reviewed' | 'unreviewed');
-                  setCurrentPage(1);
-                }}
-                className="h-11 pl-11 pr-4 bg-[#1F3A3405] hover:bg-[#1F3A3408] border border-[#1f3a3410] rounded-xl text-sm font-bold text-[#1F3A34] outline-none focus:border-[#1F3A3415] transition-all cursor-pointer appearance-none"
-              >
-                <option value="all">{t('showAll')}</option>
-                <option value="reviewed">{t('showReviewed')}</option>
-                <option value="unreviewed">{t('showUnreviewed')}</option>
-              </select>
-              <ChevronRight className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#1F3A3420] rotate-90 pointer-events-none" />
-            </div>
-
-            <div className="relative group">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#1F3A3420] group-hover:text-[#1F3A34] transition-colors" />
-              <input
-                disabled
-                placeholder={t('searchArchive')}
-                className="h-11 bg-[#1F3A3405] border border-transparent focus:border-[#1F3A3415] rounded-xl pl-11 pr-6 text-sm font-bold text-[#1F3A34] outline-none transition-all w-64 placeholder:text-[#1F3A3420]"
-              />
-            </div>
           </div>
         </div>
+
+        {/* Advanced Filters */}
+        <CallFilters
+          filters={filters}
+          onFiltersChange={(newFilters) => {
+            setFilters(newFilters);
+            setCurrentPage(1); // Reset to first page when filters change
+          }}
+        />
 
         <div className="w-full bg-white apple-shadow rounded-[3rem] border border-[#1f3a3403] overflow-hidden">
           {isLoading ? (
