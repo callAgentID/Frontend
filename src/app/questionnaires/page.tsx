@@ -31,6 +31,7 @@ interface Question {
   type: string;
   required: boolean;
   weight: number;
+  options?: string[];
 }
 
 interface Section {
@@ -247,17 +248,35 @@ function QuestionnairesPageContent() {
 
                           <div className="space-y-3">
                             {section.questions.map((question) => (
-                              <div key={question.question_id} className="bg-white p-4 rounded-2xl border border-[#1f3a3405] flex items-start gap-3 group/q">
-                                <div className="w-6 h-6 rounded-lg bg-[#1F3A3408] flex items-center justify-center shrink-0 mt-0.5">
-                                   <span className="text-[10px] font-black text-[#1F3A3460]">{question.weight}</span>
-                                </div>
-                                <div className="flex-1 space-y-1">
-                                  <p className="text-sm font-bold text-[#1F3A3490] leading-tight">{question.text}</p>
-                                  <div className="flex items-center gap-3">
-                                     <span className="text-[9px] font-black uppercase tracking-tighter text-[#1F3A3430]">{question.type}</span>
-                                     {question.required && <span className="text-[9px] font-black uppercase tracking-tighter text-red-400">Required</span>}
+                              <div key={question.question_id} className="bg-white p-4 rounded-2xl border border-[#1f3a3405] space-y-3 group/q">
+                                <div className="flex items-start gap-3">
+                                  <div className="w-6 h-6 rounded-lg bg-[#1F3A3408] flex items-center justify-center shrink-0 mt-0.5">
+                                     <span className="text-[10px] font-black text-[#1F3A3460]">{question.weight}</span>
+                                  </div>
+                                  <div className="flex-1 space-y-1">
+                                    <p className="text-sm font-bold text-[#1F3A3490] leading-tight">{question.text}</p>
+                                    <div className="flex items-center gap-3">
+                                       <span className="text-[9px] font-black uppercase tracking-tighter text-[#1F3A3430]">{question.type}</span>
+                                       {question.required && <span className="text-[9px] font-black uppercase tracking-tighter text-red-400">Required</span>}
+                                    </div>
                                   </div>
                                 </div>
+
+                                {question.options && question.options.length > 0 && (
+                                  <div className="pl-9 space-y-1.5">
+                                    <div className="text-[9px] font-black uppercase tracking-wider text-[#1F3A3430] mb-2">Options ({question.options.length}):</div>
+                                    <div className="flex flex-wrap gap-1.5">
+                                      {question.options.map((option, idx) => (
+                                        <span
+                                          key={idx}
+                                          className="px-2 py-1 rounded-md bg-[#1F3A3405] border border-[#1f3a3408] text-[10px] font-semibold text-[#1F3A3470]"
+                                        >
+                                          {option}
+                                        </span>
+                                      ))}
+                                    </div>
+                                  </div>
+                                )}
                               </div>
                             ))}
                           </div>

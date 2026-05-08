@@ -176,7 +176,7 @@ function AnalyticsPageContent() {
 
   if (selectedCallId) {
     return (
-      <div className="p-8 space-y-10 animate-in fade-in slide-in-from-right-8 duration-700">
+      <div className="p-4 sm:p-6 md:p-8 space-y-10 animate-in fade-in slide-in-from-right-8 duration-700">
         <div className="flex items-center justify-between max-w-6xl mx-auto border-b border-[#1f3a3408] pb-8">
           <button
             onClick={closeDetail}
@@ -200,7 +200,7 @@ function AnalyticsPageContent() {
   }
 
   return (
-    <div className="p-10 space-y-16 animate-in fade-in duration-1000 max-w-7xl mx-auto">
+    <div className="p-4 sm:p-6 md:p-10 space-y-16 animate-in fade-in duration-1000 max-w-7xl mx-auto">
       {/* Header Intelligence Summary */}
       <div className="flex flex-col md:flex-row gap-8 items-start justify-between border-b border-[#1f3a3408] pb-12">
         <div>
@@ -208,7 +208,7 @@ function AnalyticsPageContent() {
             <span className="px-3 py-1 bg-[#1F3A34] text-white text-[10px] uppercase font-[900] tracking-widest rounded-lg">Historical Command</span>
             <span className="text-[11px] font-bold text-[#1F3A3460] uppercase tracking-widest leading-none">Global Signal Archive</span>
           </div>
-          <h2 className="text-[52px] font-[850] text-[#1F3A34] tracking-tight leading-none mb-6">{t('title')}</h2>
+          <h2 className="text-[32px] sm:text-[42px] md:text-[52px] font-[850] text-[#1F3A34] tracking-tight leading-none mb-6">{t('title')}</h2>
           <p className="text-[#1F3A3480] text-[16px] font-medium max-w-lg leading-relaxed">
             {t('subtitle')}
           </p>

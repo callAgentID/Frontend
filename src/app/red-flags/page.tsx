@@ -478,7 +478,7 @@ function RedFlagsPageContent() {
 
   // List view
   return (
-    <main className="flex-1 overflow-y-auto bg-[#F4F8F9]/50 p-8 space-y-10">
+    <main className="flex-1 overflow-y-auto bg-[#F4F8F9]/50 p-4 sm:p-6 md:p-8 space-y-10">
       {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div>

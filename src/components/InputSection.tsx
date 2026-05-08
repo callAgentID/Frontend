@@ -22,9 +22,7 @@ import {
   Zap,
   Activity as Waveform,
   Tag,
-  HelpCircle,
-  Plus,
-  Minus
+  HelpCircle
 } from "lucide-react";
 import { cn } from "../lib/utils";
 import { useEffect } from "react";
@@ -588,7 +586,7 @@ export function InputSection({
 
                 {/* Standard Audit Multi-Select */}
                 <div className="relative group/select">
-                  <label className="text-[10px] font-black uppercase tracking-[0.2em] text-[#1F3A3440] mb-2 block px-1">Standard Audit Logic</label>
+                  <label className="text-[10px] font-black uppercase tracking-[0.2em] text-[#1F3A3440] mb-2 block px-1">Questionaire</label>
                   <div
                     onClick={() => setIsOtherOpen(!isOtherOpen)}
                     className={cn(
@@ -597,7 +595,7 @@ export function InputSection({
                     )}
                   >
                     <span className={cn("font-bold tracking-tight text-base truncate", selectedOtherIds.length > 0 ? "text-[#1F3A34]" : "text-[#1F3A3440]")}>
-                      {selectedOtherIds.length === 0 ? "Select Frameworks..." : `${selectedOtherIds.length} Frameworks Selected`}
+                      {selectedOtherIds.length === 0 ? "Select Questionaire..." : `${selectedOtherIds.length} Frameworks Selected`}
                     </span>
                   </div>
                   <FileSearch className={cn("absolute left-5 top-[65%] -translate-y-1/2 w-5 h-5 transition-colors", selectedOtherIds.length > 0 ? "text-[#1F3A34]" : "text-[#1F3A3420]")} />
@@ -638,7 +636,7 @@ export function InputSection({
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="relative group/select">
-                  <label className="text-[10px] font-black uppercase tracking-[0.2em] text-[#1F3A3440] mb-2 block px-1">Business Context</label>
+                  <label className="text-[10px] font-black uppercase tracking-[0.2em] text-[#1F3A3440] mb-2 block px-1">Campaign Name</label>
                   <select
                     value={selectedCampaignId}
                     onChange={(e) => setSelectedCampaignId(e.target.value)}
@@ -752,32 +750,47 @@ export function InputSection({
                   <label className="text-[10px] font-black uppercase tracking-[0.2em] text-[#1F3A3440] flex items-center gap-2">
                     <HelpCircle className="w-3.5 h-3.5" /> Custom Questions (Optional)
                   </label>
-                  <button
-                    type="button"
-                    onClick={() => setCustomQuestions([...customQuestions, { text: '', weight: 5 }])}
-                    className="flex items-center gap-1.5 px-3 py-1.5 bg-[#1F3A3408] hover:bg-[#1F3A3415] text-[#1F3A34] text-[9px] font-black uppercase tracking-wider rounded-lg transition-all"
-                  >
-                    <Plus className="w-3 h-3" /> Add Question
-                  </button>
+                  {customQuestions.length > 0 && (
+                    <span className="px-2 py-0.5 bg-blue-50 text-blue-700 border border-blue-200 rounded-md text-[9px] font-black">
+                      {customQuestions.length} ADDED
+                    </span>
+                  )}
                 </div>
-                {customQuestions.length > 0 && (
-                  <div className="space-y-3">
-                    {customQuestions.map((q, idx) => (
-                      <div key={idx} className="flex gap-3 items-start p-4 rounded-xl bg-[#1F3A3405] border border-[#1f3a3408]">
-                        <div className="flex-1 space-y-2">
-                          <input
-                            type="text"
-                            value={q.text}
-                            onChange={(e) => {
-                              const updated = [...customQuestions];
-                              updated[idx].text = e.target.value;
-                              setCustomQuestions(updated);
-                            }}
-                            placeholder="Enter your question..."
-                            className="w-full h-10 px-3 rounded-lg bg-white border border-[#1f3a3408] text-[#1F3A34] font-medium text-sm outline-none focus:border-[#1F3A3415] transition-all placeholder:text-[#1F3A3430]"
-                          />
-                          <div className="flex items-center gap-2">
-                            <span className="text-[10px] font-bold text-[#1F3A3440] uppercase tracking-wider">Weight:</span>
+
+                <div className="space-y-3">
+                  <input
+                    type="text"
+                    placeholder="Enter your question and press Enter..."
+                    className="w-full h-12 px-4 rounded-xl bg-[#1F3A3405] border border-transparent focus:border-[#1F3A3415] focus:bg-white text-[#1F3A34] font-medium transition-all outline-none placeholder:text-[#1F3A3430]"
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        const input = e.currentTarget;
+                        const value = input.value.trim();
+
+                        if (value) {
+                          setCustomQuestions([...customQuestions, { text: value, weight: 5 }]);
+                          input.value = '';
+                        }
+                      }
+                    }}
+                  />
+
+                  {/* Display Added Questions */}
+                  {customQuestions.length > 0 && (
+                    <div className="space-y-2 p-3 rounded-xl bg-[#1F3A3405] border border-[#1f3a3408]">
+                      {customQuestions.map((q, idx) => (
+                        <div
+                          key={idx}
+                          className="flex items-center justify-between gap-3 px-4 py-3 bg-white border border-[#1f3a3408] rounded-lg group hover:border-[#1F3A3420] transition-all"
+                        >
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-[#1F3A34] truncate">{q.text}</p>
+                            <p className="text-[10px] font-bold text-[#1F3A3440] uppercase tracking-wider mt-1">
+                              Weight: {q.weight}
+                            </p>
+                          </div>
+                          <div className="flex items-center gap-2 shrink-0">
                             <input
                               type="number"
                               min="1"
@@ -788,21 +801,22 @@ export function InputSection({
                                 updated[idx].weight = parseInt(e.target.value) || 5;
                                 setCustomQuestions(updated);
                               }}
-                              className="w-16 h-8 px-2 rounded-lg bg-white border border-[#1f3a3408] text-[#1F3A34] font-bold text-sm text-center outline-none focus:border-[#1F3A3415] transition-all"
+                              className="w-14 h-8 px-2 rounded-lg bg-[#1F3A3405] border border-[#1f3a3408] text-[#1F3A34] font-bold text-xs text-center outline-none focus:border-[#1F3A3415] transition-all"
                             />
+                            <button
+                              type="button"
+                              onClick={() => setCustomQuestions(customQuestions.filter((_, i) => i !== idx))}
+                              className="w-7 h-7 rounded-lg hover:bg-red-50 text-[#1F3A3420] hover:text-red-500 flex items-center justify-center transition-all"
+                              title="Remove question"
+                            >
+                              <X className="w-3.5 h-3.5" />
+                            </button>
                           </div>
                         </div>
-                        <button
-                          type="button"
-                          onClick={() => setCustomQuestions(customQuestions.filter((_, i) => i !== idx))}
-                          className="w-8 h-8 rounded-lg hover:bg-red-50 text-[#1F3A3420] hover:text-red-500 flex items-center justify-center transition-all shrink-0 mt-1"
-                        >
-                          <Minus className="w-4 h-4" />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
 
               <button

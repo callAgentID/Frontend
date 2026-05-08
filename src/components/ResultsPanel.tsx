@@ -44,6 +44,9 @@ interface ResultData {
   ai_meta_tags?: string[] | null; // 🆕 AI-generated tags
   final_meta_tags?: string[] | null; // 🆕 Merged unique tags
   custom_questions?: Array<{ text: string; weight: number }> | null; // 🆕 Custom questions
+  campaign_name?: string | null;
+  questionnaire_name?: string | null;
+  script_name?: string | null;
   transcript: {
     utterances: Array<{
       speaker_id: string;
@@ -171,7 +174,7 @@ export function ResultsPanel({ data, isHydrating = false }: { data: ResultData, 
   };
 
   return (
-    <div className="w-full max-w-6xl mx-auto space-y-16 animate-in fade-in slide-in-from-bottom-8 duration-1000 pb-20 mt-10">
+    <div className="w-full max-w-6xl mx-auto space-y-16 animate-in fade-in slide-in-from-bottom-8 duration-1000 pb-20 mt-10 px-4 sm:px-6">
       {/* Header Pipeline State */}
       <div className="flex flex-col md:flex-row gap-8 items-start justify-between border-b border-[#1f3a3408] pb-12">
         <div className="flex-1">
@@ -201,6 +204,37 @@ export function ResultsPanel({ data, isHydrating = false }: { data: ResultData, 
               Trace ID: {safeData.call_id?.split('-')[0] || '...'}...
             </span>
           </div>
+
+          {/* Campaign, Questionnaire, Script Info */}
+          {(safeData.campaign_name || safeData.questionnaire_name || safeData.script_name) && (
+            <div className="flex flex-wrap items-center gap-3 mb-4 px-1">
+              {safeData.campaign_name && (
+                <div className="flex items-center gap-2">
+                  <span className="text-[9px] font-black uppercase tracking-widest text-[#1F3A3460]">Campaign:</span>
+                  <span className="text-[10px] font-bold text-[#1F3A34] px-2 py-0.5 bg-purple-50 border border-purple-200 rounded-md">
+                    {safeData.campaign_name}
+                  </span>
+                </div>
+              )}
+              {safeData.questionnaire_name && (
+                <div className="flex items-center gap-2">
+                  <span className="text-[9px] font-black uppercase tracking-widest text-[#1F3A3460]">Questionnaire:</span>
+                  <span className="text-[10px] font-bold text-[#1F3A34] px-2 py-0.5 bg-blue-50 border border-blue-200 rounded-md">
+                    {safeData.questionnaire_name}
+                  </span>
+                </div>
+              )}
+              {safeData.script_name && (
+                <div className="flex items-center gap-2">
+                  <span className="text-[9px] font-black uppercase tracking-widest text-[#1F3A3460]">Script:</span>
+                  <span className="text-[10px] font-bold text-[#1F3A34] px-2 py-0.5 bg-green-50 border border-green-200 rounded-md">
+                    {safeData.script_name}
+                  </span>
+                </div>
+              )}
+            </div>
+          )}
+
           <div className="flex items-center gap-3 mb-6">
             {reviewStatus !== 'reviewed' && !isHydrating && (
               <button
@@ -222,7 +256,7 @@ export function ResultsPanel({ data, isHydrating = false }: { data: ResultData, 
               </button>
             )}
           </div>
-          <h2 className="text-[52px] font-[850] text-[#1F3A34] tracking-tight leading-none mb-6">
+          <h2 className="text-[32px] sm:text-[42px] md:text-[52px] font-[850] text-[#1F3A34] tracking-tight leading-none mb-6">
             Neural Analysis
           </h2>
           <div className={cn(
@@ -437,6 +471,12 @@ export function ResultsPanel({ data, isHydrating = false }: { data: ResultData, 
                                 ) : (
                                   <h5 className="text-[19px] font-[850] text-[#1F3A34] tracking-tight leading-snug">{answer.reasoning_summary}</h5>
                                 )}
+                                {/* Show extracted_info if present */}
+                                {answer.extracted_info && (
+                                  <div className="mt-3 p-4 rounded-xl bg-blue-50 border border-blue-200">
+                                    <p className="text-sm font-semibold text-blue-900">{answer.extracted_info}</p>
+                                  </div>
+                                )}
                               </div>
                               <div className={cn(
                                 "w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 shadow-lg transition-transform group-hover:scale-110",
@@ -558,7 +598,7 @@ export function ResultsPanel({ data, isHydrating = false }: { data: ResultData, 
           <section className="space-y-8">
             <div className="flex items-center justify-between px-1">
               <h4 className="text-xl font-[850] text-[#1F3A34] tracking-tight flex items-center gap-3">
-                <ScrollText className="w-5 h-5 text-[#1F3A3460]" /> Signal Extraction
+                <ScrollText className="w-5 h-5 text-[#1F3A3460]" /> Transcription
               </h4>
               <div className="flex items-center gap-5 text-[11px] font-[900] text-[#1F3A3460] uppercase tracking-widest">
                 <div className="flex items-center gap-1.5"><Users className="w-4 h-4" /> {safeData.transcript?.metrics?.turn_count || 0} Turns</div>
