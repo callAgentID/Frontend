@@ -787,21 +787,6 @@ export function ResultsPanel({ data, isHydrating = false }: { data: ResultData, 
             )}
           </div>
 
-          {/* Compliance Requirements */}
-          <div className="p-10 rounded-[2.5rem] bg-[#1F3A3408] border border-[#1f3a3410] space-y-6">
-            <div className="flex items-center gap-3">
-              <ShieldCheck className="w-6 h-6 text-green-600" />
-              <h4 className="text-xs font-black uppercase tracking-widest text-[#1F3A3450]">Compliance Rules</h4>
-            </div>
-            <div className="space-y-4">
-              {(data.prepared_script?.compliance_requirements || []).map((rule, i) => (
-                <div key={i} className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3 sm:p-4 rounded-xl bg-white border border-[#1f3a3408] shadow-sm">
-                  <span className="text-[12px] sm:text-[13px] font-extrabold text-[#1F3A34]">{rule.label}</span>
-                  <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-red-500/60 shrink-0 self-start sm:self-auto">{rule.severity} Risk</span>
-                </div>
-              ))}
-            </div>
-          </div>
         </div>
       </div>
     </div>
