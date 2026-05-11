@@ -690,31 +690,126 @@ export function ResultsPanel({ data, isHydrating = false }: { data: ResultData, 
           </div>
 
           {/* Script Framework Reference */}
-          <div className="p-10 rounded-[3rem] border border-[#1f3a3415] bg-white shadow-xl shadow-[#1f3a3405]">
-            <div className="flex items-center gap-3 mb-8">
+          <div className="p-10 rounded-[3rem] border border-[#1f3a3415] bg-white shadow-xl shadow-[#1f3a3405] space-y-8">
+            <div className="flex items-center gap-3">
               <FileSearch className="w-6 h-6 text-[#1F3A3460]" />
               <h4 className="text-xl font-[850] text-[#1F3A34] tracking-tight">Script Framework</h4>
             </div>
-            <div className="space-y-4">
-              {(data.prepared_script?.sections || []).map((section, index) => (
-                <div key={section.section_id} className="flex items-start sm:items-center gap-3 sm:gap-4 py-4 border-b border-[#1f3a3408] last:border-0 group">
-                  <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-[#1F3A3410] flex items-center justify-center shrink-0 group-hover:bg-[#1F3A34] transition-all">
-                    <CircleDot className="w-4 h-4 sm:w-5 sm:h-5 text-[#1F3A3480] group-hover:text-white transition-colors" />
+
+            {/* Sections */}
+            {data.prepared_script?.sections && data.prepared_script.sections.length > 0 && (
+              <div className="space-y-3">
+                <h5 className="text-xs font-black uppercase tracking-widest text-[#1F3A3460]">Sections</h5>
+                {data.prepared_script.sections.map((section, index) => (
+                  <div key={section.section_id} className="flex items-start gap-3 py-3 border-b border-[#1f3a3408] last:border-0 group">
+                    <div className="w-8 h-8 rounded-xl bg-[#1F3A3410] flex items-center justify-center shrink-0 group-hover:bg-[#1F3A34] transition-all">
+                      <CircleDot className="w-4 h-4 text-[#1F3A3480] group-hover:text-white transition-colors" />
+                    </div>
+                    <div className="flex-1 min-w-0 space-y-1">
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="text-sm font-extrabold text-[#1F3A34]">{section.title}</p>
+                        {section.required && (
+                          <span className="text-[9px] font-black uppercase tracking-wider text-yellow-600 bg-yellow-50 px-2 py-0.5 rounded-md border border-yellow-200 shrink-0">
+                            Required
+                          </span>
+                        )}
+                      </div>
+                      {section.anchors && section.anchors.length > 0 && (
+                        <div className="flex flex-wrap gap-1.5 mt-2">
+                          {section.anchors.map((anchor, idx) => (
+                            <span key={idx} className="text-[9px] font-semibold text-[#1F3A3470] bg-[#1F3A3405] px-2 py-0.5 rounded-md border border-[#1f3a3408]">
+                              "{anchor}"
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-[13px] sm:text-[14px] font-extrabold text-[#1F3A34] group-hover:text-[#1F3A34] transition-colors">{section.title}</p>
-                    <p className="text-[9px] sm:text-[10px] font-bold text-[#1F3A3440] uppercase tracking-wider mt-0.5">
-                      Section {index + 1}
-                    </p>
-                  </div>
-                  {section.required && (
-                    <span className="text-[8px] sm:text-[9px] font-black uppercase tracking-wider text-yellow-600 bg-yellow-50 px-1.5 py-0.5 sm:px-2 sm:py-1 rounded-md border border-yellow-200 shrink-0 whitespace-nowrap">
-                      Required
-                    </span>
-                  )}
+                ))}
+              </div>
+            )}
+
+            {/* Questions */}
+            {data.prepared_script?.questions && data.prepared_script.questions.length > 0 && (
+              <div className="space-y-3">
+                <h5 className="text-xs font-black uppercase tracking-widest text-[#1F3A3460]">Questions ({data.prepared_script.questions.length})</h5>
+                <div className="space-y-2 max-h-96 overflow-y-auto">
+                  {data.prepared_script.questions.map((question) => (
+                    <div key={question.question_id} className="p-3 rounded-xl bg-[#F4F8F9] border border-[#1f3a3408] space-y-2">
+                      <div className="flex items-start justify-between gap-2">
+                        <p className="text-xs font-bold text-[#1F3A34] leading-tight">{question.question_text}</p>
+                        {question.required && (
+                          <span className="text-[8px] font-black uppercase tracking-wider text-red-500 bg-red-50 px-1.5 py-0.5 rounded shrink-0">
+                            Required
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="text-[9px] font-bold text-[#1F3A3450] bg-white px-2 py-0.5 rounded-md border border-[#1f3a3408]">
+                          {question.response_type}
+                        </span>
+                        {question.expected_answers && question.expected_answers.length > 0 && (
+                          <div className="flex flex-wrap gap-1">
+                            {question.expected_answers.map((answer, idx) => (
+                              <span key={idx} className="text-[8px] font-semibold text-blue-700 bg-blue-50 px-1.5 py-0.5 rounded border border-blue-200">
+                                {answer}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                      {question.purpose && (
+                        <p className="text-[9px] font-medium text-[#1F3A3460] italic">{question.purpose}</p>
+                      )}
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
+              </div>
+            )}
+
+            {/* Products */}
+            {data.prepared_script?.products && data.prepared_script.products.length > 0 && (
+              <div className="space-y-3">
+                <h5 className="text-xs font-black uppercase tracking-widest text-[#1F3A3460]">Products ({data.prepared_script.products.length})</h5>
+                <div className="space-y-2 max-h-96 overflow-y-auto">
+                  {data.prepared_script.products.map((product) => (
+                    <div key={product.product_id} className="p-3 rounded-xl bg-purple-50 border border-purple-200 space-y-2">
+                      <p className="text-xs font-extrabold text-purple-900">{product.name}</p>
+                      <p className="text-[10px] font-medium text-purple-700 leading-relaxed">{product.description}</p>
+                      {product.conditions && (
+                        <p className="text-[9px] font-semibold text-purple-600 bg-white px-2 py-1 rounded border border-purple-200">
+                          <span className="font-black">Conditions:</span> {product.conditions}
+                        </p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Branching Points */}
+            {data.prepared_script?.branching_points && data.prepared_script.branching_points.length > 0 && (
+              <div className="space-y-3">
+                <h5 className="text-xs font-black uppercase tracking-widest text-[#1F3A3460]">Branching Logic ({data.prepared_script.branching_points.length})</h5>
+                <div className="space-y-2 max-h-96 overflow-y-auto">
+                  {data.prepared_script.branching_points.map((branch) => (
+                    <div key={branch.decision_id} className="p-3 rounded-xl bg-amber-50 border border-amber-200 space-y-2">
+                      <p className="text-xs font-bold text-amber-900">{branch.question}</p>
+                      <div className="space-y-1">
+                        <div className="flex items-start gap-2">
+                          <span className="text-[8px] font-black uppercase tracking-wider text-green-600 bg-green-100 px-1.5 py-0.5 rounded shrink-0">Yes</span>
+                          <p className="text-[9px] font-medium text-amber-800">{branch.yes_action}</p>
+                        </div>
+                        <div className="flex items-start gap-2">
+                          <span className="text-[8px] font-black uppercase tracking-wider text-red-600 bg-red-100 px-1.5 py-0.5 rounded shrink-0">No</span>
+                          <p className="text-[9px] font-medium text-amber-800">{branch.no_action}</p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Compliance Requirements */}
