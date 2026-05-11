@@ -68,6 +68,27 @@ interface ResultData {
       section_id: number;
       title: string;
       required: boolean;
+      anchors?: string[];
+    }>;
+    questions?: Array<{
+      question_id: string;
+      question_text: string;
+      response_type: string;
+      expected_answers?: string[];
+      required: boolean;
+      purpose?: string;
+    }>;
+    products?: Array<{
+      product_id: string;
+      name: string;
+      description: string;
+      conditions?: string;
+    }>;
+    branching_points?: Array<{
+      decision_id: string;
+      question: string;
+      yes_action: string;
+      no_action: string;
     }>;
     compliance_requirements: Array<{
       label: string;
@@ -174,7 +195,7 @@ export function ResultsPanel({ data, isHydrating = false }: { data: ResultData, 
   };
 
   return (
-    <div className="w-full max-w-6xl mx-auto space-y-16 animate-in fade-in slide-in-from-bottom-8 duration-1000 pb-20 mt-10 px-4 sm:px-6">
+    <div className="w-full space-y-16 animate-in fade-in slide-in-from-bottom-8 duration-1000 pb-20 mt-10 px-4 sm:px-6">
       {/* Header Pipeline State */}
       <div className="flex flex-col md:flex-row gap-8 items-start justify-between border-b border-[#1f3a3408] pb-12">
         <div className="flex-1">
@@ -360,52 +381,6 @@ export function ResultsPanel({ data, isHydrating = false }: { data: ResultData, 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 pt-8 items-start">
         {/* Left Column (8 cols): Audit & Transcript */}
         <div className="lg:col-span-8 space-y-20">
-
-          {/* Behavioral Alerts (IF PRESENT) */}
-          {hasRedFlags && data.analytics?.red_flags?.flags && (
-            <section className="space-y-6">
-              <div className="p-6 rounded-2xl bg-amber-50 border-2 border-amber-200">
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="p-2 rounded-xl bg-amber-100 text-amber-600">
-                    <ShieldAlert className="w-5 h-5" />
-                  </div>
-                  <h4 className="text-xl font-[850] text-[#1F3A34] tracking-tight">⚠️ Behavioral Alerts</h4>
-                </div>
-                <p className="text-sm font-semibold text-amber-800 leading-relaxed">
-                  These are behavioral observations and have <span className="font-black">minimal impact on the overall score</span> (10% weight). They serve as awareness indicators, not score penalties.
-                </p>
-              </div>
-              <div className="grid grid-cols-1 gap-4">
-                {safeData.analytics.red_flags.flags.map((flag, i) => {
-                  const sev = flag.severity?.toLowerCase();
-                  const sevStyles =
-                    sev === 'critical' || sev === 'high' ? 'bg-red-200/40 text-red-800' :
-                      sev === 'medium' ? 'bg-orange-200/40 text-orange-800' :
-                        'bg-blue-200/40 text-blue-800';
-
-                  return (
-                    <div key={i} className="flex items-start gap-3 sm:gap-4 p-4 sm:p-5 rounded-2xl bg-white border border-[#1f3a3408] shadow-sm hover:apple-shadow transition-all group">
-                      <div className={cn(
-                        "p-1.5 sm:p-2 rounded-xl mt-0.5 shrink-0",
-                        sev === 'critical' || sev === 'high' ? 'bg-red-50 text-red-400' :
-                          sev === 'medium' ? 'bg-orange-50 text-orange-400' :
-                            'bg-blue-50 text-blue-400'
-                      )}>
-                        <AlertCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-[11px] sm:text-[13px] font-black uppercase tracking-widest text-[#1F3A34]">{flag.label}</p>
-                        <p className="text-[11px] sm:text-xs font-semibold text-[#1F3A3460] mt-1 leading-relaxed">{flag.evidence}</p>
-                      </div>
-                      <span className={cn("px-1.5 sm:px-2 py-0.5 rounded-md text-[8px] sm:text-[9px] font-black uppercase tracking-wider shrink-0 whitespace-nowrap self-start", sevStyles)}>
-                        {flag.severity || 'Critical'}
-                      </span>
-                    </div>
-                  );
-                })}
-              </div>
-            </section>
-          )}
 
           {/* Audit Scoreboard */}
           <section className="space-y-10">

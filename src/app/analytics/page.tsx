@@ -21,7 +21,10 @@ import {
   ChevronsLeft,
   ChevronsRight,
   RefreshCw,
-  Eye
+  Eye,
+  Trash2,
+  Loader2,
+  AlertTriangle
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ResultsPanel } from "@/components/ResultsPanel";
@@ -46,6 +49,10 @@ function AnalyticsPageContent() {
 
   // Filter state
   const [filters, setFilters] = useState<CallFilterParams>({});
+
+  // Delete state
+  const [deleteConfirmCallId, setDeleteConfirmCallId] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Read call ID from URL on mount
   useEffect(() => {
@@ -152,6 +159,39 @@ function AnalyticsPageContent() {
     router.push('/analytics', { scroll: false });
   };
 
+  const handleDeleteCall = async (callId: string) => {
+    setIsDeleting(true);
+    try {
+      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://zk1354qz0k.execute-api.eu-central-1.amazonaws.com";
+      const response = await fetch(`${baseUrl}/api/v1/calls/${callId}`, {
+        method: "DELETE",
+        headers: {
+          "Accept": "*/*",
+          "ngrok-skip-browser-warning": "true"
+        }
+      });
+
+      if (response.ok) {
+        // Remove deleted call from list
+        setCalls(calls.filter(call => call.call_id !== callId));
+        setDeleteConfirmCallId(null);
+
+        // If we deleted the currently viewed call, close detail view
+        if (selectedCallId === callId) {
+          closeDetail();
+        }
+      } else {
+        console.error("Failed to delete call");
+        alert("Failed to delete call. Please try again.");
+      }
+    } catch (error) {
+      console.error("Error deleting call:", error);
+      alert("Error deleting call. Please try again.");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   // Fetch call detail when URL contains callId on mount or refresh
   useEffect(() => {
     if (selectedCallId && !detailedResult && !isDetailLoading) {
@@ -177,7 +217,7 @@ function AnalyticsPageContent() {
   if (selectedCallId) {
     return (
       <div className="p-4 sm:p-6 md:p-8 space-y-10 animate-in fade-in slide-in-from-right-8 duration-700">
-        <div className="flex items-center justify-between max-w-6xl mx-auto border-b border-[#1f3a3408] pb-8">
+        <div className="flex items-center justify-between border-b border-[#1f3a3408] pb-8">
           <button
             onClick={closeDetail}
             className="flex items-center gap-2 text-[#1F3A3450] hover:text-[#1F3A34] font-bold text-xs uppercase tracking-widest transition-all"
@@ -200,7 +240,7 @@ function AnalyticsPageContent() {
   }
 
   return (
-    <div className="p-4 sm:p-6 md:p-10 space-y-16 animate-in fade-in duration-1000 max-w-7xl mx-auto">
+    <div className="p-4 sm:p-6 md:p-10 space-y-16 animate-in fade-in duration-1000">
       {/* Header Intelligence Summary */}
       <div className="flex flex-col md:flex-row gap-8 items-start justify-between border-b border-[#1f3a3408] pb-12">
         <div>
@@ -277,20 +317,24 @@ function AnalyticsPageContent() {
               {calls.map((call) => (
                 <div
                   key={call.call_id}
-                  onClick={() => viewDetail(call.call_id)}
-                  className="flex items-center gap-6 p-8 hover:bg-[#1F3A3403] transition-all cursor-pointer group"
+                  className="flex items-center gap-6 p-8 hover:bg-[#1F3A3403] transition-all group"
                 >
                   {/* Score Indicator */}
-                  <div className={cn(
-                    "w-12 h-12 rounded-2xl flex items-center justify-center font-black text-sm shrink-0 shadow-lg",
-                    (call.overall_score || 0) >= 80 ? "bg-green-500 text-white shadow-green-500/20" :
-                      (call.overall_score || 0) >= 50 ? "bg-[#1F3A3415] text-[#1F3A34]" : "bg-red-500 text-white shadow-red-500/20"
-                  )}>
+                  <div
+                    onClick={() => viewDetail(call.call_id)}
+                    className={cn(
+                      "w-12 h-12 rounded-2xl flex items-center justify-center font-black text-sm shrink-0 shadow-lg cursor-pointer",
+                      (call.overall_score || 0) >= 80 ? "bg-green-500 text-white shadow-green-500/20" :
+                        (call.overall_score || 0) >= 50 ? "bg-[#1F3A3415] text-[#1F3A34]" : "bg-red-500 text-white shadow-red-500/20"
+                    )}>
                     {(call.overall_score || 0).toFixed(0)}
                   </div>
 
                   {/* Main Info */}
-                  <div className="flex-1 min-w-0">
+                  <div
+                    onClick={() => viewDetail(call.call_id)}
+                    className="flex-1 min-w-0 cursor-pointer"
+                  >
                     <div className="flex items-center gap-3 mb-1.5">
                       <h5 className="text-[17px] font-extrabold text-[#1F3A34] tracking-tight truncate group-hover:text-[#1F3A34] transition-colors">
                         {call.file_name || `Call #${call.call_id.split('-')[0]}`}
@@ -331,12 +375,28 @@ function AnalyticsPageContent() {
                   </div>
 
                   {/* Stats Indicators */}
-                  <div className="flex items-center gap-10 pr-6">
-                    <div className="text-right hidden md:block">
+                  <div className="flex items-center gap-4 pr-6">
+                    <div
+                      onClick={() => viewDetail(call.call_id)}
+                      className="text-right hidden md:block cursor-pointer"
+                    >
                       <p className="text-[11px] font-black text-[#1F3A3440] uppercase tracking-widest mb-1 leading-none">Silence Index</p>
                       <p className="text-[15px] font-[850] text-[#1F3A34] tracking-tight">{((call.silence_ratio || 0) * 100).toFixed(0)}%</p>
                     </div>
-                    <div className="w-11 h-11 rounded-2xl bg-[#1F3A3408] text-[#1F3A3440] flex items-center justify-center group-hover:bg-[#1F3A34] group-hover:text-white transition-all group-hover:scale-110 shadow-sm">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setDeleteConfirmCallId(call.call_id);
+                      }}
+                      className="w-10 h-10 rounded-xl bg-red-50 text-red-500 hover:bg-red-500 hover:text-white flex items-center justify-center transition-all opacity-0 group-hover:opacity-100"
+                      title="Delete call"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                    <div
+                      onClick={() => viewDetail(call.call_id)}
+                      className="w-11 h-11 rounded-2xl bg-[#1F3A3408] text-[#1F3A3440] flex items-center justify-center group-hover:bg-[#1F3A34] group-hover:text-white transition-all group-hover:scale-110 shadow-sm cursor-pointer"
+                    >
                       <ArrowUpRight className="w-5 h-5" />
                     </div>
                   </div>
@@ -485,6 +545,60 @@ function AnalyticsPageContent() {
           </div>
         )}
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {deleteConfirmCallId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white w-full max-w-md rounded-3xl shadow-2xl border border-red-200 overflow-hidden animate-in zoom-in-95 duration-200">
+            <div className="p-8 border-b border-red-100 bg-red-50 flex items-center gap-4">
+              <div className="w-12 h-12 rounded-2xl bg-red-500 flex items-center justify-center text-white">
+                <AlertTriangle className="w-6 h-6" />
+              </div>
+              <div>
+                <h3 className="text-xl font-[850] text-red-900 tracking-tight">Delete Call</h3>
+                <p className="text-sm font-semibold text-red-600 mt-0.5">This action cannot be undone</p>
+              </div>
+            </div>
+
+            <div className="p-8 space-y-6">
+              <p className="text-sm font-medium text-gray-700 leading-relaxed">
+                Are you sure you want to delete this call and all its associated data (analytics, red flags, artifacts, jobs, and embeddings)?
+              </p>
+              <div className="p-4 rounded-xl bg-gray-50 border border-gray-200">
+                <p className="text-xs font-bold text-gray-600 uppercase tracking-wider mb-1">Call ID</p>
+                <p className="text-sm font-mono font-semibold text-gray-900 break-all">{deleteConfirmCallId}</p>
+              </div>
+
+              <div className="flex gap-3 pt-4">
+                <button
+                  onClick={() => setDeleteConfirmCallId(null)}
+                  disabled={isDeleting}
+                  className="flex-1 h-12 bg-gray-100 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed text-gray-700 rounded-xl font-bold text-sm uppercase tracking-wider transition-all"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => handleDeleteCall(deleteConfirmCallId)}
+                  disabled={isDeleting}
+                  className="flex-1 h-12 bg-red-500 hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-xl font-bold text-sm uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-lg shadow-red-500/20"
+                >
+                  {isDeleting ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Deleting...
+                    </>
+                  ) : (
+                    <>
+                      <Trash2 className="w-4 h-4" />
+                      Delete
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
