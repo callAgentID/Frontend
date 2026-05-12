@@ -146,16 +146,16 @@ export function ResultsPanel({ data, isHydrating = false }: { data: ResultData, 
   const [reviewStatus, setReviewStatus] = useState(data?.review_status || 'unreviewed');
   const [playingSegment, setPlayingSegment] = useState<string | null>(null);
 
-  // Intervention state
-  const [editingQuestion, setEditingQuestion] = useState<{ template_id: string; question_id: string } | null>(null);
-  const [isRecalculating, setIsRecalculating] = useState(false);
-  const [interventionModal, setInterventionModal] = useState<{
+  // Batch intervention state
+  const [pendingEdits, setPendingEdits] = useState<Map<string, {
     template_id: string;
     question_id: string;
-    current_answer: string;
-    current_score: number;
-    current_reasoning: string;
-  } | null>(null);
+    corrected_answer: string;
+    corrected_score: number;
+    corrected_reasoning: string;
+  }>>(new Map());
+  const [isRecalculating, setIsRecalculating] = useState(false);
+  const [editingQuestionId, setEditingQuestionId] = useState<string | null>(null);
 
   if (!data && !isHydrating) return null;
 
@@ -208,47 +208,68 @@ export function ResultsPanel({ data, isHydrating = false }: { data: ResultData, 
     }
   };
 
-  const handleIntervention = async (payload: {
+  const handleSubmitAllEdits = async () => {
+    if (pendingEdits.size === 0 || !safeData.call_id || safeData.call_id === 'pending...') return;
+
+    setIsRecalculating(true);
+
+    try {
+      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://zk1354qz0k.execute-api.eu-central-1.amazonaws.com";
+
+      // Submit each intervention sequentially
+      for (const [, payload] of pendingEdits) {
+        const response = await fetch(`${baseUrl}/api/v1/calls/${safeData.call_id}/interventions`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+            "ngrok-skip-browser-warning": "true",
+          },
+          body: JSON.stringify(payload),
+        });
+
+        if (!response.ok) {
+          console.error("Failed to record intervention for", payload.question_id);
+          alert(`Failed to record intervention for ${payload.question_id}. Please try again.`);
+          setIsRecalculating(false);
+          return;
+        }
+      }
+
+      // All interventions submitted successfully
+      setPendingEdits(new Map());
+
+      // Start polling for completion
+      pollForCompletion();
+    } catch (error) {
+      console.error("Error recording interventions:", error);
+      alert("Error recording interventions. Please try again.");
+      setIsRecalculating(false);
+    }
+  };
+
+  const addPendingEdit = (edit: {
     template_id: string;
     question_id: string;
     corrected_answer: string;
     corrected_score: number;
     corrected_reasoning: string;
-    corrected_evidence?: any[];
   }) => {
-    if (!safeData.call_id || safeData.call_id === 'pending...') return;
+    const key = `${edit.template_id}_${edit.question_id}`;
+    setPendingEdits(new Map(pendingEdits.set(key, edit)));
+    setEditingQuestionId(null);
+  };
 
-    setIsRecalculating(true);
-    setInterventionModal(null);
+  const removePendingEdit = (template_id: string, question_id: string) => {
+    const key = `${template_id}_${question_id}`;
+    const newEdits = new Map(pendingEdits);
+    newEdits.delete(key);
+    setPendingEdits(newEdits);
+  };
 
-    try {
-      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://zk1354qz0k.execute-api.eu-central-1.amazonaws.com";
-      const response = await fetch(`${baseUrl}/api/v1/calls/${safeData.call_id}/interventions`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Accept": "application/json",
-          "ngrok-skip-browser-warning": "true",
-        },
-        body: JSON.stringify(payload),
-      });
-
-      if (response.ok) {
-        const result = await response.json();
-        console.log("Intervention recorded:", result);
-
-        // Start polling for completion
-        pollForCompletion();
-      } else {
-        console.error("Failed to record intervention");
-        alert("Failed to record intervention. Please try again.");
-        setIsRecalculating(false);
-      }
-    } catch (error) {
-      console.error("Error recording intervention:", error);
-      alert("Error recording intervention. Please try again.");
-      setIsRecalculating(false);
-    }
+  const getPendingEdit = (template_id: string, question_id: string) => {
+    const key = `${template_id}_${question_id}`;
+    return pendingEdits.get(key);
   };
 
   const pollForCompletion = async () => {
@@ -529,20 +550,21 @@ export function ResultsPanel({ data, isHydrating = false }: { data: ResultData, 
                                     <ChevronRight className="w-3 h-3 text-[#1F3A3420]" />
                                   </div>
                                   {!isRecalculating && !answer.skipped && (
-                                    <button
-                                      onClick={() => setInterventionModal({
-                                        template_id: templateResult.template_id,
-                                        question_id: answer.question_id,
-                                        current_answer: answer.answer || '',
-                                        current_score: answer.score || 0,
-                                        current_reasoning: answer.reasoning_summary || ''
-                                      })}
-                                      className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg border border-blue-200 transition-all opacity-0 group-hover:opacity-100"
-                                      title="Edit answer"
-                                    >
-                                      <Edit className="w-3 h-3" />
-                                      Edit
-                                    </button>
+                                    <div className="flex items-center gap-2">
+                                      {getPendingEdit(templateResult.template_id, answer.question_id) && (
+                                        <span className="px-2 py-1 text-[9px] font-black uppercase tracking-wider bg-orange-100 text-orange-700 rounded-md border border-orange-200">
+                                          Edited
+                                        </span>
+                                      )}
+                                      <button
+                                        onClick={() => setEditingQuestionId(`${templateResult.template_id}_${answer.question_id}`)}
+                                        className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg border border-blue-200 transition-all opacity-0 group-hover:opacity-100"
+                                        title="Edit answer"
+                                      >
+                                        <Edit className="w-3 h-3" />
+                                        Edit
+                                      </button>
+                                    </div>
                                   )}
                                 </div>
                                 {questionText && (
@@ -903,6 +925,42 @@ export function ResultsPanel({ data, isHydrating = false }: { data: ResultData, 
         </div>
       </div>
 
+      {/* Floating Submit Button */}
+      {pendingEdits.size > 0 && !isRecalculating && (
+        <div className="fixed bottom-8 right-8 z-40 animate-in slide-in-from-bottom-4 duration-300">
+          <div className="bg-white rounded-2xl shadow-2xl border border-[#1f3a3410] p-4 space-y-3">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-orange-100 flex items-center justify-center">
+                <span className="text-lg font-black text-orange-700">{pendingEdits.size}</span>
+              </div>
+              <div>
+                <p className="text-xs font-black uppercase tracking-wider text-[#1F3A3460]">
+                  Pending Edits
+                </p>
+                <p className="text-[10px] font-medium text-[#1F3A3440]">
+                  Ready to submit
+                </p>
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setPendingEdits(new Map())}
+                className="flex-1 h-10 px-4 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-bold text-xs uppercase tracking-wider transition-all"
+              >
+                Clear All
+              </button>
+              <button
+                onClick={handleSubmitAllEdits}
+                className="flex-1 h-10 px-4 bg-[#1F3A34] hover:bg-[#1F3A34]/90 text-white rounded-xl font-bold text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-lg shadow-[#1F3A3420]"
+              >
+                <Save className="w-3 h-3" />
+                Submit All
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Recalculating Overlay */}
       {isRecalculating && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
@@ -910,20 +968,42 @@ export function ResultsPanel({ data, isHydrating = false }: { data: ResultData, 
             <Loader2 className="w-12 h-12 text-[#1F3A34] animate-spin mx-auto" />
             <h3 className="text-xl font-[850] text-[#1F3A34]">Recalculating...</h3>
             <p className="text-sm font-medium text-[#1F3A3470]">
-              Updating scores and regenerating summary. This may take a few moments.
+              Submitting {pendingEdits.size} change{pendingEdits.size !== 1 ? 's' : ''} and regenerating scores. This may take a few moments.
             </p>
           </div>
         </div>
       )}
 
       {/* Intervention Modal */}
-      {interventionModal && (
-        <InterventionModal
-          modal={interventionModal}
-          onClose={() => setInterventionModal(null)}
-          onSubmit={handleIntervention}
-        />
-      )}
+      {editingQuestionId && (() => {
+        const [templateId, questionId] = editingQuestionId.split('_');
+        // Find the answer data
+        const templateResult = (safeData.qa_result?.results || []).find((r: any) => r.template_id === templateId);
+        const answer = templateResult?.answers?.find((a: any) => a.question_id === questionId);
+
+        if (!answer) return null;
+
+        const existingEdit = getPendingEdit(templateId, questionId);
+
+        return (
+          <InterventionModal
+            modal={{
+              template_id: templateId,
+              question_id: questionId,
+              current_answer: existingEdit?.corrected_answer || answer.answer || '',
+              current_score: existingEdit?.corrected_score || answer.score || 0,
+              current_reasoning: existingEdit?.corrected_reasoning || answer.reasoning_summary || ''
+            }}
+            onClose={() => setEditingQuestionId(null)}
+            onSubmit={(edit) => addPendingEdit(edit)}
+            existingEdit={existingEdit}
+            onRemove={() => {
+              removePendingEdit(templateId, questionId);
+              setEditingQuestionId(null);
+            }}
+          />
+        );
+      })()}
     </div>
   );
 }
@@ -944,12 +1024,20 @@ interface InterventionModalProps {
     corrected_score: number;
     corrected_reasoning: string;
   }) => void;
+  existingEdit?: {
+    template_id: string;
+    question_id: string;
+    corrected_answer: string;
+    corrected_score: number;
+    corrected_reasoning: string;
+  };
+  onRemove?: () => void;
 }
 
-function InterventionModal({ modal, onClose, onSubmit }: InterventionModalProps) {
-  const [correctedAnswer, setCorrectedAnswer] = useState(modal.current_answer);
-  const [correctedScore, setCorrectedScore] = useState(modal.current_score);
-  const [correctedReasoning, setCorrectedReasoning] = useState('');
+function InterventionModal({ modal, onClose, onSubmit, existingEdit, onRemove }: InterventionModalProps) {
+  const [correctedAnswer, setCorrectedAnswer] = useState(existingEdit?.corrected_answer || modal.current_answer);
+  const [correctedScore, setCorrectedScore] = useState(existingEdit?.corrected_score || modal.current_score);
+  const [correctedReasoning, setCorrectedReasoning] = useState(existingEdit?.corrected_reasoning || '');
 
   const handleSubmit = () => {
     if (!correctedReasoning.trim()) {
@@ -1043,6 +1131,14 @@ function InterventionModal({ modal, onClose, onSubmit }: InterventionModalProps)
 
           {/* Actions */}
           <div className="flex gap-3 pt-4">
+            {existingEdit && onRemove && (
+              <button
+                onClick={onRemove}
+                className="h-12 px-4 bg-red-50 hover:bg-red-100 text-red-600 rounded-xl font-bold text-sm uppercase tracking-wider transition-all border border-red-200"
+              >
+                Remove
+              </button>
+            )}
             <button
               onClick={onClose}
               className="flex-1 h-12 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-bold text-sm uppercase tracking-wider transition-all"
@@ -1054,7 +1150,7 @@ function InterventionModal({ modal, onClose, onSubmit }: InterventionModalProps)
               className="flex-1 h-12 bg-[#1F3A34] hover:bg-[#1F3A34]/90 text-white rounded-xl font-bold text-sm uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-lg shadow-[#1F3A3420]"
             >
               <Save className="w-4 h-4" />
-              Save & Recalculate
+              {existingEdit ? 'Update' : 'Add to Queue'}
             </button>
           </div>
         </div>
