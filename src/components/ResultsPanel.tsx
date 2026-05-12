@@ -26,7 +26,10 @@ import {
   EyeOff,
   Loader2,
   CircleDot,
-  MinusCircle
+  MinusCircle,
+  Edit,
+  Save,
+  X as XIcon
 } from "lucide-react";
 import { cn } from "../lib/utils";
 import { ReactElement, JSXElementConstructor, ReactNode, ReactPortal, Key, useState } from "react";
@@ -143,6 +146,17 @@ export function ResultsPanel({ data, isHydrating = false }: { data: ResultData, 
   const [reviewStatus, setReviewStatus] = useState(data?.review_status || 'unreviewed');
   const [playingSegment, setPlayingSegment] = useState<string | null>(null);
 
+  // Intervention state
+  const [editingQuestion, setEditingQuestion] = useState<{ template_id: string; question_id: string } | null>(null);
+  const [isRecalculating, setIsRecalculating] = useState(false);
+  const [interventionModal, setInterventionModal] = useState<{
+    template_id: string;
+    question_id: string;
+    current_answer: string;
+    current_score: number;
+    current_reasoning: string;
+  } | null>(null);
+
   if (!data && !isHydrating) return null;
 
   // Use dummy data for skeletons if data is null during initial hydration
@@ -192,6 +206,87 @@ export function ResultsPanel({ data, isHydrating = false }: { data: ResultData, 
     } finally {
       setIsMarkingReviewed(false);
     }
+  };
+
+  const handleIntervention = async (payload: {
+    template_id: string;
+    question_id: string;
+    corrected_answer: string;
+    corrected_score: number;
+    corrected_reasoning: string;
+    corrected_evidence?: any[];
+  }) => {
+    if (!safeData.call_id || safeData.call_id === 'pending...') return;
+
+    setIsRecalculating(true);
+    setInterventionModal(null);
+
+    try {
+      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://zk1354qz0k.execute-api.eu-central-1.amazonaws.com";
+      const response = await fetch(`${baseUrl}/api/v1/calls/${safeData.call_id}/interventions`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Accept": "application/json",
+          "ngrok-skip-browser-warning": "true",
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        console.log("Intervention recorded:", result);
+
+        // Start polling for completion
+        pollForCompletion();
+      } else {
+        console.error("Failed to record intervention");
+        alert("Failed to record intervention. Please try again.");
+        setIsRecalculating(false);
+      }
+    } catch (error) {
+      console.error("Error recording intervention:", error);
+      alert("Error recording intervention. Please try again.");
+      setIsRecalculating(false);
+    }
+  };
+
+  const pollForCompletion = async () => {
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://zk1354qz0k.execute-api.eu-central-1.amazonaws.com";
+    const maxAttempts = 60; // Poll for max 5 minutes (60 * 5 seconds)
+    let attempts = 0;
+
+    const poll = async () => {
+      try {
+        const response = await fetch(`${baseUrl}/api/v1/calls/${safeData.call_id}`, {
+          headers: { "ngrok-skip-browser-warning": "true" }
+        });
+        const updatedData = await response.json();
+
+        if (updatedData.status === 'ready') {
+          // Recalculation complete - reload the page
+          window.location.reload();
+        } else if (attempts < maxAttempts) {
+          attempts++;
+          setTimeout(poll, 5000); // Poll every 5 seconds
+        } else {
+          // Timeout - stop polling
+          console.error("Polling timeout - recalculation taking too long");
+          alert("Recalculation is taking longer than expected. Please refresh the page manually.");
+          setIsRecalculating(false);
+        }
+      } catch (error) {
+        console.error("Error polling for completion:", error);
+        if (attempts < maxAttempts) {
+          attempts++;
+          setTimeout(poll, 5000);
+        } else {
+          setIsRecalculating(false);
+        }
+      }
+    };
+
+    poll();
   };
 
   return (
@@ -427,10 +522,28 @@ export function ResultsPanel({ data, isHydrating = false }: { data: ResultData, 
                         <div key={idx} className="group bg-white rounded-[2.5rem] border border-[#1f3a3410] shadow-2xl shadow-[#1f3a3405] overflow-hidden hover:border-[#1f3a3420] transition-all">
                           <div className="p-10 space-y-6">
                             <div className="flex justify-between items-start gap-8">
-                              <div className="space-y-4">
-                                <div className="flex items-center gap-2">
-                                  <span className="text-[11px] font-black text-[#1F3A3440] uppercase tracking-[0.2em]">{answer.question_id}</span>
-                                  <ChevronRight className="w-3 h-3 text-[#1F3A3420]" />
+                              <div className="flex-1 space-y-4">
+                                <div className="flex items-center justify-between gap-2">
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-[11px] font-black text-[#1F3A3440] uppercase tracking-[0.2em]">{answer.question_id}</span>
+                                    <ChevronRight className="w-3 h-3 text-[#1F3A3420]" />
+                                  </div>
+                                  {!isRecalculating && !answer.skipped && (
+                                    <button
+                                      onClick={() => setInterventionModal({
+                                        template_id: templateResult.template_id,
+                                        question_id: answer.question_id,
+                                        current_answer: answer.answer || '',
+                                        current_score: answer.score || 0,
+                                        current_reasoning: answer.reasoning_summary || ''
+                                      })}
+                                      className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg border border-blue-200 transition-all opacity-0 group-hover:opacity-100"
+                                      title="Edit answer"
+                                    >
+                                      <Edit className="w-3 h-3" />
+                                      Edit
+                                    </button>
+                                  )}
                                 </div>
                                 {questionText && (
                                   <p className="text-sm font-bold text-purple-600 bg-purple-50 px-3 py-2 rounded-lg border border-purple-200">
@@ -787,6 +900,163 @@ export function ResultsPanel({ data, isHydrating = false }: { data: ResultData, 
             )}
           </div>
 
+        </div>
+      </div>
+
+      {/* Recalculating Overlay */}
+      {isRecalculating && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <div className="bg-white rounded-3xl p-8 shadow-2xl max-w-md text-center space-y-4">
+            <Loader2 className="w-12 h-12 text-[#1F3A34] animate-spin mx-auto" />
+            <h3 className="text-xl font-[850] text-[#1F3A34]">Recalculating...</h3>
+            <p className="text-sm font-medium text-[#1F3A3470]">
+              Updating scores and regenerating summary. This may take a few moments.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Intervention Modal */}
+      {interventionModal && (
+        <InterventionModal
+          modal={interventionModal}
+          onClose={() => setInterventionModal(null)}
+          onSubmit={handleIntervention}
+        />
+      )}
+    </div>
+  );
+}
+
+interface InterventionModalProps {
+  modal: {
+    template_id: string;
+    question_id: string;
+    current_answer: string;
+    current_score: number;
+    current_reasoning: string;
+  };
+  onClose: () => void;
+  onSubmit: (payload: {
+    template_id: string;
+    question_id: string;
+    corrected_answer: string;
+    corrected_score: number;
+    corrected_reasoning: string;
+  }) => void;
+}
+
+function InterventionModal({ modal, onClose, onSubmit }: InterventionModalProps) {
+  const [correctedAnswer, setCorrectedAnswer] = useState(modal.current_answer);
+  const [correctedScore, setCorrectedScore] = useState(modal.current_score);
+  const [correctedReasoning, setCorrectedReasoning] = useState('');
+
+  const handleSubmit = () => {
+    if (!correctedReasoning.trim()) {
+      alert('Please provide a reason for this correction.');
+      return;
+    }
+
+    onSubmit({
+      template_id: modal.template_id,
+      question_id: modal.question_id,
+      corrected_answer: correctedAnswer,
+      corrected_score: correctedScore,
+      corrected_reasoning: correctedReasoning,
+    });
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
+      <div className="bg-white w-full max-w-2xl rounded-3xl shadow-2xl border border-[#1f3a3410] overflow-hidden animate-in zoom-in-95 duration-200">
+        <div className="p-8 border-b border-[#1f3a3408] bg-[#1F3A3402] flex items-center justify-between">
+          <div>
+            <h3 className="text-2xl font-[850] text-[#1F3A34] tracking-tight">Edit Answer</h3>
+            <p className="text-sm font-semibold text-[#1F3A3440] mt-1">Manual correction for {modal.question_id}</p>
+          </div>
+          <button
+            onClick={onClose}
+            className="w-10 h-10 rounded-xl hover:bg-[#1F3A3410] flex items-center justify-center transition-all text-[#1F3A3420]"
+          >
+            <XIcon className="w-5 h-5" />
+          </button>
+        </div>
+
+        <div className="p-8 space-y-6">
+          {/* Current Answer */}
+          <div className="p-4 rounded-xl bg-gray-50 border border-gray-200 space-y-2">
+            <p className="text-xs font-black uppercase tracking-wider text-gray-600">Current Answer</p>
+            <p className="text-sm font-bold text-gray-900">{modal.current_answer}</p>
+            <p className="text-xs font-medium text-gray-600">{modal.current_reasoning}</p>
+            <p className="text-xs font-bold text-gray-700">Score: {modal.current_score}</p>
+          </div>
+
+          {/* Corrected Answer */}
+          <div className="space-y-2">
+            <label className="text-xs font-black uppercase tracking-wider text-[#1F3A3440]">
+              Corrected Answer
+            </label>
+            <select
+              value={correctedAnswer}
+              onChange={(e) => {
+                const val = e.target.value;
+                setCorrectedAnswer(val);
+                // Auto-set score based on answer
+                if (val.toLowerCase() === 'yes') setCorrectedScore(100);
+                else if (val.toLowerCase() === 'no') setCorrectedScore(0);
+              }}
+              className="w-full h-12 px-4 bg-[#1F3A3403] border border-[#1f3a3410] rounded-xl text-[#1F3A34] font-semibold outline-none focus:border-[#1F3A34] transition-all"
+            >
+              <option value="Yes">Yes</option>
+              <option value="No">No</option>
+            </select>
+          </div>
+
+          {/* Corrected Score */}
+          <div className="space-y-2">
+            <label className="text-xs font-black uppercase tracking-wider text-[#1F3A3440]">
+              Corrected Score (0-100)
+            </label>
+            <input
+              type="number"
+              min="0"
+              max="100"
+              value={correctedScore}
+              onChange={(e) => setCorrectedScore(Number(e.target.value))}
+              className="w-full h-12 px-4 bg-[#1F3A3403] border border-[#1f3a3410] rounded-xl text-[#1F3A34] font-semibold outline-none focus:border-[#1F3A34] transition-all"
+            />
+          </div>
+
+          {/* Reasoning */}
+          <div className="space-y-2">
+            <label className="text-xs font-black uppercase tracking-wider text-[#1F3A3440]">
+              Reason for Correction *
+            </label>
+            <textarea
+              value={correctedReasoning}
+              onChange={(e) => setCorrectedReasoning(e.target.value)}
+              placeholder="Explain why you're correcting this answer..."
+              rows={4}
+              className="w-full px-4 py-3 bg-[#1F3A3403] border border-[#1f3a3410] rounded-xl text-[#1F3A34] font-medium outline-none focus:border-[#1F3A34] transition-all resize-none"
+            />
+          </div>
+
+          {/* Actions */}
+          <div className="flex gap-3 pt-4">
+            <button
+              onClick={onClose}
+              className="flex-1 h-12 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-bold text-sm uppercase tracking-wider transition-all"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleSubmit}
+              className="flex-1 h-12 bg-[#1F3A34] hover:bg-[#1F3A34]/90 text-white rounded-xl font-bold text-sm uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-lg shadow-[#1F3A3420]"
+            >
+              <Save className="w-4 h-4" />
+              Save & Recalculate
+            </button>
+          </div>
         </div>
       </div>
     </div>
