@@ -153,6 +153,7 @@ export function ResultsPanel({ data, isHydrating = false }: { data: ResultData, 
     corrected_answer: string;
     corrected_score: number;
     corrected_reasoning: string;
+    corrected_evidence?: any[];
   }>>(new Map());
   const [isRecalculating, setIsRecalculating] = useState(false);
   const [editingQuestionId, setEditingQuestionId] = useState<string | null>(null);
@@ -216,27 +217,38 @@ export function ResultsPanel({ data, isHydrating = false }: { data: ResultData, 
     try {
       const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://zk1354qz0k.execute-api.eu-central-1.amazonaws.com";
 
-      // Submit each intervention sequentially
-      for (const [, payload] of pendingEdits) {
-        const response = await fetch(`${baseUrl}/api/v1/calls/${safeData.call_id}/interventions`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Accept": "application/json",
-            "ngrok-skip-browser-warning": "true",
-          },
-          body: JSON.stringify(payload),
-        });
+      // Convert pending edits Map to interventions array
+      const interventions = Array.from(pendingEdits.values()).map(edit => ({
+        template_id: edit.template_id,
+        question_id: edit.question_id,
+        corrected_answer: edit.corrected_answer,
+        corrected_score: edit.corrected_score,
+        corrected_reasoning: edit.corrected_reasoning,
+        ...(edit.corrected_evidence && { corrected_evidence: edit.corrected_evidence })
+      }));
 
-        if (!response.ok) {
-          console.error("Failed to record intervention for", payload.question_id);
-          alert(`Failed to record intervention for ${payload.question_id}. Please try again.`);
-          setIsRecalculating(false);
-          return;
-        }
+      // Submit all interventions in a single request
+      const response = await fetch(`${baseUrl}/api/v1/calls/${safeData.call_id}/interventions`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Accept": "application/json",
+          "ngrok-skip-browser-warning": "true",
+        },
+        body: JSON.stringify({ interventions }),
+      });
+
+      if (!response.ok) {
+        console.error("Failed to record interventions");
+        alert("Failed to record interventions. Please try again.");
+        setIsRecalculating(false);
+        return;
       }
 
-      // All interventions submitted successfully
+      const result = await response.json();
+      console.log("Interventions recorded:", result);
+
+      // Clear pending edits
       setPendingEdits(new Map());
 
       // Start polling for completion
@@ -254,6 +266,7 @@ export function ResultsPanel({ data, isHydrating = false }: { data: ResultData, 
     corrected_answer: string;
     corrected_score: number;
     corrected_reasoning: string;
+    corrected_evidence?: any[];
   }) => {
     const key = `${edit.template_id}_${edit.question_id}`;
     setPendingEdits(new Map(pendingEdits.set(key, edit)));
@@ -267,7 +280,14 @@ export function ResultsPanel({ data, isHydrating = false }: { data: ResultData, 
     setPendingEdits(newEdits);
   };
 
-  const getPendingEdit = (template_id: string, question_id: string) => {
+  const getPendingEdit = (template_id: string, question_id: string): {
+    template_id: string;
+    question_id: string;
+    corrected_answer: string;
+    corrected_score: number;
+    corrected_reasoning: string;
+    corrected_evidence?: any[];
+  } | undefined => {
     const key = `${template_id}_${question_id}`;
     return pendingEdits.get(key);
   };
@@ -1023,6 +1043,7 @@ interface InterventionModalProps {
     corrected_answer: string;
     corrected_score: number;
     corrected_reasoning: string;
+    corrected_evidence?: any[];
   }) => void;
   existingEdit?: {
     template_id: string;
@@ -1030,6 +1051,7 @@ interface InterventionModalProps {
     corrected_answer: string;
     corrected_score: number;
     corrected_reasoning: string;
+    corrected_evidence?: any[];
   };
   onRemove?: () => void;
 }
