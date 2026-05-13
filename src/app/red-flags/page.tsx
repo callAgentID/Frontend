@@ -24,7 +24,11 @@ import {
   Play,
   Pause,
   Clock,
-  Shield
+  Shield,
+  Edit,
+  Save,
+  X as XIcon,
+  History
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { RedFlagItemSkeleton, DetailViewSkeleton } from "@/components/Skeleton";
@@ -53,6 +57,15 @@ interface RedFlagDetail {
   created_at: string;
   reviewed_at?: string;
   reviewed_by?: string;
+  human_interventions?: Array<{
+    timestamp: string;
+    question_id: string;
+    template_id: string;
+    corrected_score: number;
+    corrected_answer: string;
+    corrected_evidence: any;
+    corrected_reasoning: string;
+  }>;
 }
 
 interface Stats {
@@ -77,6 +90,19 @@ function RedFlagsPageContent() {
   const [detailData, setDetailData] = useState<RedFlagDetail | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
   const [playingSegment, setPlayingSegment] = useState<string | null>(null);
+
+  // Batch intervention state
+  const [pendingEdits, setPendingEdits] = useState<Map<string, {
+    template_id: string;
+    question_id: string;
+    corrected_answer: string;
+    corrected_score: number;
+    corrected_reasoning: string;
+    corrected_evidence?: any[];
+  }>>(new Map());
+  const [isRecalculating, setIsRecalculating] = useState(false);
+  const [editingQuestionId, setEditingQuestionId] = useState<string | null>(null);
+  const [viewHistoryFor, setViewHistoryFor] = useState<{ template_id: string; question_id: string } | null>(null);
 
   // Filter state
   const [filterCritical, setFilterCritical] = useState<boolean | null>(null);
@@ -191,7 +217,134 @@ function RedFlagsPageContent() {
     setSelectedCallId(null);
     setDetailData(null);
     setPlayingSegment(null);
+    setPendingEdits(new Map());
+    setEditingQuestionId(null);
+    setViewHistoryFor(null);
     router.push('/red-flags', { scroll: false });
+  };
+
+  const handleSubmitAllEdits = async () => {
+    if (pendingEdits.size === 0 || !selectedCallId) return;
+
+    setIsRecalculating(true);
+
+    try {
+      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://zk1354qz0k.execute-api.eu-central-1.amazonaws.com";
+
+      // Convert pending edits Map to interventions array
+      const interventions = Array.from(pendingEdits.values()).map(edit => ({
+        template_id: edit.template_id,
+        question_id: edit.question_id,
+        corrected_answer: edit.corrected_answer,
+        corrected_score: edit.corrected_score,
+        corrected_reasoning: edit.corrected_reasoning,
+        ...(edit.corrected_evidence && { corrected_evidence: edit.corrected_evidence })
+      }));
+
+      // Submit all interventions in a single request
+      const response = await fetch(`${baseUrl}/api/v1/calls/${selectedCallId}/interventions`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Accept": "application/json",
+          "ngrok-skip-browser-warning": "true",
+        },
+        body: JSON.stringify({ interventions }),
+      });
+
+      if (!response.ok) {
+        console.error("Failed to record interventions");
+        alert("Failed to record interventions. Please try again.");
+        setIsRecalculating(false);
+        return;
+      }
+
+      const result = await response.json();
+      console.log("Interventions recorded:", result);
+
+      // Clear pending edits
+      setPendingEdits(new Map());
+
+      // Start polling for completion
+      pollForCompletion();
+    } catch (error) {
+      console.error("Error recording interventions:", error);
+      alert("Error recording interventions. Please try again.");
+      setIsRecalculating(false);
+    }
+  };
+
+  const addPendingEdit = (edit: {
+    template_id: string;
+    question_id: string;
+    corrected_answer: string;
+    corrected_score: number;
+    corrected_reasoning: string;
+    corrected_evidence?: any[];
+  }) => {
+    const key = `${edit.template_id}_${edit.question_id}`;
+    setPendingEdits(new Map(pendingEdits.set(key, edit)));
+    setEditingQuestionId(null);
+  };
+
+  const removePendingEdit = (template_id: string, question_id: string) => {
+    const key = `${template_id}_${question_id}`;
+    const newEdits = new Map(pendingEdits);
+    newEdits.delete(key);
+    setPendingEdits(newEdits);
+  };
+
+  const getPendingEdit = (template_id: string, question_id: string): {
+    template_id: string;
+    question_id: string;
+    corrected_answer: string;
+    corrected_score: number;
+    corrected_reasoning: string;
+    corrected_evidence?: any[];
+  } | undefined => {
+    const key = `${template_id}_${question_id}`;
+    return pendingEdits.get(key);
+  };
+
+  const pollForCompletion = async () => {
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://zk1354qz0k.execute-api.eu-central-1.amazonaws.com";
+    const maxAttempts = 60; // Poll for max 5 minutes (60 * 5 seconds)
+    let attempts = 0;
+
+    const poll = async () => {
+      try {
+        const response = await fetch(`${baseUrl}/api/v1/calls/${selectedCallId}`, {
+          headers: { "ngrok-skip-browser-warning": "true" }
+        });
+        const updatedData = await response.json();
+
+        if (updatedData.status === 'ready') {
+          // Recalculation complete - reload the detail view
+          if (selectedCallId) {
+            viewDetail(selectedCallId);
+          }
+          setIsRecalculating(false);
+        } else if (attempts < maxAttempts) {
+          attempts++;
+          setTimeout(poll, 5000); // Poll every 5 seconds
+        } else {
+          // Timeout - stop polling
+          console.error("Polling timeout - recalculation taking too long");
+          alert("Recalculation is taking longer than expected. Please refresh the page manually.");
+          setIsRecalculating(false);
+        }
+      } catch (error) {
+        console.error("Error polling for completion:", error);
+        if (attempts < maxAttempts) {
+          attempts++;
+          setTimeout(poll, 5000);
+        } else {
+          setIsRecalculating(false);
+        }
+      }
+    };
+
+    poll();
   };
 
   // Mark as reviewed
@@ -324,152 +477,418 @@ function RedFlagsPageContent() {
             {/* Questionnaire Results */}
             {detailData.full_result?.answers && (
               <div className="bg-white rounded-[2.5rem] border border-[#1f3a3410] p-10 apple-shadow space-y-6">
-                <div className="flex items-center justify-between border-b border-[#1f3a3408] pb-6">
-                  <h3 className="text-xl font-[850] text-[#1F3A34] tracking-tight">Questionnaire Analysis</h3>
+                <div className="border-b border-[#1f3a3408] pb-6 space-y-4">
+                  <div className="flex items-center gap-4">
+                    <h3 className="text-xl font-[850] text-[#1F3A34] tracking-tight">Questionnaire Analysis</h3>
+                    {detailData.human_interventions && detailData.human_interventions.length > 0 && (
+                      <span className="flex items-center gap-1.5 px-3 py-1 bg-green-50 rounded-lg border border-green-200">
+                        <CheckCircle2 className="w-3.5 h-3.5 text-green-600" />
+                        <span className="text-xs font-black uppercase tracking-wider text-green-700">{detailData.human_interventions.length} Human Verifications</span>
+                      </span>
+                    )}
+                  </div>
                   {detailData.full_result.summary && (
-                    <div className="px-4 py-2 bg-[#1F3A3405] rounded-xl border border-[#1f3a3410]">
-                      <p className="text-[10px] font-black uppercase tracking-widest text-[#1F3A3440] mb-1">Overall Summary</p>
-                      <p className="text-xs font-bold text-[#1F3A34]">{detailData.full_result.summary}</p>
+                    <div className="p-4 bg-[#1F3A3405] rounded-xl border border-[#1f3a3410]">
+                      <p className="text-[10px] font-black uppercase tracking-widest text-[#1F3A3440] mb-2">Overall Summary</p>
+                      <p className="text-sm font-bold text-[#1F3A34] leading-relaxed">{detailData.full_result.summary}</p>
                     </div>
                   )}
                 </div>
 
                 <div className="space-y-4">
-                  {detailData.full_result.answers.map((answer: any, idx: number) => (
-                    <div
-                      key={answer.question_id || idx}
-                      className="p-6 rounded-2xl border border-[#1f3a3410] bg-[#F4F8F9]/30 hover:bg-[#F4F8F9]/60 transition-all"
-                    >
-                      <div className="flex items-start justify-between mb-4">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-3 mb-2">
+                  {detailData.full_result.answers.map((answer: any, idx: number) => {
+                    const templateId = 'red_flags'; // Red flags template ID
+                    const questionId = answer.question_id || `q${idx + 1}`;
+
+                    return (
+                      <div
+                        key={questionId}
+                        className="group p-6 rounded-2xl border border-[#1f3a3410] bg-[#F4F8F9]/30 hover:bg-[#F4F8F9]/60 transition-all space-y-4"
+                      >
+                        {/* Header Row with Question ID, Badges, and Edit Button */}
+                        <div className="flex items-center justify-between mb-4">
+                          <div className="flex items-center gap-3">
                             <span className="text-[10px] font-black uppercase tracking-widest text-[#1F3A3460]">
-                              Question {answer.question_id || idx + 1}
+                              Question {questionId}
                             </span>
                             {answer.skipped && (
                               <span className="px-2 py-0.5 text-[9px] font-black uppercase tracking-wider rounded-md bg-gray-100 text-gray-600 border border-gray-200">
                                 Skipped
                               </span>
                             )}
+                            {(answer.is_edited || (detailData.human_interventions?.some(
+                              (i: any) => i.question_id === questionId && i.template_id === templateId
+                            ))) && (
+                                <span className="px-2 py-1 text-[9px] font-black uppercase tracking-wider bg-green-100 text-green-700 rounded-md border border-green-200 flex items-center gap-1">
+                                  <CheckCircle2 className="w-3 h-3" />
+                                  Human Verified
+                                </span>
+                              )}
                           </div>
-                          {answer.reasoning_summary && (
-                            <p className="text-sm font-bold text-[#1F3A34] mb-2">{answer.reasoning_summary}</p>
+                          {!isRecalculating && !answer.skipped && (
+                            <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                              {getPendingEdit(templateId, questionId) && (
+                                <span className="px-2 py-1 text-[9px] font-black uppercase tracking-wider bg-orange-100 text-orange-700 rounded-md border border-orange-200">
+                                  Pending Edit
+                                </span>
+                              )}
+                              <button
+                                onClick={() => setEditingQuestionId(`${templateId}_${questionId}`)}
+                                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg border border-blue-200 transition-all"
+                                title="Edit answer"
+                              >
+                                <Edit className="w-3 h-3" />
+                                Edit
+                              </button>
+                            </div>
                           )}
                         </div>
-                        <div className="flex items-center gap-4 shrink-0">
-                          <div className="text-right">
-                            <p className="text-[9px] font-black uppercase tracking-widest text-[#1F3A3460]">Answer</p>
-                            <p className={cn(
-                              "text-sm font-black uppercase tracking-wider",
-                              answer.answer === "yes" ? "text-green-600" : "text-red-600"
-                            )}>
-                              {answer.answer}
-                            </p>
+
+                        {/* Question Text - Full Width */}
+                        {answer.question_text && (
+                          <p className="text-sm font-bold text-purple-600 bg-purple-50 px-3 py-2 rounded-lg border border-purple-200 mb-4">
+                            Q: {answer.question_text}
+                          </p>
+                        )}
+
+                        {/* Answer and Score Row */}
+                        <div className="flex items-start justify-between mb-4">
+                          <div className="flex-1">
+                            {answer.reasoning_summary && (
+                              <p className="text-sm font-bold text-[#1F3A34]">{answer.reasoning_summary}</p>
+                            )}
                           </div>
-                          <div className={cn(
-                            "w-16 h-16 rounded-2xl flex flex-col items-center justify-center shadow-lg",
-                            answer.score >= 70 ? "bg-green-500 text-white shadow-green-500/20" :
-                              answer.score >= 40 ? "bg-yellow-500 text-white shadow-yellow-500/20" :
-                                "bg-red-500 text-white shadow-red-500/20"
-                          )}>
-                            <p className="text-2xl font-black">{answer.score}</p>
-                            <p className="text-[8px] font-bold opacity-70">SCORE</p>
+                          <div className="flex items-center gap-4 shrink-0 ml-6">
+                            <div className="text-right">
+                              <p className="text-[9px] font-black uppercase tracking-widest text-[#1F3A3460]">Answer</p>
+                              <p className={cn(
+                                "text-sm font-black uppercase tracking-wider",
+                                answer.answer === "yes" ? "text-green-600" : "text-red-600"
+                              )}>
+                                {answer.answer}
+                              </p>
+                            </div>
+                            <div className={cn(
+                              "w-16 h-16 rounded-2xl flex flex-col items-center justify-center shadow-lg",
+                              answer.score >= 70 ? "bg-green-500 text-white shadow-green-500/20" :
+                                answer.score >= 40 ? "bg-yellow-500 text-white shadow-yellow-500/20" :
+                                  "bg-red-500 text-white shadow-red-500/20"
+                            )}>
+                              <p className="text-2xl font-black">{answer.score}</p>
+                              <p className="text-[8px] font-bold opacity-70">SCORE</p>
+                            </div>
                           </div>
                         </div>
-                      </div>
 
-                      {answer.evidence && answer.evidence.length > 0 && (
-                        <div className="mt-4 pt-4 border-t border-[#1f3a3410]">
-                          <p className="text-[9px] font-black uppercase tracking-widest text-[#1F3A3460] mb-3">Evidence</p>
-                          <div className="space-y-2">
-                            {answer.evidence.map((ev: any, evIdx: number) => {
-                              const hasAudio = detailData.full_result?.provider_metadata?.provider !== 'manual';
-                              const segmentId = `${answer.question_id}_${ev.start_ms}`;
-                              const isPlaying = playingSegment === segmentId;
+                        {/* Show latest edit if question has interventions - Full width */}
+                        {detailData.human_interventions && (() => {
+                          const interventions = detailData.human_interventions.filter(
+                            (i: any) => i.question_id === questionId && i.template_id === templateId
+                          );
 
-                              return (
-                                <div
-                                  key={evIdx}
-                                  onClick={() => {
-                                    if (!hasAudio || ev.start_ms < 0) return;
+                          if (interventions.length === 0) return null;
 
-                                    const player = document.getElementById('red-flag-audio-player') as HTMLAudioElement;
-                                    if (!player) return;
+                          const latest = interventions[interventions.length - 1];
 
-                                    if (isPlaying) {
-                                      player.pause();
-                                      setPlayingSegment(null);
-                                    } else {
-                                      const startTime = (ev.start_ms || 0) / 1000;
-                                      const endTime = (ev.end_ms || ev.start_ms || 0) / 1000;
+                          return (
+                            <div className="p-4 rounded-xl bg-green-50 border border-green-200 space-y-2">
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                  <Clock className="w-4 h-4 text-green-600" />
+                                  <p className="text-xs font-bold text-green-900">
+                                    Last edited: {new Date(latest.timestamp).toLocaleString()}
+                                  </p>
+                                </div>
+                                {interventions.length > 1 && (
+                                  <button
+                                    onClick={() => setViewHistoryFor({ template_id: templateId, question_id: questionId })}
+                                    className="flex items-center gap-1 px-2 py-1 text-[10px] font-bold text-green-700 hover:text-green-900 hover:bg-green-100 rounded-md transition-all"
+                                  >
+                                    <History className="w-3 h-3" />
+                                    View History ({interventions.length})
+                                  </button>
+                                )}
+                              </div>
+                              <p className="text-xs font-medium text-green-700 italic">"{latest.corrected_reasoning}"</p>
+                              <div className="flex items-center gap-4 pt-2 border-t border-green-200">
+                                <div>
+                                  <p className="text-[9px] font-black uppercase tracking-wider text-green-600">Answer</p>
+                                  <p className="text-sm font-bold text-green-900">{latest.corrected_answer}</p>
+                                </div>
+                                <div>
+                                  <p className="text-[9px] font-black uppercase tracking-wider text-green-600">Score</p>
+                                  <p className="text-sm font-bold text-green-900">{latest.corrected_score}</p>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })()}
 
-                                      player.currentTime = startTime;
-                                      player.play();
-                                      setPlayingSegment(segmentId);
+                        {answer.evidence && answer.evidence.length > 0 && (
+                          <div className="mt-4 pt-4 border-t border-[#1f3a3410]">
+                            <p className="text-[9px] font-black uppercase tracking-widest text-[#1F3A3460] mb-3">Evidence</p>
+                            <div className="space-y-2">
+                              {answer.evidence.map((ev: any, evIdx: number) => {
+                                const hasAudio = detailData.full_result?.provider_metadata?.provider !== 'manual';
+                                const segmentId = `${answer.question_id}_${ev.start_ms}`;
+                                const isPlaying = playingSegment === segmentId;
 
-                                      // Stop at end_ms
-                                      const checkTime = () => {
-                                        if (player.currentTime >= endTime) {
-                                          player.pause();
-                                          setPlayingSegment(null);
-                                        } else if (playingSegment === segmentId) {
-                                          requestAnimationFrame(checkTime);
-                                        }
-                                      };
-                                      requestAnimationFrame(checkTime);
-                                    }
-                                  }}
-                                  className={cn(
-                                    "p-3 bg-white rounded-xl border border-[#1f3a3408] transition-all",
-                                    hasAudio && ev.start_ms >= 0 && "cursor-pointer hover:border-[#1F3A3420] hover:bg-[#F4F8F9]",
-                                    isPlaying && "border-[#1F3A34] bg-[#1F3A3410]"
-                                  )}
-                                >
-                                  <p className="text-xs text-[#1F3A34] leading-relaxed italic mb-2">"{ev.quote}"</p>
-                                  <div className="flex items-center justify-between gap-4">
-                                    <div className="flex items-center gap-4">
-                                      <span className="text-[9px] font-bold text-[#1F3A3460] uppercase tracking-wider">
-                                        Match: {(ev.score * 100).toFixed(1)}%
-                                      </span>
-                                      {ev.start_ms >= 0 && (
+                                return (
+                                  <div
+                                    key={evIdx}
+                                    onClick={() => {
+                                      if (!hasAudio || ev.start_ms < 0) return;
+
+                                      const player = document.getElementById('red-flag-audio-player') as HTMLAudioElement;
+                                      if (!player) return;
+
+                                      if (isPlaying) {
+                                        player.pause();
+                                        setPlayingSegment(null);
+                                      } else {
+                                        const startTime = (ev.start_ms || 0) / 1000;
+                                        const endTime = (ev.end_ms || ev.start_ms || 0) / 1000;
+
+                                        player.currentTime = startTime;
+                                        player.play();
+                                        setPlayingSegment(segmentId);
+
+                                        // Stop at end_ms
+                                        const checkTime = () => {
+                                          if (player.currentTime >= endTime) {
+                                            player.pause();
+                                            setPlayingSegment(null);
+                                          } else if (playingSegment === segmentId) {
+                                            requestAnimationFrame(checkTime);
+                                          }
+                                        };
+                                        requestAnimationFrame(checkTime);
+                                      }
+                                    }}
+                                    className={cn(
+                                      "p-3 bg-white rounded-xl border border-[#1f3a3408] transition-all",
+                                      hasAudio && ev.start_ms >= 0 && "cursor-pointer hover:border-[#1F3A3420] hover:bg-[#F4F8F9]",
+                                      isPlaying && "border-[#1F3A34] bg-[#1F3A3410]"
+                                    )}
+                                  >
+                                    <p className="text-xs text-[#1F3A34] leading-relaxed italic mb-2">"{ev.quote}"</p>
+                                    <div className="flex items-center justify-between gap-4">
+                                      <div className="flex items-center gap-4">
                                         <span className="text-[9px] font-bold text-[#1F3A3460] uppercase tracking-wider">
-                                          {Math.floor(ev.start_ms / 1000)}s - {Math.floor(ev.end_ms / 1000)}s
+                                          Match: {(ev.score * 100).toFixed(1)}%
                                         </span>
-                                      )}
-                                    </div>
-                                    {hasAudio && ev.start_ms >= 0 && (
-                                      <div className="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-wider">
-                                        {isPlaying ? (
-                                          <>
-                                            <Pause className="w-3 h-3 fill-current text-[#1F3A34]" />
-                                            <span className="text-[#1F3A34]">Playing</span>
-                                          </>
-                                        ) : (
-                                          <>
-                                            <Play className="w-3 h-3 fill-current text-[#1F3A3460]" />
-                                            <span className="text-[#1F3A3460]">Play</span>
-                                          </>
+                                        {ev.start_ms >= 0 && (
+                                          <span className="text-[9px] font-bold text-[#1F3A3460] uppercase tracking-wider">
+                                            {Math.floor(ev.start_ms / 1000)}s - {Math.floor(ev.end_ms / 1000)}s
+                                          </span>
                                         )}
                                       </div>
-                                    )}
+                                      {hasAudio && ev.start_ms >= 0 && (
+                                        <div className="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-wider">
+                                          {isPlaying ? (
+                                            <>
+                                              <Pause className="w-3 h-3 fill-current text-[#1F3A34]" />
+                                              <span className="text-[#1F3A34]">Playing</span>
+                                            </>
+                                          ) : (
+                                            <>
+                                              <Play className="w-3 h-3 fill-current text-[#1F3A3460]" />
+                                              <span className="text-[#1F3A3460]">Play</span>
+                                            </>
+                                          )}
+                                        </div>
+                                      )}
+                                    </div>
                                   </div>
-                                </div>
-                              );
-                            })}
+                                );
+                              })}
+                            </div>
                           </div>
-                        </div>
-                      )}
+                        )}
 
-                      <div className="mt-3 flex items-center gap-4 text-[9px] font-bold text-[#1F3A3460] uppercase tracking-wider">
-                        <span>Weight: {answer.weight}</span>
-                        <span className="w-1 h-1 rounded-full bg-[#1F3A3420]" />
-                        <span>Confidence: {answer.confidence}</span>
+                        <div className="mt-3 flex items-center gap-4 text-[9px] font-bold text-[#1F3A3460] uppercase tracking-wider">
+                          <span>Weight: {answer.weight}</span>
+                          <span className="w-1 h-1 rounded-full bg-[#1F3A3420]" />
+                          <span>Confidence: {answer.confidence}</span>
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             )}
+
+            {/* Floating Submit Button */}
+            {pendingEdits.size > 0 && !isRecalculating && (
+              <div className="fixed bottom-8 right-8 z-40 animate-in slide-in-from-bottom-4 duration-300">
+                <div className="bg-white rounded-2xl shadow-2xl border border-[#1f3a3410] p-4 space-y-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-orange-100 flex items-center justify-center">
+                      <span className="text-lg font-black text-orange-700">{pendingEdits.size}</span>
+                    </div>
+                    <div>
+                      <p className="text-xs font-black uppercase tracking-wider text-[#1F3A3460]">
+                        Pending Edits
+                      </p>
+                      <p className="text-[10px] font-medium text-[#1F3A3440]">
+                        Ready to submit
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => setPendingEdits(new Map())}
+                      className="flex-1 h-10 px-4 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-bold text-xs uppercase tracking-wider transition-all"
+                    >
+                      Clear All
+                    </button>
+                    <button
+                      onClick={handleSubmitAllEdits}
+                      className="flex-1 h-10 px-4 bg-[#1F3A34] hover:bg-[#1F3A34]/90 text-white rounded-xl font-bold text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-lg shadow-[#1F3A3420]"
+                    >
+                      <Save className="w-3 h-3" />
+                      Submit All
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Recalculating Overlay */}
+            {isRecalculating && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+                <div className="bg-white rounded-3xl p-8 shadow-2xl max-w-md text-center space-y-4">
+                  <Loader2 className="w-12 h-12 text-[#1F3A34] animate-spin mx-auto" />
+                  <h3 className="text-xl font-[850] text-[#1F3A34]">Recalculating...</h3>
+                  <p className="text-sm font-medium text-[#1F3A3470]">
+                    Submitting {pendingEdits.size} change{pendingEdits.size !== 1 ? 's' : ''} and regenerating scores. This may take a few moments.
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* Edit History Modal */}
+            {viewHistoryFor && (() => {
+              const interventions = detailData?.human_interventions?.filter(
+                (i: any) => i.question_id === viewHistoryFor.question_id && i.template_id === viewHistoryFor.template_id
+              ) || [];
+
+              return (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
+                  <div className="bg-white w-full max-w-3xl max-h-[80vh] overflow-hidden rounded-3xl shadow-2xl border border-[#1f3a3410] animate-in zoom-in-95 duration-200">
+                    <div className="p-8 border-b border-[#1f3a3408] bg-[#1F3A3402] flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <History className="w-6 h-6 text-[#1F3A3460]" />
+                        <div>
+                          <h3 className="text-2xl font-[850] text-[#1F3A34] tracking-tight">Edit History</h3>
+                          <p className="text-sm font-semibold text-[#1F3A3440] mt-1">
+                            {viewHistoryFor.question_id} - {interventions.length} edit{interventions.length !== 1 ? 's' : ''}
+                          </p>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => setViewHistoryFor(null)}
+                        className="w-10 h-10 rounded-xl hover:bg-[#1F3A3410] flex items-center justify-center transition-all text-[#1F3A3420]"
+                      >
+                        <XIcon className="w-5 h-5" />
+                      </button>
+                    </div>
+
+                    <div className="p-8 overflow-y-auto max-h-[60vh] space-y-4">
+                      {interventions.map((intervention: any, idx: number) => (
+                        <div
+                          key={idx}
+                          className={cn(
+                            "p-6 rounded-2xl border space-y-3",
+                            idx === interventions.length - 1
+                              ? "bg-green-50 border-green-200"
+                              : "bg-gray-50 border-gray-200"
+                          )}
+                        >
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <Clock className="w-4 h-4 text-[#1F3A3460]" />
+                              <p className="text-xs font-bold text-[#1F3A34]">
+                                {new Date(intervention.timestamp).toLocaleString()}
+                              </p>
+                            </div>
+                            {idx === interventions.length - 1 && (
+                              <span className="px-2 py-1 text-[9px] font-black uppercase tracking-wider bg-green-200 text-green-800 rounded-md">
+                                Current
+                              </span>
+                            )}
+                          </div>
+                          <div className="grid grid-cols-2 gap-4">
+                            <div>
+                              <p className="text-[10px] font-black uppercase tracking-wider text-[#1F3A3440] mb-1">Answer</p>
+                              <p className="text-sm font-bold text-[#1F3A34]">{intervention.corrected_answer}</p>
+                            </div>
+                            <div>
+                              <p className="text-[10px] font-black uppercase tracking-wider text-[#1F3A3440] mb-1">Score</p>
+                              <p className="text-sm font-bold text-[#1F3A34]">{intervention.corrected_score}</p>
+                            </div>
+                          </div>
+                          <div>
+                            <p className="text-[10px] font-black uppercase tracking-wider text-[#1F3A3440] mb-1">Reasoning</p>
+                            <p className="text-sm font-medium text-[#1F3A3470] italic">"{intervention.corrected_reasoning}"</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="p-6 border-t border-[#1f3a3408] bg-[#F4F8F9]">
+                      <button
+                        onClick={() => setViewHistoryFor(null)}
+                        className="w-full h-12 bg-[#1F3A34] hover:bg-[#1F3A34]/90 text-white rounded-xl font-bold text-sm uppercase tracking-wider transition-all"
+                      >
+                        Close
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
+
+            {/* Intervention Modal */}
+            {editingQuestionId && detailData && (() => {
+              // editingQuestionId format: "red_flags_IMMEDIATE_ATTENTION_REASONS"
+              // We need to extract: templateId="red_flags", questionId="IMMEDIATE_ATTENTION_REASONS"
+              const templateId = 'red_flags'; // We know it's always red_flags for this page
+              const questionId = editingQuestionId.replace('red_flags_', ''); // Remove template prefix
+
+              // Find the answer data
+              const answer = detailData.full_result?.answers?.find((a: any, idx: number) => {
+                const answerQuestionId = a.question_id || `q${idx + 1}`;
+                return answerQuestionId === questionId;
+              });
+
+              if (!answer) {
+                console.log('Answer not found for questionId:', questionId);
+                console.log('Available answers:', detailData.full_result?.answers?.map((a: any, idx: number) => a.question_id || `q${idx + 1}`));
+                return null;
+              }
+
+              const existingEdit = getPendingEdit(templateId, questionId);
+
+              return (
+                <InterventionModal
+                  modal={{
+                    template_id: templateId,
+                    question_id: questionId,
+                    current_answer: existingEdit?.corrected_answer || answer.answer || '',
+                    current_score: existingEdit?.corrected_score || answer.score || 0,
+                    current_reasoning: existingEdit?.corrected_reasoning || answer.reasoning_summary || ''
+                  }}
+                  onClose={() => setEditingQuestionId(null)}
+                  onSubmit={(edit) => addPendingEdit(edit)}
+                  existingEdit={existingEdit}
+                  onRemove={() => {
+                    removePendingEdit(templateId, questionId);
+                    setEditingQuestionId(null);
+                  }}
+                />
+              );
+            })()}
           </div>
         ) : null}
       </div>
@@ -687,6 +1106,159 @@ function RedFlagsPageContent() {
         )}
       </div>
     </main>
+  );
+}
+
+interface InterventionModalProps {
+  modal: {
+    template_id: string;
+    question_id: string;
+    current_answer: string;
+    current_score: number;
+    current_reasoning: string;
+  };
+  onClose: () => void;
+  onSubmit: (payload: {
+    template_id: string;
+    question_id: string;
+    corrected_answer: string;
+    corrected_score: number;
+    corrected_reasoning: string;
+    corrected_evidence?: any[];
+  }) => void;
+  existingEdit?: {
+    template_id: string;
+    question_id: string;
+    corrected_answer: string;
+    corrected_score: number;
+    corrected_reasoning: string;
+    corrected_evidence?: any[];
+  };
+  onRemove?: () => void;
+}
+
+function InterventionModal({ modal, onClose, onSubmit, existingEdit, onRemove }: InterventionModalProps) {
+  const [correctedAnswer, setCorrectedAnswer] = useState(existingEdit?.corrected_answer || modal.current_answer);
+  const [correctedScore, setCorrectedScore] = useState(existingEdit?.corrected_score || modal.current_score);
+  const [correctedReasoning, setCorrectedReasoning] = useState(existingEdit?.corrected_reasoning || '');
+
+  const handleSubmit = () => {
+    if (!correctedReasoning.trim()) {
+      alert('Please provide a reason for this correction.');
+      return;
+    }
+
+    onSubmit({
+      template_id: modal.template_id,
+      question_id: modal.question_id,
+      corrected_answer: correctedAnswer,
+      corrected_score: correctedScore,
+      corrected_reasoning: correctedReasoning,
+    });
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
+      <div className="bg-white w-full max-w-2xl rounded-3xl shadow-2xl border border-[#1f3a3410] overflow-hidden animate-in zoom-in-95 duration-200">
+        <div className="p-8 border-b border-[#1f3a3408] bg-[#1F3A3402] flex items-center justify-between">
+          <div>
+            <h3 className="text-2xl font-[850] text-[#1F3A34] tracking-tight">Edit Answer</h3>
+            <p className="text-sm font-semibold text-[#1F3A3440] mt-1">Manual correction for {modal.question_id}</p>
+          </div>
+          <button
+            onClick={onClose}
+            className="w-10 h-10 rounded-xl hover:bg-[#1F3A3410] flex items-center justify-center transition-all text-[#1F3A3420]"
+          >
+            <XIcon className="w-5 h-5" />
+          </button>
+        </div>
+
+        <div className="p-8 space-y-6">
+          {/* Current Answer */}
+          <div className="p-4 rounded-xl bg-gray-50 border border-gray-200 space-y-2">
+            <p className="text-xs font-black uppercase tracking-wider text-gray-600">Current Answer</p>
+            <p className="text-sm font-bold text-gray-900">{modal.current_answer}</p>
+            <p className="text-xs font-medium text-gray-600">{modal.current_reasoning}</p>
+            <p className="text-xs font-bold text-gray-700">Score: {modal.current_score}</p>
+          </div>
+
+          {/* Corrected Answer */}
+          <div className="space-y-2">
+            <label className="text-xs font-black uppercase tracking-wider text-[#1F3A3440]">
+              Corrected Answer
+            </label>
+            <select
+              value={correctedAnswer}
+              onChange={(e) => {
+                const val = e.target.value;
+                setCorrectedAnswer(val);
+                // Auto-set score based on answer
+                if (val.toLowerCase() === 'yes') setCorrectedScore(100);
+                else if (val.toLowerCase() === 'no') setCorrectedScore(0);
+              }}
+              className="w-full h-12 px-4 bg-[#1F3A3403] border border-[#1f3a3410] rounded-xl text-[#1F3A34] font-semibold outline-none focus:border-[#1F3A34] transition-all"
+            >
+              <option value="Yes">Yes</option>
+              <option value="No">No</option>
+            </select>
+          </div>
+
+          {/* Corrected Score */}
+          <div className="space-y-2">
+            <label className="text-xs font-black uppercase tracking-wider text-[#1F3A3440]">
+              Corrected Score (0-100)
+            </label>
+            <input
+              type="number"
+              min="0"
+              max="100"
+              value={correctedScore}
+              onChange={(e) => setCorrectedScore(Number(e.target.value))}
+              className="w-full h-12 px-4 bg-[#1F3A3403] border border-[#1f3a3410] rounded-xl text-[#1F3A34] font-semibold outline-none focus:border-[#1F3A34] transition-all"
+            />
+          </div>
+
+          {/* Reasoning */}
+          <div className="space-y-2">
+            <label className="text-xs font-black uppercase tracking-wider text-[#1F3A3440]">
+              Reason for Correction *
+            </label>
+            <textarea
+              value={correctedReasoning}
+              onChange={(e) => setCorrectedReasoning(e.target.value)}
+              placeholder="Explain why you're correcting this answer..."
+              rows={4}
+              className="w-full px-4 py-3 bg-[#1F3A3403] border border-[#1f3a3410] rounded-xl text-[#1F3A34] font-medium outline-none focus:border-[#1F3A34] transition-all resize-none"
+            />
+          </div>
+
+          {/* Actions */}
+          <div className="flex gap-3 pt-4">
+            {existingEdit && onRemove && (
+              <button
+                onClick={onRemove}
+                className="h-12 px-4 bg-red-50 hover:bg-red-100 text-red-600 rounded-xl font-bold text-sm uppercase tracking-wider transition-all border border-red-200"
+              >
+                Remove
+              </button>
+            )}
+            <button
+              onClick={onClose}
+              className="flex-1 h-12 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-bold text-sm uppercase tracking-wider transition-all"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleSubmit}
+              className="flex-1 h-12 bg-[#1F3A34] hover:bg-[#1F3A34]/90 text-white rounded-xl font-bold text-sm uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-lg shadow-[#1F3A3420]"
+            >
+              <Save className="w-4 h-4" />
+              {existingEdit ? 'Update' : 'Add to Queue'}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }
 

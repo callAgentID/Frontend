@@ -782,7 +782,7 @@ export function InputSection({
                         const value = input.value.trim();
 
                         if (value) {
-                          setCustomQuestions([...customQuestions, { text: value, weight: 5 }]);
+                          setCustomQuestions([...customQuestions, { text: value, weight: 0 }]);
                           input.value = '';
                         }
                       }
@@ -806,12 +806,12 @@ export function InputSection({
                           <div className="flex items-center gap-2 shrink-0">
                             <input
                               type="number"
-                              min="1"
+                              min="0"
                               max="10"
                               value={q.weight}
                               onChange={(e) => {
                                 const updated = [...customQuestions];
-                                updated[idx].weight = parseInt(e.target.value) || 5;
+                                updated[idx].weight = parseInt(e.target.value) || 0;
                                 setCustomQuestions(updated);
                               }}
                               className="w-14 h-8 px-2 rounded-lg bg-[#1F3A3405] border border-[#1f3a3408] text-[#1F3A34] font-bold text-xs text-center outline-none focus:border-[#1F3A3415] transition-all"

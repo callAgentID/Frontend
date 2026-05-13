@@ -29,7 +29,8 @@ import {
   MinusCircle,
   Edit,
   Save,
-  X as XIcon
+  X as XIcon,
+  History
 } from "lucide-react";
 import { cn } from "../lib/utils";
 import { ReactElement, JSXElementConstructor, ReactNode, ReactPortal, Key, useState } from "react";
@@ -50,6 +51,16 @@ interface ResultData {
   campaign_name?: string | null;
   questionnaire_name?: string | null;
   script_name?: string | null;
+  human_intervention_count?: number;
+  human_interventions?: Array<{
+    timestamp: string;
+    question_id: string;
+    template_id: string;
+    corrected_score: number;
+    corrected_answer: string;
+    corrected_evidence: any;
+    corrected_reasoning: string;
+  }>;
   transcript: {
     utterances: Array<{
       speaker_id: string;
@@ -112,7 +123,6 @@ interface ResultData {
       }>;
     }>;
     summary: string;
-    human_intervention_count?: number;
     overall_score_breakdown?: { // 🆕 Detailed score breakdown
       mode: string;
       score_version: number;
@@ -160,17 +170,19 @@ export function ResultsPanel({ data, isHydrating = false }: { data: ResultData, 
   }>>(new Map());
   const [isRecalculating, setIsRecalculating] = useState(false);
   const [editingQuestionId, setEditingQuestionId] = useState<string | null>(null);
+  const [viewHistoryFor, setViewHistoryFor] = useState<{ template_id: string; question_id: string } | null>(null);
 
   if (!data && !isHydrating) return null;
 
   // Use dummy data for skeletons if data is null during initial hydration
-  const safeData = data || {
+  const safeData: ResultData = data || {
     call_id: 'pending...',
     overall_score: 0,
     review_status: 'unreviewed',
+    status: 'processing',
     analytics: { sentiment: { overall: { label: 'analyzing...' } }, red_flags: { has_red_flags: false, flags: [] }, silence: { ratio: 0, gap_count: 0 } },
-    qa_result: { summary: 'Processing cognitive audit...', answers: [] },
-    transcript: { utterances: [], metrics: { turn_count: 0 } },
+    qa_result: { summary: 'Processing cognitive audit...', answers: [], results: [] },
+    transcript: { utterances: [], metrics: { turn_count: 0, silence_ratio: 0 } },
     prepared_script: { sections: [], compliance_requirements: [] }
   } as any;
 
@@ -528,10 +540,10 @@ export function ResultsPanel({ data, isHydrating = false }: { data: ResultData, 
                 <Target className="w-6 h-6 text-[#1F3A3460]" /> Audit Findings
               </h4>
               <div className="flex items-center gap-4 text-[11px] font-[900] text-[#1F3A3440] uppercase tracking-widest">
-                {safeData.qa_result?.human_intervention_count !== undefined && safeData.qa_result.human_intervention_count > 0 && (
+                {safeData.human_intervention_count !== undefined && safeData.human_intervention_count > 0 && (
                   <span className="flex items-center gap-1.5 px-3 py-1 bg-green-50 rounded-lg border border-green-200">
                     <CheckCircle2 className="w-3.5 h-3.5 text-green-600" />
-                    <span className="text-green-700">{safeData.qa_result.human_intervention_count} Human Verified</span>
+                    <span className="text-green-700">{safeData.human_intervention_count} Human Verifications</span>
                   </span>
                 )}
                 <span className="flex items-center gap-1.5"><div className="w-1.5 h-1.5 rounded-full bg-green-500" /> Success</span>
@@ -578,12 +590,14 @@ export function ResultsPanel({ data, isHydrating = false }: { data: ResultData, 
                                   <div className="flex items-center gap-2">
                                     <span className="text-[11px] font-black text-[#1F3A3440] uppercase tracking-[0.2em]">{answer.question_id}</span>
                                     <ChevronRight className="w-3 h-3 text-[#1F3A3420]" />
-                                    {answer.is_edited && (
-                                      <span className="px-2 py-1 text-[9px] font-black uppercase tracking-wider bg-green-100 text-green-700 rounded-md border border-green-200 flex items-center gap-1">
-                                        <CheckCircle2 className="w-3 h-3" />
-                                        Human Verified
-                                      </span>
-                                    )}
+                                    {(answer.is_edited || (safeData.human_interventions?.some(
+                                      (i: any) => i.question_id === answer.question_id && i.template_id === templateResult.template_id
+                                    ))) && (
+                                        <span className="px-2 py-1 text-[9px] font-black uppercase tracking-wider bg-green-100 text-green-700 rounded-md border border-green-200 flex items-center gap-1">
+                                          <CheckCircle2 className="w-3 h-3" />
+                                          Human Verified
+                                        </span>
+                                      )}
                                   </div>
                                   {!isRecalculating && !answer.skipped && (
                                     <div className="flex items-center gap-2">
@@ -645,6 +659,50 @@ export function ResultsPanel({ data, isHydrating = false }: { data: ResultData, 
                                 )}
                               </div>
                             </div>
+
+                            {/* Show latest edit if question has interventions - Full width */}
+                            {safeData.human_interventions && (() => {
+                              const interventions = safeData.human_interventions.filter(
+                                (i: any) => i.question_id === answer.question_id && i.template_id === templateResult.template_id
+                              );
+
+                              if (interventions.length === 0) return null;
+
+                              const latest = interventions[interventions.length - 1];
+
+                              return (
+                                <div className="p-4 rounded-xl bg-green-50 border border-green-200 space-y-2">
+                                  <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-2">
+                                      <Clock className="w-4 h-4 text-green-600" />
+                                      <p className="text-xs font-bold text-green-900">
+                                        Last edited: {new Date(latest.timestamp).toLocaleString()}
+                                      </p>
+                                    </div>
+                                    {interventions.length > 1 && (
+                                      <button
+                                        onClick={() => setViewHistoryFor({ template_id: templateResult.template_id, question_id: answer.question_id })}
+                                        className="flex items-center gap-1 px-2 py-1 text-[10px] font-bold text-green-700 hover:text-green-900 hover:bg-green-100 rounded-md transition-all"
+                                      >
+                                        <History className="w-3 h-3" />
+                                        View History ({interventions.length})
+                                      </button>
+                                    )}
+                                  </div>
+                                  <p className="text-xs font-medium text-green-700 italic">"{latest.corrected_reasoning}"</p>
+                                  <div className="flex items-center gap-4 pt-2 border-t border-green-200">
+                                    <div>
+                                      <p className="text-[9px] font-black uppercase tracking-wider text-green-600">Answer</p>
+                                      <p className="text-sm font-bold text-green-900">{latest.corrected_answer}</p>
+                                    </div>
+                                    <div>
+                                      <p className="text-[9px] font-black uppercase tracking-wider text-green-600">Score</p>
+                                      <p className="text-sm font-bold text-green-900">{latest.corrected_score}</p>
+                                    </div>
+                                  </div>
+                                </div>
+                              );
+                            })()}
 
                             {(answer.evidence?.length || 0) > 0 && (() => {
                               const evidence = answer.evidence[0];
@@ -1009,6 +1067,88 @@ export function ResultsPanel({ data, isHydrating = false }: { data: ResultData, 
           </div>
         </div>
       )}
+
+      {/* Edit History Modal */}
+      {viewHistoryFor && (() => {
+        const interventions = safeData.human_interventions?.filter(
+          (i: any) => i.question_id === viewHistoryFor.question_id && i.template_id === viewHistoryFor.template_id
+        ) || [];
+
+        return (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
+            <div className="bg-white w-full max-w-3xl max-h-[80vh] overflow-hidden rounded-3xl shadow-2xl border border-[#1f3a3410] animate-in zoom-in-95 duration-200">
+              <div className="p-8 border-b border-[#1f3a3408] bg-[#1F3A3402] flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <History className="w-6 h-6 text-[#1F3A3460]" />
+                  <div>
+                    <h3 className="text-2xl font-[850] text-[#1F3A34] tracking-tight">Edit History</h3>
+                    <p className="text-sm font-semibold text-[#1F3A3440] mt-1">
+                      {viewHistoryFor.question_id} - {interventions.length} edit{interventions.length !== 1 ? 's' : ''}
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setViewHistoryFor(null)}
+                  className="w-10 h-10 rounded-xl hover:bg-[#1F3A3410] flex items-center justify-center transition-all text-[#1F3A3420]"
+                >
+                  <XIcon className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="p-8 overflow-y-auto max-h-[60vh] space-y-4">
+                {interventions.map((intervention: any, idx: number) => (
+                  <div
+                    key={idx}
+                    className={cn(
+                      "p-6 rounded-2xl border space-y-3",
+                      idx === interventions.length - 1
+                        ? "bg-green-50 border-green-200"
+                        : "bg-gray-50 border-gray-200"
+                    )}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Clock className="w-4 h-4 text-[#1F3A3460]" />
+                        <p className="text-xs font-bold text-[#1F3A34]">
+                          {new Date(intervention.timestamp).toLocaleString()}
+                        </p>
+                      </div>
+                      {idx === interventions.length - 1 && (
+                        <span className="px-2 py-1 text-[9px] font-black uppercase tracking-wider bg-green-200 text-green-800 rounded-md">
+                          Current
+                        </span>
+                      )}
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <p className="text-[10px] font-black uppercase tracking-wider text-[#1F3A3440] mb-1">Answer</p>
+                        <p className="text-sm font-bold text-[#1F3A34]">{intervention.corrected_answer}</p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-black uppercase tracking-wider text-[#1F3A3440] mb-1">Score</p>
+                        <p className="text-sm font-bold text-[#1F3A34]">{intervention.corrected_score}</p>
+                      </div>
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-black uppercase tracking-wider text-[#1F3A3440] mb-1">Reasoning</p>
+                      <p className="text-sm font-medium text-[#1F3A3470] italic">"{intervention.corrected_reasoning}"</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="p-6 border-t border-[#1f3a3408] bg-[#F4F8F9]">
+                <button
+                  onClick={() => setViewHistoryFor(null)}
+                  className="w-full h-12 bg-[#1F3A34] hover:bg-[#1F3A34]/90 text-white rounded-xl font-bold text-sm uppercase tracking-wider transition-all"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Intervention Modal */}
       {editingQuestionId && (() => {
