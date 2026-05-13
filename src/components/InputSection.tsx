@@ -52,7 +52,7 @@ export function InputSection({
   const [manualTranscript, setManualTranscript] = useState("");
   const [manualFile, setManualFile] = useState<File | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [processingStatus, setProcessingStatus] = useState<"uploading" | "transcribing" | "idle">("idle");
+  const [processingStatus, setProcessingStatus] = useState<"uploading" | "transcribing" | "idle" | "Transcription complete, analyzing..." | "Running QA evaluation..." | "Finalizing results...">("idle");
   const [generatedTranscript, setGeneratedTranscript] = useState("");
   const [callAnalytics, setCallAnalytics] = useState<CallAnalytics | null>(null);
   const [processingError, setProcessingError] = useState<string | null>(null);
@@ -193,17 +193,30 @@ export function InputSection({
           return true; // Stop polling
         }
 
-        if ((data.status === "ready" || data.status === "transcribed") && data.transcript?.utterances) {
-          const formattedTranscript = data.transcript.utterances
-            .map((u: any) => `Speaker ${u.speaker_id}: ${u.text}`)
-            .join("\n");
+        // Only stop polling when status is "ready" - full analysis complete
+        if (data.status === "ready") {
+          if (data.transcript?.utterances) {
+            const formattedTranscript = data.transcript.utterances
+              .map((u: any) => `Speaker ${u.speaker_id}: ${u.text}`)
+              .join("\n");
 
-          setGeneratedTranscript(formattedTranscript);
+            setGeneratedTranscript(formattedTranscript);
+            if (onTranscriptReady) onTranscriptReady(formattedTranscript);
+          }
+
           setIsProcessing(false);
           setProcessingStatus("idle");
-          if (onTranscriptReady) onTranscriptReady(formattedTranscript);
           if (onAnalysisComplete) onAnalysisComplete(data);
-          return true; // Stop polling
+          return true; // Stop polling - analysis complete
+        }
+
+        // Update status message for intermediate states
+        if (data.status === "transcribed") {
+          setProcessingStatus("Transcription complete, analyzing...");
+        } else if (data.status === "evaluating") {
+          setProcessingStatus("Running QA evaluation...");
+        } else if (data.status === "postprocessing") {
+          setProcessingStatus("Finalizing results...");
         }
         return false;
       } catch (err) {
