@@ -32,12 +32,16 @@ function CampaignsPageContent() {
   const [selectedCampaignForAssign, setSelectedCampaignForAssign] = useState<string>("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [viewingScript, setViewingScript] = useState<{ loading: boolean; data: any; error?: string }>({ loading: false, data: null });
+  const [processedScriptId, setProcessedScriptId] = useState<string | null>(null);
 
   // Read script ID from URL on mount
   useEffect(() => {
     const scriptIdFromUrl = searchParams.get('scriptId');
-    if (scriptIdFromUrl) {
+    if (scriptIdFromUrl && scriptIdFromUrl !== processedScriptId) {
+      setProcessedScriptId(scriptIdFromUrl);
       handleScriptClick(scriptIdFromUrl);
+    } else if (!scriptIdFromUrl && processedScriptId) {
+      setProcessedScriptId(null);
     }
   }, [searchParams]);
 
@@ -267,11 +271,11 @@ function CampaignsPageContent() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="space-y-1">
-          <h1 className="text-4xl font-[850] text-[#1F3A34] tracking-tight">{t('title')}</h1>
-          <p className="text-[#1F3A3460] font-medium">{t('subtitle')}</p>
+          <h1 className="text-4xl font-[850] text-[#F6FAFD] tracking-tight">{t('title')}</h1>
+          <p className="text-[#B3CFE5] font-medium">{t('subtitle')}</p>
         </div>
         <div className="flex gap-4">
-          <button onClick={fetchData} className="h-12 px-6 bg-[#1F3A3408] text-[#1F3A34] rounded-2xl font-bold flex items-center gap-2 hover:bg-[#1F3A3415] transition-all text-sm">
+          <button onClick={fetchData} className="h-12 px-6 bg-[#1A3D63]/40 text-[#4A7FA7] rounded-2xl font-bold flex items-center gap-2 hover:bg-[#1A3D63]/60 transition-all text-sm border border-[#4A7FA7]/30">
             {t('refreshData')}
           </button>
           <button
@@ -279,7 +283,7 @@ function CampaignsPageContent() {
               setModalType("campaign");
               setIsModalOpen(true);
             }}
-            className="h-12 px-6 bg-[#1F3A34] text-white rounded-2xl font-bold flex items-center gap-2 shadow-xl shadow-[#1F3A3420] hover:scale-105 active:scale-95 transition-all text-sm"
+            className="h-12 px-6 bg-gradient-to-r from-[#4A7FA7] to-[#1A3D63] glow text-white rounded-2xl font-bold flex items-center gap-2 shadow-xl shadow-[#4A7FA7]/30 hover:opacity-90 active:scale-95 transition-all text-sm"
           >
             <Plus className="w-5 h-5" /> {t('newAsset')}
           </button>
@@ -301,31 +305,31 @@ function CampaignsPageContent() {
             return (
               <div key={campaign.id} className="group relative">
                 {/* Campaign Header Card */}
-                <div className="bg-white rounded-[2.5rem] border border-[#1f3a3410] overflow-hidden shadow-2xl shadow-[#1f3a3405] transition-all hover:border-[#1f3a3420]">
-                  <div className="p-10 border-b border-[#1f3a3408] bg-[#1F3A3402] flex items-center justify-between">
+                <div className="bg-[#1A3D63]/60 glow rounded-[2.5rem] border border-[#4A7FA7]/30 overflow-hidden shadow-2xl shadow-[#4A7FA7]/10 transition-all hover:border-[#4A7FA7]/50">
+                  <div className="p-10 border-b border-[#4A7FA7]/30 bg-[#1A3D63]/40 flex items-center justify-between">
                     <div className="flex items-center gap-8">
-                      <div className="w-20 h-20 rounded-3xl bg-[#1F3A34] text-white flex items-center justify-center shadow-2xl shadow-[#1F3A3430]">
+                      <div className="w-20 h-20 rounded-3xl bg-gradient-to-r from-[#4A7FA7] to-[#1A3D63] text-white flex items-center justify-center shadow-2xl shadow-[#4A7FA7]/30">
                         <Layers className="w-10 h-10" />
                       </div>
                       <div>
                         <div className="flex items-center gap-3 mb-1">
-                          <h2 className="text-3xl font-[850] text-[#1F3A34] tracking-tight">{campaign.name}</h2>
+                          <h2 className="text-3xl font-[850] text-[#F6FAFD] tracking-tight">{campaign.name}</h2>
                           <span className={cn(
                             "px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider",
-                            campaign.active ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-700"
+                            campaign.active ? "bg-[#4A7FA7]/20 text-[#4A7FA7] border border-[#4A7FA7]/30" : "bg-[#1A3D63]/40 text-[#B3CFE5]"
                           )}>
                             {campaign.active ? "Live Cluster" : "Archived"}
                           </span>
                         </div>
-                        <p className="text-[#1F3A3440] font-bold uppercase tracking-[0.2em] text-[11px]">Identity Code: {campaign.code}</p>
+                        <p className="text-[#B3CFE5] font-bold uppercase tracking-[0.2em] text-[11px]">Identity Code: {campaign.code}</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-6 pr-4">
                       <div className="text-right">
-                        <p className="text-[10px] font-black uppercase tracking-widest text-[#1F3A3430]">Mapped Assets</p>
-                        <p className="font-[850] text-[#1F3A34]">{campaignScripts.length + campaignQuestionnaires.length} Units</p>
+                        <p className="text-[10px] font-black uppercase tracking-widest text-[#B3CFE5]">Mapped Assets</p>
+                        <p className="font-[850] text-[#F6FAFD]">{campaignScripts.length + campaignQuestionnaires.length} Units</p>
                       </div>
-                      <button className="w-12 h-12 rounded-2xl bg-[#1F3A3405] flex items-center justify-center text-[#1F3A3440] hover:bg-[#1F3A34] hover:text-white transition-all">
+                      <button className="w-12 h-12 rounded-2xl bg-[#1A3D63]/40 flex items-center justify-center text-[#4A7FA7] hover:bg-gradient-to-r hover:from-[#4A7FA7] hover:to-[#1A3D63] hover:text-white transition-all">
                         <MoreHorizontal className="w-6 h-6" />
                       </button>
                     </div>
@@ -333,11 +337,11 @@ function CampaignsPageContent() {
 
                   {/* Asset Classification Grid */}
                   {/* Scripts Section */}
-                  <div className="bg-white p-10 space-y-6">
-                    <div className="flex items-center justify-between border-b border-[#1f3a3405] pb-4">
+                  <div className="bg-[#1A3D63]/40 p-10 space-y-6">
+                    <div className="flex items-center justify-between border-b border-[#4A7FA7]/30 pb-4">
                       <div className="flex items-center gap-3">
-                        <FileCode className="w-5 h-5 text-[#1F3A3440]" />
-                        <h3 className="font-extrabold text-[#1F3A34] uppercase tracking-wider text-xs">Neural Scripts</h3>
+                        <FileCode className="w-5 h-5 text-[#4A7FA7]" />
+                        <h3 className="font-extrabold text-[#F6FAFD] uppercase tracking-wider text-xs">Neural Scripts</h3>
                       </div>
                       <button
                         onClick={() => {
@@ -345,24 +349,24 @@ function CampaignsPageContent() {
                           setModalType("script");
                           setIsModalOpen(true);
                         }}
-                        className="bg-[#1F3A3410] text-[#1F3A34] text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-lg hover:bg-[#1F3A34] hover:text-white transition-all"
+                        className="bg-[#1A3D63]/40 text-[#4A7FA7] text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-lg hover:bg-gradient-to-r hover:from-[#4A7FA7] hover:to-[#1A3D63] hover:text-white transition-all border border-[#4A7FA7]/30"
                       >
                         Add Logic
                       </button>
                     </div>
                     <div className="space-y-3">
                       {campaignScripts.map((s) => (
-                        <div key={s.id} onClick={() => handleScriptClick(s.id)} className="p-4 rounded-2xl bg-[#1F3A3403] border border-transparent hover:border-[#1F3A3410] transition-all flex items-center justify-between group/row cursor-pointer">
+                        <div key={s.id} onClick={() => handleScriptClick(s.id)} className="p-4 rounded-2xl bg-[#1A3D63]/40 border border-transparent hover:border-[#4A7FA7]/30 transition-all flex items-center justify-between group/row cursor-pointer">
                           <div className="flex items-center gap-4">
-                            <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center text-[#1F3A3420] group-hover/row:text-[#1F3A34]">
+                            <div className="w-10 h-10 rounded-xl bg-[#1A3D63]/60 flex items-center justify-center text-[#4A7FA7] group-hover/row:text-[#F6FAFD]">
                               <FileText className="w-4 h-4" />
                             </div>
-                            <p className="text-sm font-bold text-[#1F3A34]">{s.title || "Standard Sales Script"}</p>
+                            <p className="text-sm font-bold text-[#F6FAFD]">{s.title || "Standard Sales Script"}</p>
                           </div>
-                          <ArrowRight className="w-4 h-4 text-[#1F3A3410] group-hover/row:translate-x-1 transition-all" />
+                          <ArrowRight className="w-4 h-4 text-[#4A7FA7] group-hover/row:translate-x-1 transition-all" />
                         </div>
                       ))}
-                      {campaignScripts.length === 0 && <p className="text-[11px] font-bold text-[#1F3A3420] italic py-2">No scripts mapped to this framework...</p>}
+                      {campaignScripts.length === 0 && <p className="text-[11px] font-bold text-[#B3CFE5] italic py-2">No scripts mapped to this framework...</p>}
                     </div>
                   </div>
 
@@ -377,14 +381,14 @@ function CampaignsPageContent() {
 
       {/* Creation Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-[#11231f20] backdrop-blur-md animate-in fade-in duration-300">
-          <div className="bg-white w-full max-w-xl rounded-[2.5rem] shadow-2xl border border-[#1f3a3410] overflow-hidden animate-in zoom-in-95 duration-300">
-            <div className="p-8 border-b border-[#1f3a3405] bg-[#1F3A3402] flex items-center justify-between">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/40 backdrop-blur-md animate-in fade-in duration-300">
+          <div className="bg-[#1A3D63]/95 glow w-full max-w-xl max-h-[90vh] rounded-[2.5rem] shadow-2xl border border-[#4A7FA7]/30 overflow-y-auto animate-in zoom-in-95 duration-300">
+            <div className="p-8 border-b border-[#4A7FA7]/30 bg-[#1A3D63]/60 flex items-center justify-between">
               <div>
-                <h3 className="text-2xl font-[850] text-[#1F3A34] tracking-tight">
+                <h3 className="text-2xl font-[850] text-[#F6FAFD] tracking-tight">
                   {modalType === 'view_script' ? 'Neural Script Details' : `Deploy New ${modalType === 'campaign' ? 'Campaign Cluster' : modalType === 'script' ? 'Neural Script' : 'QA Blueprint'}`}
                 </h3>
-                <p className="text-sm font-semibold text-[#1F3A3440] mt-1">
+                <p className="text-sm font-semibold text-[#B3CFE5] mt-1">
                   {modalType === 'view_script' ? 'Reviewing deployed logic framework.' : 'Configure your intelligence assets below.'}
                 </p>
               </div>
@@ -396,18 +400,18 @@ function CampaignsPageContent() {
                     router.push('/campaigns', { scroll: false });
                   }
                 }}
-                className="w-10 h-10 rounded-xl hover:bg-[#1F3A3410] flex items-center justify-center transition-all text-[#1F3A3420]"
+                className="w-10 h-10 rounded-xl hover:bg-[#4A7FA7]/20 flex items-center justify-center transition-all text-[#B3CFE5]"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <div className="p-10 space-y-8">
+            <div className="p-10 space-y-8 overflow-visible">
               {modalType === "campaign" && (
                 <div className="space-y-6">
                   <InputField label="Name" placeholder="e.g. Q4 Growth Sales" value={campForm.name} onChange={(v) => setCampForm({ ...campForm, name: v })} />
                   <InputField label="Identity Code" placeholder="e.g. SALES_Q4" value={campForm.code} onChange={(v) => setCampForm({ ...campForm, code: v })} />
-                  <button onClick={handleCreateCampaign} disabled={isSubmitting} className="w-full h-14 bg-[#1F3A34] text-white rounded-2xl font-bold flex items-center justify-center gap-3 shadow-xl hover:scale-[1.02] transition-all">
+                  <button onClick={handleCreateCampaign} disabled={isSubmitting} className="w-full h-14 bg-gradient-to-r from-[#4A7FA7] to-[#1A3D63] glow text-[#F6FAFD] rounded-2xl font-bold flex items-center justify-center gap-3 shadow-xl hover:scale-[1.02] transition-all disabled:opacity-50">
                     {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : <><Plus className="w-5 h-5" /> Initialize Cluster</>}
                   </button>
                 </div>
@@ -425,16 +429,16 @@ function CampaignsPageContent() {
 
                   {/* Input Mode Toggle */}
                   <div className="space-y-2">
-                    <label className="text-[10px] font-black uppercase tracking-[0.2em] text-[#1F3A3440]">Input Method</label>
-                    <div className="flex p-1.5 bg-[#1F3A3408] rounded-xl border border-[#1f3a3405]">
+                    <label className="text-[10px] font-black uppercase tracking-[0.2em] text-[#B3CFE5]">Input Method</label>
+                    <div className="flex p-1.5 bg-[#1A3D63]/40 rounded-xl border border-[#4A7FA7]/20">
                       <button
                         type="button"
                         onClick={() => setScriptForm({ ...scriptForm, inputMode: "file" })}
                         className={cn(
                           "flex-1 py-2 rounded-lg text-xs font-extrabold transition-all",
                           scriptForm.inputMode === "file"
-                            ? "bg-[#1F3A34] text-white shadow-sm"
-                            : "text-[#1F3A3450] hover:text-[#1F3A34]"
+                            ? "bg-gradient-to-r from-[#4A7FA7] to-[#1A3D63] text-[#F6FAFD] glow"
+                            : "text-[#B3CFE5]/70 hover:text-[#F6FAFD]"
                         )}
                       >
                         <Upload className="w-3.5 h-3.5 inline-block mr-1.5" />
@@ -446,8 +450,8 @@ function CampaignsPageContent() {
                         className={cn(
                           "flex-1 py-2 rounded-lg text-xs font-extrabold transition-all",
                           scriptForm.inputMode === "text"
-                            ? "bg-[#1F3A34] text-white shadow-sm"
-                            : "text-[#1F3A3450] hover:text-[#1F3A34]"
+                            ? "bg-gradient-to-r from-[#4A7FA7] to-[#1A3D63] text-[#F6FAFD] glow"
+                            : "text-[#B3CFE5]/70 hover:text-[#F6FAFD]"
                         )}
                       >
                         <FileText className="w-3.5 h-3.5 inline-block mr-1.5" />
@@ -460,31 +464,31 @@ function CampaignsPageContent() {
                     <FileUpload label="Script Document (.docx)" onChange={(f) => setScriptForm({ ...scriptForm, file: f })} />
                   ) : (
                     <div className="space-y-2">
-                      <label className="text-[10px] font-black uppercase tracking-[0.2em] text-[#1F3A3440]">Script Text</label>
+                      <label className="text-[10px] font-black uppercase tracking-[0.2em] text-[#B3CFE5]">Script Text</label>
                       <textarea
                         value={scriptForm.text}
                         onChange={(e) => setScriptForm({ ...scriptForm, text: e.target.value })}
                         placeholder="Paste your script content here..."
                         rows={8}
-                        className="w-full bg-[#1F3A3403] border border-[#1f3a3410] rounded-xl p-4 outline-none focus:border-[#1F3A34] transition-all text-[#1F3A34] font-medium text-sm resize-none"
+                        className="w-full bg-[#1A3D63]/40 border border-[#4A7FA7]/30 rounded-xl p-4 outline-none focus:border-[#4A7FA7] transition-all text-[#F6FAFD] font-medium text-sm resize-none placeholder:text-[#B3CFE5]/50"
                       />
                     </div>
                   )}
 
-                  <div className="flex items-center gap-3 p-3 rounded-xl bg-[#1F3A3405]">
+                  <div className="flex items-center gap-3 p-3 rounded-xl bg-[#1A3D63]/40 border border-[#4A7FA7]/20">
                     <input
                       type="checkbox"
                       id="set_default"
                       checked={scriptForm.set_as_campaign_default}
                       onChange={(e) => setScriptForm({ ...scriptForm, set_as_campaign_default: e.target.checked })}
-                      className="w-4 h-4 rounded border-[#1F3A3415] text-[#1F3A34]"
+                      className="w-4 h-4 rounded border-[#4A7FA7]/30 text-[#4A7FA7]"
                     />
-                    <label htmlFor="set_default" className="text-xs font-bold text-[#1F3A34] cursor-pointer">
+                    <label htmlFor="set_default" className="text-xs font-bold text-[#F6FAFD] cursor-pointer">
                       Set as campaign default script
                     </label>
                   </div>
 
-                  <button onClick={handleUploadScript} disabled={isSubmitting} className="w-full h-14 bg-[#1F3A34] text-white disabled:opacity-50 rounded-2xl font-bold flex items-center justify-center gap-3 shadow-xl hover:scale-[1.02] transition-all">
+                  <button onClick={handleUploadScript} disabled={isSubmitting} className="w-full h-14 bg-gradient-to-r from-[#4A7FA7] to-[#1A3D63] glow text-[#F6FAFD] disabled:opacity-50 rounded-2xl font-bold flex items-center justify-center gap-3 shadow-xl hover:scale-[1.02] transition-all">
                     {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : <><Upload className="w-5 h-5" /> Deploy Logic</>}
                   </button>
                 </div>
@@ -497,16 +501,16 @@ function CampaignsPageContent() {
 
                   {/* Input Mode Toggle */}
                   <div className="space-y-2">
-                    <label className="text-[10px] font-black uppercase tracking-[0.2em] text-[#1F3A3440]">Input Method</label>
-                    <div className="flex p-1.5 bg-[#1F3A3408] rounded-xl border border-[#1f3a3405]">
+                    <label className="text-[10px] font-black uppercase tracking-[0.2em] text-[#B3CFE5]">Input Method</label>
+                    <div className="flex p-1.5 bg-[#1A3D63]/40 rounded-xl border border-[#4A7FA7]/20">
                       <button
                         type="button"
                         onClick={() => setQuestForm({ ...questForm, inputMode: "file" })}
                         className={cn(
                           "flex-1 py-2 rounded-lg text-xs font-extrabold transition-all",
                           questForm.inputMode === "file"
-                            ? "bg-[#1F3A34] text-white shadow-sm"
-                            : "text-[#1F3A3450] hover:text-[#1F3A34]"
+                            ? "bg-gradient-to-r from-[#4A7FA7] to-[#1A3D63] text-[#F6FAFD] glow"
+                            : "text-[#B3CFE5]/70 hover:text-[#F6FAFD]"
                         )}
                       >
                         <Upload className="w-3.5 h-3.5 inline-block mr-1.5" />
@@ -518,8 +522,8 @@ function CampaignsPageContent() {
                         className={cn(
                           "flex-1 py-2 rounded-lg text-xs font-extrabold transition-all",
                           questForm.inputMode === "text"
-                            ? "bg-[#1F3A34] text-white shadow-sm"
-                            : "text-[#1F3A3450] hover:text-[#1F3A34]"
+                            ? "bg-gradient-to-r from-[#4A7FA7] to-[#1A3D63] text-[#F6FAFD] glow"
+                            : "text-[#B3CFE5]/70 hover:text-[#F6FAFD]"
                         )}
                       >
                         <FileText className="w-3.5 h-3.5 inline-block mr-1.5" />
@@ -532,31 +536,31 @@ function CampaignsPageContent() {
                     <FileUpload label="Questionnaire Document (.docx)" onChange={(f) => setQuestForm({ ...questForm, file: f })} />
                   ) : (
                     <div className="space-y-2">
-                      <label className="text-[10px] font-black uppercase tracking-[0.2em] text-[#1F3A3440]">Questionnaire Text</label>
+                      <label className="text-[10px] font-black uppercase tracking-[0.2em] text-[#B3CFE5]">Questionnaire Text</label>
                       <textarea
                         value={questForm.text}
                         onChange={(e) => setQuestForm({ ...questForm, text: e.target.value })}
                         placeholder="Paste your questionnaire content here..."
                         rows={8}
-                        className="w-full bg-[#1F3A3403] border border-[#1f3a3410] rounded-xl p-4 outline-none focus:border-[#1F3A34] transition-all text-[#1F3A34] font-medium text-sm resize-none"
+                        className="w-full bg-[#1A3D63]/40 border border-[#4A7FA7]/30 rounded-xl p-4 outline-none focus:border-[#4A7FA7] transition-all text-[#F6FAFD] font-medium text-sm resize-none placeholder:text-[#B3CFE5]/50"
                       />
                     </div>
                   )}
 
-                  <div className="flex items-center gap-3 p-3 rounded-xl bg-[#1F3A3405]">
+                  <div className="flex items-center gap-3 p-3 rounded-xl bg-[#1A3D63]/40 border border-[#4A7FA7]/20">
                     <input
                       type="checkbox"
                       id="active_quest"
                       checked={questForm.active}
                       onChange={(e) => setQuestForm({ ...questForm, active: e.target.checked })}
-                      className="w-4 h-4 rounded border-[#1F3A3415] text-[#1F3A34]"
+                      className="w-4 h-4 rounded border-[#4A7FA7]/30 text-[#4A7FA7]"
                     />
-                    <label htmlFor="active_quest" className="text-xs font-bold text-[#1F3A34] cursor-pointer">
+                    <label htmlFor="active_quest" className="text-xs font-bold text-[#F6FAFD] cursor-pointer">
                       Mark as active questionnaire
                     </label>
                   </div>
 
-                  <button onClick={handleUploadQuest} disabled={isSubmitting} className="w-full h-14 bg-[#1F3A34] text-white disabled:opacity-50 rounded-2xl font-bold flex items-center justify-center gap-3 shadow-xl hover:scale-[1.02] transition-all">
+                  <button onClick={handleUploadQuest} disabled={isSubmitting} className="w-full h-14 bg-gradient-to-r from-[#4A7FA7] to-[#1A3D63] glow text-[#F6FAFD] disabled:opacity-50 rounded-2xl font-bold flex items-center justify-center gap-3 shadow-xl hover:scale-[1.02] transition-all">
                     {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : <><CheckCircle2 className="w-5 h-5" /> Define Audit</>}
                   </button>
                 </div>
@@ -571,19 +575,19 @@ function CampaignsPageContent() {
                   ) : viewingScript.data ? (
                     <div className="space-y-6">
                       <div className="space-y-2">
-                        <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-[#1F3A3440]">Script Title</h4>
-                        <p className="text-lg font-bold text-[#1F3A34]">{viewingScript.data.title}</p>
+                        <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-[#B3CFE5]">Script Title</h4>
+                        <p className="text-lg font-bold text-[#F6FAFD]">{viewingScript.data.title}</p>
                       </div>
                       <div className="space-y-2">
-                        <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-[#1F3A3440]">Source Text</h4>
-                        <div className="bg-[#F4F8F9] p-6 rounded-2xl border border-[#1f3a3410] max-h-[400px] overflow-y-auto subtle-grid">
-                          <p className="text-sm text-[#1F3A3480] whitespace-pre-wrap leading-relaxed">{viewingScript.data.source_text}</p>
+                        <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-[#B3CFE5]">Source Text</h4>
+                        <div className="bg-[#0A1931]/60 p-6 rounded-2xl border border-[#4A7FA7]/30 max-h-[400px] overflow-y-auto">
+                          <p className="text-sm text-[#B3CFE5] whitespace-pre-wrap leading-relaxed">{viewingScript.data.source_text}</p>
                         </div>
                       </div>
-                      <div className="flex items-center gap-4 text-[10px] font-bold text-[#1F3A3450] uppercase tracking-wider">
-                        <span className="bg-[#1F3A3405] px-2 py-1 rounded-md">Version {viewingScript.data.version}</span>
-                        <span className="bg-[#1F3A3405] px-2 py-1 rounded-md">{viewingScript.data.call_direction}</span>
-                        <span className="bg-[#1F3A3405] px-2 py-1 rounded-md">{viewingScript.data.status}</span>
+                      <div className="flex items-center gap-4 text-[10px] font-bold text-[#B3CFE5] uppercase tracking-wider">
+                        <span className="bg-[#1A3D63]/40 px-2 py-1 rounded-md border border-[#4A7FA7]/20">Version {viewingScript.data.version}</span>
+                        <span className="bg-[#1A3D63]/40 px-2 py-1 rounded-md border border-[#4A7FA7]/20">{viewingScript.data.call_direction}</span>
+                        <span className="bg-[#1A3D63]/40 px-2 py-1 rounded-md border border-[#4A7FA7]/20">{viewingScript.data.status}</span>
                       </div>
                     </div>
                   ) : null}
@@ -601,7 +605,7 @@ export default function CampaignsPage() {
   return (
     <Suspense fallback={
       <div className="flex-1 flex items-center justify-center">
-        <div className="w-12 h-12 rounded-2xl border-4 border-[#1f3a3408] border-t-[#1F3A34] animate-spin" />
+        <div className="w-12 h-12 rounded-2xl border-4 border-[#1A3D63]/40 border-t-[#4A7FA7] animate-spin" />
       </div>
     }>
       <CampaignsPageContent />
@@ -612,13 +616,13 @@ export default function CampaignsPage() {
 function InputField({ label, placeholder, value, onChange }: { label: string; placeholder: string; value: string; onChange: (v: string) => void }) {
   return (
     <div className="space-y-2">
-      <label className="text-[10px] font-black uppercase tracking-[0.2em] text-[#1F3A3440]">{label}</label>
+      <label className="text-[10px] font-black uppercase tracking-[0.2em] text-[#B3CFE5]">{label}</label>
       <input
         type="text"
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className="w-full h-14 bg-[#1F3A3403] border border-[#1f3a3410] rounded-xl px-4 outline-none focus:border-[#1F3A34] transition-all text-[#1F3A34] font-semibold"
+        className="w-full h-14 bg-[#1A3D63]/40 border border-[#4A7FA7]/30 rounded-xl px-4 outline-none focus:border-[#4A7FA7] transition-all text-[#F6FAFD] font-semibold placeholder:text-[#B3CFE5]/50"
       />
     </div>
   );
@@ -627,19 +631,19 @@ function InputField({ label, placeholder, value, onChange }: { label: string; pl
 function SelectField({ label, options, value, onChange }: { label: string; options: any[]; value: string; onChange: (v: string) => void }) {
   return (
     <div className="space-y-2">
-      <label className="text-[10px] font-black uppercase tracking-[0.2em] text-[#1F3A3440]">{label}</label>
+      <label className="text-[10px] font-black uppercase tracking-[0.2em] text-[#B3CFE5]">{label}</label>
       <div className="relative">
         <select
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          className="w-full h-14 bg-[#1F3A3403] border border-[#1f3a3410] rounded-xl px-4 outline-none focus:border-[#1F3A34] transition-all text-[#1F3A34] font-semibold appearance-none"
+          className="w-full h-14 bg-[#1A3D63]/40 border border-[#4A7FA7]/30 rounded-xl px-4 outline-none focus:border-[#4A7FA7] transition-all text-[#F6FAFD] font-semibold appearance-none"
         >
           <option value="">Select Target...</option>
           {options.map(o => (
             <option key={o.id} value={o.id}>{o.name}</option>
           ))}
         </select>
-        <ChevronRight className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#1F3A3420] rotate-90" />
+        <ChevronRight className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#4A7FA7] rotate-90" />
       </div>
     </div>
   );
@@ -649,7 +653,7 @@ function FileUpload({ label, onChange }: { label: string; onChange: (file: File)
   const [fileName, setFileName] = useState("");
   return (
     <div className="space-y-2">
-      <label className="text-[10px] font-black uppercase tracking-[0.2em] text-[#1F3A3440]">{label}</label>
+      <label className="text-[10px] font-black uppercase tracking-[0.2em] text-[#B3CFE5]">{label}</label>
       <div
         onClick={() => {
           const input = document.createElement("input");
@@ -663,12 +667,12 @@ function FileUpload({ label, onChange }: { label: string; onChange: (file: File)
           };
           input.click();
         }}
-        className="w-full h-14 border-2 border-dashed border-[#1f3a3410] rounded-xl flex items-center px-4 gap-3 cursor-pointer hover:bg-[#1F3A3402] transition-all group"
+        className="w-full h-14 border-2 border-dashed border-[#4A7FA7]/30 rounded-xl flex items-center px-4 gap-3 cursor-pointer hover:bg-[#1A3D63]/40 transition-all group"
       >
-        <div className="w-8 h-8 rounded-lg bg-[#1F3A3408] group-hover:bg-[#1F3A34] group-hover:text-white flex items-center justify-center text-[#1F3A3440] transition-all">
+        <div className="w-8 h-8 rounded-lg bg-[#1A3D63]/40 group-hover:bg-gradient-to-r group-hover:from-[#4A7FA7] group-hover:to-[#1A3D63] group-hover:text-white flex items-center justify-center text-[#4A7FA7] transition-all">
           <Upload className="w-4 h-4" />
         </div>
-        <span className="text-sm font-bold text-[#1F3A3440]">{fileName || "Click to select file"}</span>
+        <span className="text-sm font-bold text-[#B3CFE5]">{fileName || "Click to select file"}</span>
       </div>
     </div>
   );
@@ -677,10 +681,10 @@ function FileUpload({ label, onChange }: { label: string; onChange: (file: File)
 function EmptyState({ label }: { label: string }) {
   return (
     <div className="py-20 text-center space-y-3">
-      <div className="w-16 h-16 bg-[#1F3A3405] rounded-3xl flex items-center justify-center mx-auto mb-4">
-        <Layers className="w-8 h-8 text-[#1F3A3410]" />
+      <div className="w-16 h-16 bg-[#1A3D63]/40 rounded-3xl flex items-center justify-center mx-auto mb-4">
+        <Layers className="w-8 h-8 text-[#4A7FA7]" />
       </div>
-      <p className="text-[#1F3A3420] font-extrabold uppercase tracking-widest text-xs italic">{label}</p>
+      <p className="text-[#B3CFE5] font-extrabold uppercase tracking-widest text-xs italic">{label}</p>
     </div>
   );
 }

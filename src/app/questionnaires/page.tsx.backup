@@ -22,8 +22,7 @@ import {
   X,
   Upload,
   FileText,
-  Edit,
-  Trash2
+  Edit
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
@@ -80,6 +79,7 @@ function QuestionnairesPageContent() {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Edit state
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingQuestionnaire, setEditingQuestionnaire] = useState<Questionnaire | null>(null);
   const [editForm, setEditForm] = useState({
@@ -89,6 +89,7 @@ function QuestionnairesPageContent() {
     is_redflag: false
   });
 
+  // Read expanded questionnaire ID from URL on mount
   useEffect(() => {
     const questionnaireIdFromUrl = searchParams.get('id');
     if (questionnaireIdFromUrl) {
@@ -171,7 +172,8 @@ function QuestionnairesPageContent() {
     }
   };
 
-  const handleCreateQuestionnaire = async () => {
+  const handleCreateQuestionnaire = async () {
+    // Validation
     if (!createForm.name) {
       alert("Please provide a questionnaire name.");
       return;
@@ -190,6 +192,7 @@ function QuestionnairesPageContent() {
       const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://zk1354qz0k.execute-api.eu-central-1.amazonaws.com";
       const formData = new FormData();
 
+      // Add common fields
       formData.append("name", createForm.name);
       if (createForm.description) formData.append("description", createForm.description);
       formData.append("active", String(createForm.active));
@@ -197,9 +200,11 @@ function QuestionnairesPageContent() {
 
       let endpoint = "";
       if (createForm.inputMode === "file") {
+        // File upload endpoint
         formData.append("file", createForm.file!);
         endpoint = `${baseUrl}/api/v1/questionnaires/upload`;
       } else {
+        // Text parse endpoint
         formData.append("text", createForm.text);
         endpoint = `${baseUrl}/api/v1/questionnaires/parse`;
       }
@@ -239,45 +244,14 @@ function QuestionnairesPageContent() {
     }
   };
 
-  const handleDeleteQuestionnaire = async (id: string, name: string) => {
-    if (!confirm(`Are you sure you want to delete "${name}"? This action cannot be undone.`)) {
-      return;
-    }
-
-    try {
-      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://zk1354qz0k.execute-api.eu-central-1.amazonaws.com";
-      const res = await fetch(`${baseUrl}/api/v1/questionnaires/${id}`, {
-        method: "DELETE",
-        headers: {
-          "ngrok-skip-browser-warning": "true"
-        }
-      });
-
-      if (res.ok) {
-        console.log("Deleted questionnaire:", id);
-        fetchQuestionnaires();
-        if (expandedId === id) {
-          setExpandedId(null);
-          router.push('/questionnaires', { scroll: false });
-        }
-      } else {
-        const errorData = await res.json().catch(() => ({}));
-        console.error("Failed to delete questionnaire:", errorData);
-        alert(`Failed to delete questionnaire: ${errorData.detail || "Please try again."}`);
-      }
-    } catch (err: any) {
-      console.error("Failed to delete questionnaire:", err);
-      alert("Network error. Please check your connection and try again.");
-    }
-  };
-
-  const filtered = questionnaires.filter(q =>
+  const filtered = questionnaires.filter(q => 
     q.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     q.description.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   return (
     <main className="flex-1 overflow-y-auto p-8 space-y-10">
+      {/* Header Strategy */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div>
           <div className="flex items-center gap-3 mb-2">
@@ -295,6 +269,7 @@ function QuestionnairesPageContent() {
         </button>
       </div>
 
+      {/* Intelligence Filter */}
       <div className="relative group">
         <Search className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-[#B3CFE5] group-focus-within:text-[#4A7FA7] transition-colors" />
         <input
@@ -306,6 +281,7 @@ function QuestionnairesPageContent() {
         />
       </div>
 
+      {/* Strategic Schema List */}
       <div className="space-y-6">
         {loading ? (
           <div className="space-y-6">
@@ -339,6 +315,7 @@ function QuestionnairesPageContent() {
                     const newExpandedId = expandedId === q.id ? null : q.id;
                     setExpandedId(newExpandedId);
 
+                    // Update URL with questionnaire ID
                     if (newExpandedId) {
                       router.push(`/questionnaires?id=${newExpandedId}`, { scroll: false });
                     } else {
@@ -383,15 +360,6 @@ function QuestionnairesPageContent() {
                     className="w-10 h-10 rounded-xl bg-[#4A7FA7]/20 hover:bg-[#4A7FA7]/30 text-[#4A7FA7] flex items-center justify-center transition-all border border-[#4A7FA7]/30"
                   >
                     <Edit className="w-4 h-4" />
-                  </button>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleDeleteQuestionnaire(q.id, q.name);
-                    }}
-                    className="w-10 h-10 rounded-xl bg-red-500/20 hover:bg-red-500/30 text-red-400 flex items-center justify-center transition-all border border-red-500/30"
-                  >
-                    <Trash2 className="w-4 h-4" />
                   </button>
                   <div
                     onClick={() => {
@@ -485,6 +453,7 @@ function QuestionnairesPageContent() {
               </div>
 
               <div className="p-10 space-y-8 overflow-y-auto flex-1">
+                 {/* Basic Info */}
                  <div className="space-y-6">
                    <div className="space-y-2">
                      <label className="text-[10px] font-black uppercase tracking-[0.2em] text-[#B3CFE5]">Schema Name *</label>
@@ -507,6 +476,7 @@ function QuestionnairesPageContent() {
                      />
                    </div>
 
+                   {/* Settings */}
                    <div className="grid grid-cols-2 gap-6">
                      <div className="space-y-3">
                        <label className="text-[10px] font-black uppercase tracking-[0.2em] text-[#B3CFE5]">Status</label>
@@ -542,6 +512,7 @@ function QuestionnairesPageContent() {
                    </div>
                  </div>
 
+                 {/* Input Mode Toggle */}
                  <div className="space-y-4">
                    <label className="text-[10px] font-black uppercase tracking-[0.2em] text-[#B3CFE5]">Input Method *</label>
                    <div className="flex p-1.5 bg-[#1A3D63]/40 rounded-xl border border-[#4A7FA7]/20">
@@ -574,6 +545,7 @@ function QuestionnairesPageContent() {
                    </div>
                  </div>
 
+                 {/* File Upload or Text Input */}
                  {createForm.inputMode === "file" ? (
                    <div className="space-y-2">
                      <label className="text-[10px] font-black uppercase tracking-[0.2em] text-[#B3CFE5]">Questionnaire Document *</label>
@@ -632,6 +604,7 @@ function QuestionnairesPageContent() {
         </div>
       )}
 
+      {/* Edit Modal */}
       {isEditModalOpen && editingQuestionnaire && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/50 backdrop-blur-md animate-in fade-in duration-300">
            <div className="bg-[#1A3D63]/95 glow w-full max-w-xl rounded-[2.5rem] shadow-2xl border border-[#4A7FA7]/30 overflow-hidden animate-in zoom-in-95 duration-300">
@@ -670,6 +643,7 @@ function QuestionnairesPageContent() {
                    />
                  </div>
 
+                 {/* Settings */}
                  <div className="grid grid-cols-2 gap-6">
                    <div className="space-y-3">
                      <label className="text-[10px] font-black uppercase tracking-[0.2em] text-[#B3CFE5]">Status</label>

@@ -47,9 +47,9 @@ export function Sidebar() {
       {/* Mobile Menu Button */}
       <button
         onClick={() => setIsMobileOpen(true)}
-        className="fixed top-4 left-4 z-30 lg:hidden p-2 rounded-xl bg-white/90 backdrop-blur-sm border border-[#1f3a3410] shadow-lg"
+        className="fixed top-4 left-4 z-30 lg:hidden p-2 rounded-xl glass-blur border border-[#4A7FA7]/30 shadow-lg glow"
       >
-        <Menu className="w-6 h-6 text-[#1F3A34]" />
+        <Menu className="w-6 h-6 text-[#B3CFE5]" />
       </button>
 
       {/* Mobile Overlay */}
@@ -62,7 +62,7 @@ export function Sidebar() {
 
       {/* Sidebar */}
       <aside className={cn(
-        "h-screen flex-shrink-0 flex flex-col border-r border-[#1f3a3410] bg-white/40 glass-blur apple-blur transition-all duration-300 fixed lg:relative z-50",
+        "h-screen flex-shrink-0 flex flex-col border-r border-[#4A7FA7]/20 glass-blur apple-blur transition-all duration-300 fixed lg:relative z-50 shadow-2xl",
         isCollapsed ? "w-[80px]" : "w-[280px]",
         isMobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
       )}>
@@ -70,13 +70,13 @@ export function Sidebar() {
           {/* Header with Close/Collapse */}
           <div className="flex items-center justify-between mb-10 mt-2">
             <div className={cn("flex items-center gap-3", isCollapsed ? "justify-center w-full" : "px-2")}>
-              <div className="w-8 h-8 rounded-lg bg-[#1F3A34] flex items-center justify-center shadow-lg shadow-[#1F3A3420]">
-                <Command className="text-white w-5 h-5" />
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#4A7FA7] to-[#1A3D63] flex items-center justify-center shadow-lg glow">
+                <Command className="text-[#F6FAFD] w-5 h-5" />
               </div>
               {!isCollapsed && (
                 <div>
-                  <h1 className="text-lg font-extrabold tracking-tight text-[#1F3A34]">
-                    Conversation <span className="opacity-40 font-bold block -mt-1 text-[10px] uppercase tracking-widest leading-none">Intel</span>
+                  <h1 className="text-lg font-extrabold tracking-tight text-[#F6FAFD]">
+                    Conversation <span className="opacity-60 font-bold block -mt-1 text-[10px] uppercase tracking-widest leading-none text-[#B3CFE5]">Intel</span>
                   </h1>
                 </div>
               )}
@@ -85,9 +85,9 @@ export function Sidebar() {
             {/* Mobile Close Button */}
             <button
               onClick={() => setIsMobileOpen(false)}
-              className="lg:hidden p-2 hover:bg-[#1F3A3408] rounded-xl transition-colors"
+              className="lg:hidden p-2 hover:bg-[#1A3D63]/40 rounded-xl transition-colors"
             >
-              <X className="w-5 h-5 text-[#1F3A34]" />
+              <X className="w-5 h-5 text-[#B3CFE5]" />
             </button>
           </div>
 
@@ -95,7 +95,7 @@ export function Sidebar() {
           <button
             onClick={() => setIsCollapsed(!isCollapsed)}
             className={cn(
-              "hidden lg:flex items-center justify-center w-8 h-8 rounded-xl bg-[#1F3A3408] hover:bg-[#1F3A34] hover:text-white transition-all mb-6 shrink-0",
+              "hidden lg:flex items-center justify-center w-8 h-8 rounded-xl bg-[#1A3D63]/40 hover:bg-[#4A7FA7] hover:text-[#F6FAFD] text-[#B3CFE5] transition-all mb-6 shrink-0 border border-[#4A7FA7]/20",
               isCollapsed ? "mx-auto" : "ml-auto"
             )}
           >
@@ -106,7 +106,7 @@ export function Sidebar() {
           <div className="space-y-8 flex-1 overflow-y-auto">
             <div>
               {!isCollapsed && (
-                <h2 className="px-4 text-[11px] font-bold uppercase tracking-widest text-[#1F3A3470] mb-4">{t('navigation')}</h2>
+                <h2 className="px-4 text-[11px] font-bold uppercase tracking-widest text-[#B3CFE5]/60 mb-4">{t('navigation')}</h2>
               )}
               <nav className="space-y-1">
                 {NAV_ITEMS.slice(0, 6).map((item) => {
@@ -122,15 +122,15 @@ export function Sidebar() {
                         "flex items-center rounded-2xl text-[14px] font-medium transition-all group",
                         isCollapsed ? "justify-center p-2.5" : "gap-3.5 px-4 py-2.5",
                         isActive
-                          ? "bg-[#1F3A34] text-white apple-shadow"
-                          : "text-[#1F3A34] hover:bg-[#1F3A3408]"
+                          ? "bg-gradient-to-r from-[#4A7FA7] to-[#1A3D63] text-[#F6FAFD] glow border border-[#4A7FA7]/40"
+                          : "text-[#B3CFE5] hover:bg-[#1A3D63]/40 border border-transparent hover:border-[#4A7FA7]/20"
                       )}
                       title={isCollapsed ? t(item.name as any) : undefined}
                     >
                       <Icon
                         className={cn(
                           "w-[18px] h-[18px] opacity-70 shrink-0",
-                          isActive ? "text-white" : "text-[#1F3A3470]"
+                          isActive ? "text-[#F6FAFD]" : "text-[#B3CFE5]/70"
                         )}
                       />
                       {!isCollapsed && t(item.name as any)}
@@ -142,7 +142,7 @@ export function Sidebar() {
 
             <div>
               {!isCollapsed && (
-                <h2 className="px-4 text-[11px] font-bold uppercase tracking-widest text-[#1F3A3470] mb-4">{t('management')}</h2>
+                <h2 className="px-4 text-[11px] font-bold uppercase tracking-widest text-[#B3CFE5]/60 mb-4">{t('management')}</h2>
               )}
               <nav className="space-y-1">
                 {NAV_ITEMS.slice(6).map((item) => {
@@ -158,15 +158,15 @@ export function Sidebar() {
                         "flex items-center rounded-2xl text-[14px] font-medium transition-all group",
                         isCollapsed ? "justify-center p-2.5" : "gap-3.5 px-4 py-2.5",
                         isActive
-                          ? "bg-[#1F3A34] text-white apple-shadow"
-                          : "text-[#1F3A34] hover:bg-[#1F3A3408]"
+                          ? "bg-gradient-to-r from-[#4A7FA7] to-[#1A3D63] text-[#F6FAFD] glow border border-[#4A7FA7]/40"
+                          : "text-[#B3CFE5] hover:bg-[#1A3D63]/40 border border-transparent hover:border-[#4A7FA7]/20"
                       )}
                       title={isCollapsed ? t(item.name as any) : undefined}
                     >
                       <Icon
                         className={cn(
                           "w-[18px] h-[18px] opacity-70 shrink-0",
-                          isActive ? "text-white" : "text-[#1F3A3470]"
+                          isActive ? "text-[#F6FAFD]" : "text-[#B3CFE5]/70"
                         )}
                       />
                       {!isCollapsed && t(item.name as any)}
@@ -182,16 +182,16 @@ export function Sidebar() {
             {!isCollapsed && <LanguageSwitcher />}
 
             <div className={cn(
-              "rounded-3xl bg-[#1F3A3408] border border-[#1f3a3408] flex items-center transition-all",
+              "rounded-3xl bg-[#1A3D63]/40 border border-[#4A7FA7]/30 flex items-center transition-all glow",
               isCollapsed ? "flex-col gap-2 p-2" : "gap-3 p-4"
             )}>
-              <div className="w-9 h-9 rounded-full bg-[#1F3A3420] flex items-center justify-center text-[#1F3A34] font-bold text-xs shrink-0">
+              <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#4A7FA7] to-[#1A3D63] flex items-center justify-center text-[#F6FAFD] font-bold text-xs shrink-0 shadow-lg">
                 JD
               </div>
               {!isCollapsed && (
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-bold text-[#1F3A34] truncate">John Doe</p>
-                  <p className="description text-[10px] text-[#1F3A3480] font-semibold mt-0.5 uppercase tracking-wider truncate">Enterprise Manager</p>
+                  <p className="text-sm font-bold text-[#F6FAFD] truncate">John Doe</p>
+                  <p className="description text-[10px] text-[#B3CFE5]/70 font-semibold mt-0.5 uppercase tracking-wider truncate">Enterprise Manager</p>
                 </div>
               )}
             </div>

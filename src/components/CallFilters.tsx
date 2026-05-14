@@ -179,8 +179,8 @@ export function CallFilters({ filters, onFiltersChange, campaigns = [], question
           className={cn(
             "flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-sm transition-all border",
             isOpen
-              ? "bg-[#1F3A34] text-white border-[#1F3A34]"
-              : "bg-white text-[#1F3A34] border-[#1f3a3410] hover:bg-[#1F3A3408]"
+              ? "bg-gradient-to-r from-[#4A7FA7] to-[#1A3D63] glow text-white border-[#4A7FA7]/30"
+              : "bg-[#1A3D63]/40 text-[#F6FAFD] border-[#4A7FA7]/20 hover:bg-[#1A3D63]/60"
           )}
         >
           <Filter className="w-4 h-4" />
@@ -206,14 +206,14 @@ export function CallFilters({ filters, onFiltersChange, campaigns = [], question
 
       {/* Filter Panel */}
       {isOpen && (
-        <div className="p-6 rounded-[2rem] bg-white border border-[#1f3a3410] space-y-6 shadow-lg">
+        <div className="p-6 rounded-[2rem] bg-[#1A3D63]/60 border border-[#4A7FA7]/30 space-y-6 shadow-lg">
           {/* Search */}
           <div>
-            <label className="block text-xs font-black uppercase tracking-widest text-[#1F3A3470] mb-2 flex items-center gap-2">
+            <label className="block text-xs font-black uppercase tracking-widest text-[#B3CFE5] mb-2 flex items-center gap-2">
               <Search className={cn("w-3 h-3", isSearching && "animate-pulse")} />
               Search
               {isSearching && (
-                <span className="text-[9px] font-bold text-blue-500 bg-blue-50 px-2 py-0.5 rounded-md">
+                <span className="text-[9px] font-bold text-[#4A7FA7] bg-[#4A7FA7]/20 px-2 py-0.5 rounded-md">
                   Searching...
                 </span>
               )}
@@ -224,12 +224,12 @@ export function CallFilters({ filters, onFiltersChange, campaigns = [], question
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
                 placeholder="Search file name or summary..."
-                className="w-full px-4 py-2.5 rounded-xl border border-[#1f3a3410] bg-[#1F3A3405] text-sm font-medium text-[#1F3A34] placeholder:text-[#1F3A3440] focus:outline-none focus:ring-2 focus:ring-[#1F3A34] focus:border-transparent"
+                className="w-full px-4 py-2.5 rounded-xl border border-[#4A7FA7]/20 bg-[#1A3D63]/40 text-sm font-medium text-[#F6FAFD] placeholder:text-[#B3CFE5] focus:outline-none focus:ring-2 focus:ring-[#4A7FA7] focus:border-transparent"
               />
               {searchInput && (
                 <button
                   onClick={() => setSearchInput("")}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[#1F3A3440] hover:text-[#1F3A34] transition-colors"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[#B3CFE5] hover:text-[#F6FAFD] transition-colors"
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -239,7 +239,7 @@ export function CallFilters({ filters, onFiltersChange, campaigns = [], question
 
           {/* Status Filter */}
           <div>
-            <label className="block text-xs font-black uppercase tracking-widest text-[#1F3A3470] mb-2">
+            <label className="block text-xs font-black uppercase tracking-widest text-[#B3CFE5] mb-2">
               Status
             </label>
             <div className="flex flex-wrap gap-2">
@@ -250,8 +250,8 @@ export function CallFilters({ filters, onFiltersChange, campaigns = [], question
                   className={cn(
                     "px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all border",
                     filters.status?.includes(option.value)
-                      ? "bg-[#1F3A34] text-white border-[#1F3A34]"
-                      : "bg-[#1F3A3408] text-[#1F3A34] border-[#1f3a3410] hover:bg-[#1F3A3410]"
+                      ? "bg-gradient-to-r from-[#4A7FA7] to-[#1A3D63] glow text-white border-[#4A7FA7]/30"
+                      : "bg-[#1A3D63]/40 text-[#F6FAFD] border-[#4A7FA7]/20 hover:bg-[#1A3D63]/60"
                   )}
                 >
                   {option.label}
@@ -262,7 +262,7 @@ export function CallFilters({ filters, onFiltersChange, campaigns = [], question
 
           {/* Review Status Filter */}
           <div>
-            <label className="block text-xs font-black uppercase tracking-widest text-[#1F3A3470] mb-2">
+            <label className="block text-xs font-black uppercase tracking-widest text-[#B3CFE5] mb-2">
               Review Status
             </label>
             <div className="flex flex-wrap gap-2">
@@ -273,8 +273,8 @@ export function CallFilters({ filters, onFiltersChange, campaigns = [], question
                   className={cn(
                     "px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all border",
                     filters.review_status?.includes(option.value)
-                      ? "bg-[#1F3A34] text-white border-[#1F3A34]"
-                      : "bg-[#1F3A3408] text-[#1F3A34] border-[#1f3a3410] hover:bg-[#1F3A3410]"
+                      ? "bg-gradient-to-r from-[#4A7FA7] to-[#1A3D63] glow text-white border-[#4A7FA7]/30"
+                      : "bg-[#1A3D63]/40 text-[#F6FAFD] border-[#4A7FA7]/20 hover:bg-[#1A3D63]/60"
                   )}
                 >
                   {option.label}
@@ -285,7 +285,7 @@ export function CallFilters({ filters, onFiltersChange, campaigns = [], question
 
           {/* Call Success Toggle */}
           <div>
-            <label className="block text-xs font-black uppercase tracking-widest text-[#1F3A3470] mb-2">
+            <label className="block text-xs font-black uppercase tracking-widest text-[#B3CFE5] mb-2">
               Call Outcome
             </label>
             <div className="flex gap-2">
@@ -318,8 +318,8 @@ export function CallFilters({ filters, onFiltersChange, campaigns = [], question
                 className={cn(
                   "px-3 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-all border",
                   filters.call_success === undefined
-                    ? "bg-[#1F3A34] text-white border-[#1F3A34]"
-                    : "bg-[#1F3A3408] text-[#1F3A34] border-[#1f3a3410] hover:bg-[#1F3A3410]"
+                    ? "bg-gradient-to-r from-[#4A7FA7] to-[#1A3D63] glow text-white border-[#4A7FA7]/30"
+                    : "bg-[#1A3D63]/40 text-[#F6FAFD] border-[#4A7FA7]/20 hover:bg-[#1A3D63]/60"
                 )}
               >
                 All
@@ -329,7 +329,7 @@ export function CallFilters({ filters, onFiltersChange, campaigns = [], question
 
           {/* Sentiment Filter */}
           <div>
-            <label className="block text-xs font-black uppercase tracking-widest text-[#1F3A3470] mb-2">
+            <label className="block text-xs font-black uppercase tracking-widest text-[#B3CFE5] mb-2">
               Sentiment
             </label>
             <div className="flex gap-2">
@@ -342,8 +342,8 @@ export function CallFilters({ filters, onFiltersChange, campaigns = [], question
                     className={cn(
                       "flex-1 px-3 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-all border flex items-center justify-center gap-2",
                       filters.sentiment === option.value
-                        ? "bg-[#1F3A34] text-white border-[#1F3A34]"
-                        : "bg-[#1F3A3408] text-[#1F3A34] border-[#1f3a3410] hover:bg-[#1F3A3410]"
+                        ? "bg-gradient-to-r from-[#4A7FA7] to-[#1A3D63] glow text-white border-[#4A7FA7]/30"
+                        : "bg-[#1A3D63]/40 text-[#F6FAFD] border-[#4A7FA7]/20 hover:bg-[#1A3D63]/60"
                     )}
                   >
                     <Icon className={cn("w-4 h-4", filters.sentiment !== option.value && option.color)} />
@@ -356,7 +356,7 @@ export function CallFilters({ filters, onFiltersChange, campaigns = [], question
 
           {/* Score Range Slider */}
           <div>
-            <label className="block text-xs font-black uppercase tracking-widest text-[#1F3A3470] mb-2">
+            <label className="block text-xs font-black uppercase tracking-widest text-[#B3CFE5] mb-2">
               <BarChart3 className="w-3 h-3 inline mr-1" />
               Score Range: {filters.min_score || 0} - {filters.max_score || 100}
             </label>
@@ -382,7 +382,7 @@ export function CallFilters({ filters, onFiltersChange, campaigns = [], question
 
           {/* Tags */}
           <div>
-            <label className="block text-xs font-black uppercase tracking-widest text-[#1F3A3470] mb-2">
+            <label className="block text-xs font-black uppercase tracking-widest text-[#B3CFE5] mb-2">
               <Tag className="w-3 h-3 inline mr-1" />
               Tags
             </label>
@@ -393,11 +393,11 @@ export function CallFilters({ filters, onFiltersChange, campaigns = [], question
                 onChange={(e) => setTagInput(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && addTag()}
                 placeholder="Add tag..."
-                className="flex-1 px-3 py-2 rounded-lg border border-[#1f3a3410] bg-[#1F3A3405] text-sm font-medium text-[#1F3A34] placeholder:text-[#1F3A3440] focus:outline-none focus:ring-2 focus:ring-[#1F3A34]"
+                className="flex-1 px-3 py-2 rounded-lg border border-[#4A7FA7]/20 bg-[#1A3D63]/40 text-sm font-medium text-[#F6FAFD] placeholder:text-[#B3CFE5] focus:outline-none focus:ring-2 focus:ring-[#4A7FA7]"
               />
               <button
                 onClick={addTag}
-                className="px-4 py-2 rounded-lg bg-[#1F3A34] text-white text-xs font-bold uppercase tracking-wider hover:bg-[#1F3A34]/90 transition-all"
+                className="px-4 py-2 rounded-lg bg-[#4A7FA7] text-white text-xs font-bold uppercase tracking-wider hover:bg-[#4A7FA7]/90 transition-all"
               >
                 Add
               </button>
@@ -407,10 +407,10 @@ export function CallFilters({ filters, onFiltersChange, campaigns = [], question
                 {filters.tag.map((tag) => (
                   <span
                     key={tag}
-                    className="px-2 py-1 rounded-md bg-blue-100 text-blue-700 text-xs font-bold flex items-center gap-1.5"
+                    className="px-2 py-1 rounded-md bg-[#4A7FA7]/20 text-[#B3CFE5] text-xs font-bold flex items-center gap-1.5"
                   >
                     #{tag}
-                    <button onClick={() => removeTag(tag)} className="hover:text-blue-900">
+                    <button onClick={() => removeTag(tag)} className="hover:text-[#F6FAFD]">
                       <X className="w-3 h-3" />
                     </button>
                   </span>
@@ -422,7 +422,7 @@ export function CallFilters({ filters, onFiltersChange, campaigns = [], question
           {/* Campaigns */}
           {campaigns.length > 0 && (
             <div>
-              <label className="block text-xs font-black uppercase tracking-widest text-[#1F3A3470] mb-2">
+              <label className="block text-xs font-black uppercase tracking-widest text-[#B3CFE5] mb-2">
                 Campaigns
               </label>
               <div className="space-y-2 max-h-40 overflow-y-auto">
@@ -432,9 +432,9 @@ export function CallFilters({ filters, onFiltersChange, campaigns = [], question
                       type="checkbox"
                       checked={filters.campaign_id?.includes(campaign.id) || false}
                       onChange={() => toggleCampaign(campaign.id)}
-                      className="rounded border-[#1f3a3410]"
+                      className="rounded border-[#4A7FA7]/20"
                     />
-                    <span className="text-sm font-medium text-[#1F3A34]">{campaign.name}</span>
+                    <span className="text-sm font-medium text-[#F6FAFD]">{campaign.name}</span>
                   </label>
                 ))}
               </div>
@@ -444,7 +444,7 @@ export function CallFilters({ filters, onFiltersChange, campaigns = [], question
           {/* Questionnaires */}
           {questionnaires.length > 0 && (
             <div>
-              <label className="block text-xs font-black uppercase tracking-widest text-[#1F3A3470] mb-2">
+              <label className="block text-xs font-black uppercase tracking-widest text-[#B3CFE5] mb-2">
                 Questionnaires
               </label>
               <div className="space-y-2 max-h-40 overflow-y-auto">
@@ -454,9 +454,9 @@ export function CallFilters({ filters, onFiltersChange, campaigns = [], question
                       type="checkbox"
                       checked={filters.questionnaire_id?.includes(questionnaire.id) || false}
                       onChange={() => toggleQuestionnaire(questionnaire.id)}
-                      className="rounded border-[#1f3a3410]"
+                      className="rounded border-[#4A7FA7]/20"
                     />
-                    <span className="text-sm font-medium text-[#1F3A34]">{questionnaire.title}</span>
+                    <span className="text-sm font-medium text-[#F6FAFD]">{questionnaire.title}</span>
                   </label>
                 ))}
               </div>

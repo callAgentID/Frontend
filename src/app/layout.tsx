@@ -38,12 +38,17 @@ export default async function RootLayout({
       <head>
         <meta name="google" content="notranslate" />
       </head>
-      <body className="h-screen overflow-hidden flex text-foreground bg-background">
+      <body className="h-screen overflow-hidden flex relative" style={{ background: '#0A1931', color: '#502D55' }}>
+        {/* Animated smoke wave background */}
+        <div className="smoke-particle" />
+        <div className="smoke-particle" />
+        <div className="smoke-particle" />
+
         <NextIntlClientProvider messages={messages}>
           <Sidebar aria-hidden="true" />
-          <div className="flex-1 flex flex-col min-h-screen overflow-hidden">
+          <div className="flex-1 flex flex-col min-h-screen overflow-hidden relative" style={{ background: '#0A1931' }}>
             <Navbar />
-            <main className="flex-1 overflow-y-auto p-4 sm:p-6 md:p-8 subtle-grid">
+            <main className="flex-1 overflow-y-auto p-4 sm:p-6 md:p-8 subtle-grid backdrop-blur-sm" style={{ background: '#0A1931' }}>
               {children}
             </main>
           </div>

@@ -217,16 +217,16 @@ function AnalyticsPageContent() {
   if (selectedCallId) {
     return (
       <div className="p-4 sm:p-6 md:p-8 space-y-10 animate-in fade-in slide-in-from-right-8 duration-700">
-        <div className="flex items-center justify-between border-b border-[#1f3a3408] pb-8">
+        <div className="flex items-center justify-between border-b border-[#4A7FA7]/30 pb-8">
           <button
             onClick={closeDetail}
-            className="flex items-center gap-2 text-[#1F3A3450] hover:text-[#1F3A34] font-bold text-xs uppercase tracking-widest transition-all"
+            className="flex items-center gap-2 text-[#B3CFE5] hover:text-[#F6FAFD] font-bold text-xs uppercase tracking-widest transition-all"
           >
             <ArrowLeft className="w-4 h-4" /> Back to Signal History
           </button>
           <div className="flex items-center gap-3">
-            <span className="text-[11px] font-bold text-[#1F3A3460] uppercase tracking-widest">Signal Locked</span>
-            <div className="w-2.5 h-2.5 rounded-full bg-green-500 shadow-sm shadow-green-500/50 animate-pulse" />
+            <span className="text-[11px] font-bold text-[#B3CFE5] uppercase tracking-widest">Signal Locked</span>
+            <div className="w-2.5 h-2.5 rounded-full bg-[#4A7FA7] shadow-sm shadow-[#4A7FA7]/50 animate-pulse" />
           </div>
         </div>
 
@@ -242,29 +242,29 @@ function AnalyticsPageContent() {
   return (
     <div className="p-4 sm:p-6 md:p-10 space-y-16 animate-in fade-in duration-1000">
       {/* Header Intelligence Summary */}
-      <div className="flex flex-col md:flex-row gap-8 items-start justify-between border-b border-[#1f3a3408] pb-12">
+      <div className="flex flex-col md:flex-row gap-8 items-start justify-between border-b border-[#4A7FA7]/30 pb-12">
         <div>
           <div className="flex items-center gap-3 mb-4 px-1">
-            <span className="px-3 py-1 bg-[#1F3A34] text-white text-[10px] uppercase font-[900] tracking-widest rounded-lg">Historical Command</span>
-            <span className="text-[11px] font-bold text-[#1F3A3460] uppercase tracking-widest leading-none">Global Signal Archive</span>
+            <span className="px-3 py-1 bg-gradient-to-r from-[#4A7FA7] to-[#1A3D63] glow text-white text-[10px] uppercase font-[900] tracking-widest rounded-lg">Historical Command</span>
+            <span className="text-[11px] font-bold text-[#B3CFE5] uppercase tracking-widest leading-none">Global Signal Archive</span>
           </div>
-          <h2 className="text-[32px] sm:text-[42px] md:text-[52px] font-[850] text-[#1F3A34] tracking-tight leading-none mb-6">{t('title')}</h2>
-          <p className="text-[#1F3A3480] text-[16px] font-medium max-w-lg leading-relaxed">
+          <h2 className="text-[32px] sm:text-[42px] md:text-[52px] font-[850] text-[#F6FAFD] tracking-tight leading-none mb-6">{t('title')}</h2>
+          <p className="text-[#B3CFE5] text-[16px] font-medium max-w-lg leading-relaxed">
             {t('subtitle')}
           </p>
         </div>
 
         <div className="flex gap-4">
           {/* Aggregate Quick Stats */}
-          <div className="p-6 rounded-[2.5rem] bg-white apple-shadow border border-[#1f3a3405] min-w-[200px]">
+          <div className="p-6 rounded-[2.5rem] bg-[#1A3D63]/60 glow border border-[#4A7FA7]/30 min-w-[200px]">
             <div className="flex items-center justify-between mb-4">
-              <div className="p-2 rounded-xl bg-[#1F3A3408] text-[#1F3A3440]"><Activity className="w-4 h-4" /></div>
-              <span className="text-[10px] font-black text-blue-500 bg-blue-50 px-2 py-0.5 rounded-md">Page {currentPage}</span>
+              <div className="p-2 rounded-xl bg-[#1A3D63]/40 text-[#4A7FA7]"><Activity className="w-4 h-4" /></div>
+              <span className="text-[10px] font-black text-[#4A7FA7] bg-[#1A3D63]/40 px-2 py-0.5 rounded-md">Page {currentPage}</span>
             </div>
-            <p className="text-[10px] font-black text-[#1F3A3430] uppercase tracking-widest mb-1">{t('showingRecords')}</p>
-            <h4 className="text-2xl font-[850] text-[#1F3A34]">{calls.length}</h4>
+            <p className="text-[10px] font-black text-[#B3CFE5] uppercase tracking-widest mb-1">{t('showingRecords')}</p>
+            <h4 className="text-2xl font-[850] text-[#F6FAFD]">{calls.length}</h4>
             {totalCalls > 0 && (
-              <p className="text-[9px] font-bold text-[#1F3A3440] mt-1">of ~{totalCalls} total</p>
+              <p className="text-[9px] font-bold text-[#B3CFE5] mt-1">of ~{totalCalls} total</p>
             )}
           </div>
         </div>
@@ -274,9 +274,9 @@ function AnalyticsPageContent() {
       <div className="space-y-8">
         <div className="flex items-center justify-between px-2">
           <div className="flex items-center gap-4">
-            <h4 className="text-xl font-[850] text-[#1F3A34] tracking-tight">{t('signalHistory')}</h4>
-            <div className="h-6 w-[1px] bg-[#1f3a3410]" />
-            <div className="flex items-center gap-2 text-[10px] font-black px-3 py-1 bg-[#1F3A3408] rounded-full text-[#1F3A3450]">
+            <h4 className="text-xl font-[850] text-[#F6FAFD] tracking-tight">{t('signalHistory')}</h4>
+            <div className="h-6 w-[1px] bg-[#4A7FA7]/20" />
+            <div className="flex items-center gap-2 text-[10px] font-black px-3 py-1 bg-[#1A3D63]/40 rounded-full text-[#B3CFE5]">
               <Database className="w-3 h-3" /> {t('live')}
             </div>
           </div>
@@ -286,7 +286,7 @@ function AnalyticsPageContent() {
                 setCurrentPage(1);
                 setIsLoading(true);
               }}
-              className="flex items-center gap-2 px-4 h-11 bg-[#1F3A3408] hover:bg-[#1F3A3415] text-[#1F3A34] rounded-xl font-bold text-xs uppercase tracking-wider transition-all"
+              className="flex items-center gap-2 px-4 h-11 bg-gradient-to-r from-[#4A7FA7] to-[#1A3D63] glow hover:opacity-90 text-white rounded-xl font-bold text-xs uppercase tracking-wider transition-all"
               title={t('refresh')}
             >
               <RefreshCw className="w-4 h-4" />
@@ -305,27 +305,27 @@ function AnalyticsPageContent() {
           }}
         />
 
-        <div className="w-full bg-white apple-shadow rounded-[3rem] border border-[#1f3a3403] overflow-hidden">
+        <div className="w-full bg-[#1A3D63]/60 glow rounded-[3rem] border border-[#4A7FA7]/30 overflow-hidden">
           {isLoading ? (
-            <div className="divide-y divide-[#1f3a3405]">
+            <div className="divide-y divide-[#4A7FA7]/20">
               {[1, 2, 3, 4, 5].map((i) => (
                 <CallListItemSkeleton key={i} />
               ))}
             </div>
           ) : (
-            <div className="divide-y divide-[#1f3a3405]">
+            <div className="divide-y divide-[#4A7FA7]/20">
               {calls.map((call) => (
                 <div
                   key={call.call_id}
-                  className="flex items-center gap-6 p-8 hover:bg-[#1F3A3403] transition-all group"
+                  className="flex items-center gap-6 p-8 hover:bg-[#1A3D63]/80 transition-all group"
                 >
                   {/* Score Indicator */}
                   <div
                     onClick={() => viewDetail(call.call_id)}
                     className={cn(
                       "w-12 h-12 rounded-2xl flex items-center justify-center font-black text-sm shrink-0 shadow-lg cursor-pointer",
-                      (call.overall_score || 0) >= 80 ? "bg-green-500 text-white shadow-green-500/20" :
-                        (call.overall_score || 0) >= 50 ? "bg-[#1F3A3415] text-[#1F3A34]" : "bg-red-500 text-white shadow-red-500/20"
+                      (call.overall_score || 0) >= 80 ? "bg-gradient-to-br from-[#4A7FA7] to-[#1A3D63] text-white shadow-[#4A7FA7]/20" :
+                        (call.overall_score || 0) >= 50 ? "bg-[#1A3D63]/40 text-[#F6FAFD]" : "bg-red-500 text-white shadow-red-500/20"
                     )}>
                     {(call.overall_score || 0).toFixed(0)}
                   </div>
@@ -336,39 +336,39 @@ function AnalyticsPageContent() {
                     className="flex-1 min-w-0 cursor-pointer"
                   >
                     <div className="flex items-center gap-3 mb-1.5">
-                      <h5 className="text-[17px] font-extrabold text-[#1F3A34] tracking-tight truncate group-hover:text-[#1F3A34] transition-colors">
+                      <h5 className="text-[17px] font-extrabold text-[#F6FAFD] tracking-tight truncate group-hover:text-[#B3CFE5] transition-colors">
                         {call.file_name || `Call #${call.call_id.split('-')[0]}`}
                       </h5>
                       {call.has_red_flags && <ShieldAlert className="w-5 h-5 text-red-500 fill-red-500/10" />}
                       {call.call_success !== null && call.call_success !== undefined && (
                         <span className={cn(
                           "px-2 py-0.5 text-[9px] font-black uppercase tracking-wider rounded-md",
-                          call.call_success ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
+                          call.call_success ? "bg-[#4A7FA7]/20 text-[#4A7FA7] border border-[#4A7FA7]/30" : "bg-red-100 text-red-700"
                         )}>
                           {call.call_success ? '✅' : '❌'}
                         </span>
                       )}
                       {call.review_status === 'reviewed' && (
-                        <span className="flex items-center gap-1 px-2 py-0.5 text-[9px] font-black uppercase tracking-wider rounded-md bg-blue-50 text-blue-600 border border-blue-200">
+                        <span className="flex items-center gap-1 px-2 py-0.5 text-[9px] font-black uppercase tracking-wider rounded-md bg-[#4A7FA7]/20 text-[#4A7FA7] border border-[#4A7FA7]/30">
                           <Eye className="w-3 h-3" />
                         </span>
                       )}
                     </div>
                     {call.smart_summary && (
-                      <p className="text-sm font-medium text-[#1F3A3460] mb-2 line-clamp-2 leading-relaxed">
+                      <p className="text-sm font-medium text-[#B3CFE5] mb-2 line-clamp-2 leading-relaxed">
                         {call.smart_summary}
                       </p>
                     )}
                     <div className="flex items-center gap-5">
-                      <span className="text-[10px] font-bold text-[#1F3A3430] uppercase tracking-widest">
+                      <span className="text-[10px] font-bold text-[#B3CFE5] uppercase tracking-widest">
                         ID: {call.call_id.split('-')[0]}
                       </span>
-                      <span className="w-1.5 h-1.5 rounded-full bg-[#1F3A3415]" />
-                      <span className="flex items-center gap-2 text-[11px] font-black text-[#1F3A3460] uppercase tracking-widest">
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#4A7FA7]/30" />
+                      <span className="flex items-center gap-2 text-[11px] font-black text-[#B3CFE5] uppercase tracking-widest">
                         <Calendar className="w-3.5 h-3.5" /> {new Date(call.created_at).toLocaleDateString()}
                       </span>
-                      <span className="w-1.5 h-1.5 rounded-full bg-[#1F3A3415]" />
-                      <span className="text-[11px] font-bold text-[#1F3A3480] uppercase tracking-widest px-2 py-0.5 bg-[#1F3A3405] rounded-md">
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#4A7FA7]/30" />
+                      <span className="text-[11px] font-bold text-[#B3CFE5] uppercase tracking-widest px-2 py-0.5 bg-[#1A3D63]/40 rounded-md">
                         Sentiment: {call.sentiment?.label || 'N/A'}
                       </span>
                     </div>
@@ -380,22 +380,22 @@ function AnalyticsPageContent() {
                       onClick={() => viewDetail(call.call_id)}
                       className="text-right hidden md:block cursor-pointer"
                     >
-                      <p className="text-[11px] font-black text-[#1F3A3440] uppercase tracking-widest mb-1 leading-none">Silence Index</p>
-                      <p className="text-[15px] font-[850] text-[#1F3A34] tracking-tight">{((call.silence_ratio || 0) * 100).toFixed(0)}%</p>
+                      <p className="text-[11px] font-black text-[#B3CFE5] uppercase tracking-widest mb-1 leading-none">Silence Index</p>
+                      <p className="text-[15px] font-[850] text-[#F6FAFD] tracking-tight">{((call.silence_ratio || 0) * 100).toFixed(0)}%</p>
                     </div>
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
                         setDeleteConfirmCallId(call.call_id);
                       }}
-                      className="w-10 h-10 rounded-xl bg-red-50 text-red-500 hover:bg-red-500 hover:text-white flex items-center justify-center transition-all opacity-0 group-hover:opacity-100"
+                      className="w-10 h-10 rounded-xl bg-red-500/20 text-red-500 hover:bg-red-500 hover:text-white flex items-center justify-center transition-all opacity-0 group-hover:opacity-100"
                       title="Delete call"
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
                     <div
                       onClick={() => viewDetail(call.call_id)}
-                      className="w-11 h-11 rounded-2xl bg-[#1F3A3408] text-[#1F3A3440] flex items-center justify-center group-hover:bg-[#1F3A34] group-hover:text-white transition-all group-hover:scale-110 shadow-sm cursor-pointer"
+                      className="w-11 h-11 rounded-2xl bg-[#1A3D63]/40 text-[#4A7FA7] flex items-center justify-center group-hover:bg-gradient-to-r group-hover:from-[#4A7FA7] group-hover:to-[#1A3D63] group-hover:text-white transition-all group-hover:scale-110 shadow-sm cursor-pointer"
                     >
                       <ArrowUpRight className="w-5 h-5" />
                     </div>
@@ -405,8 +405,8 @@ function AnalyticsPageContent() {
 
               {calls.length === 0 && (
                 <div className="p-20 text-center space-y-4">
-                  <History className="w-12 h-12 text-[#1F3A3410] mx-auto" />
-                  <p className="text-sm font-bold text-[#1F3A3430] uppercase tracking-widest">No signals found in the history.</p>
+                  <History className="w-12 h-12 text-[#4A7FA7] mx-auto" />
+                  <p className="text-sm font-bold text-[#B3CFE5] uppercase tracking-widest">No signals found in the history.</p>
                 </div>
               )}
             </div>
@@ -417,21 +417,21 @@ function AnalyticsPageContent() {
         {!isLoading && calls.length > 0 && (
           <div className="flex items-center justify-between px-4 py-6">
             <div className="flex items-center gap-4">
-              <p className="text-sm font-bold text-[#1F3A3460]">
-                {t('showing')} <span className="text-[#1F3A34] font-extrabold">{((currentPage - 1) * itemsPerPage) + 1}</span> {t('to')} <span className="text-[#1F3A34] font-extrabold">{Math.min(currentPage * itemsPerPage, ((currentPage - 1) * itemsPerPage) + calls.length)}</span>
-                {totalCalls > 0 && <span> {t('of')} <span className="text-[#1F3A34] font-extrabold">{totalCalls}</span></span>}
+              <p className="text-sm font-bold text-[#B3CFE5]">
+                {t('showing')} <span className="text-[#F6FAFD] font-extrabold">{((currentPage - 1) * itemsPerPage) + 1}</span> {t('to')} <span className="text-[#F6FAFD] font-extrabold">{Math.min(currentPage * itemsPerPage, ((currentPage - 1) * itemsPerPage) + calls.length)}</span>
+                {totalCalls > 0 && <span> {t('of')} <span className="text-[#F6FAFD] font-extrabold">{totalCalls}</span></span>}
               </p>
 
               {/* Items per page selector */}
               <div className="flex items-center gap-2">
-                <span className="text-xs font-bold text-[#1F3A3440] uppercase tracking-wider">{t('perPage')}</span>
+                <span className="text-xs font-bold text-[#B3CFE5] uppercase tracking-wider">{t('perPage')}</span>
                 <select
                   value={itemsPerPage}
                   onChange={(e) => {
                     setItemsPerPage(parseInt(e.target.value));
                     setCurrentPage(1);
                   }}
-                  className="h-9 px-3 bg-[#1F3A3405] border border-[#1f3a3410] rounded-lg text-sm font-bold text-[#1F3A34] outline-none focus:border-[#1F3A3415] transition-all cursor-pointer"
+                  className="h-9 px-3 bg-[#1A3D63]/40 border border-[#4A7FA7]/30 rounded-lg text-sm font-bold text-[#F6FAFD] outline-none focus:border-[#4A7FA7] transition-all cursor-pointer"
                 >
                   <option value="10">10</option>
                   <option value="20">20</option>
@@ -449,8 +449,8 @@ function AnalyticsPageContent() {
                 className={cn(
                   "w-10 h-10 rounded-xl flex items-center justify-center font-bold transition-all",
                   currentPage === 1
-                    ? "bg-[#1F3A3405] text-[#1F3A3420] cursor-not-allowed"
-                    : "bg-[#1F3A3408] text-[#1F3A34] hover:bg-[#1F3A34] hover:text-white shadow-sm"
+                    ? "bg-[#1A3D63]/20 text-[#4A7FA7]/30 cursor-not-allowed"
+                    : "bg-[#1A3D63]/40 text-[#4A7FA7] hover:bg-gradient-to-r hover:from-[#4A7FA7] hover:to-[#1A3D63] hover:text-white shadow-sm"
                 )}
                 title="First page"
               >
@@ -464,8 +464,8 @@ function AnalyticsPageContent() {
                 className={cn(
                   "w-10 h-10 rounded-xl flex items-center justify-center font-bold transition-all",
                   currentPage === 1
-                    ? "bg-[#1F3A3405] text-[#1F3A3420] cursor-not-allowed"
-                    : "bg-[#1F3A3408] text-[#1F3A34] hover:bg-[#1F3A34] hover:text-white shadow-sm"
+                    ? "bg-[#1A3D63]/20 text-[#4A7FA7]/30 cursor-not-allowed"
+                    : "bg-[#1A3D63]/40 text-[#4A7FA7] hover:bg-gradient-to-r hover:from-[#4A7FA7] hover:to-[#1A3D63] hover:text-white shadow-sm"
                 )}
                 title="Previous page"
               >
@@ -497,8 +497,8 @@ function AnalyticsPageContent() {
                       className={cn(
                         "w-10 h-10 rounded-xl flex items-center justify-center text-sm font-black transition-all",
                         currentPage === pageNum
-                          ? "bg-[#1F3A34] text-white shadow-lg shadow-[#1F3A3420]"
-                          : "bg-[#1F3A3405] text-[#1F3A34] hover:bg-[#1F3A3410]"
+                          ? "bg-gradient-to-r from-[#4A7FA7] to-[#1A3D63] text-white shadow-lg shadow-[#4A7FA7]/30"
+                          : "bg-[#1A3D63]/20 text-[#4A7FA7] hover:bg-[#1A3D63]/40"
                       )}
                     >
                       {pageNum}
@@ -514,8 +514,8 @@ function AnalyticsPageContent() {
                 className={cn(
                   "w-10 h-10 rounded-xl flex items-center justify-center font-bold transition-all",
                   calls.length < itemsPerPage
-                    ? "bg-[#1F3A3405] text-[#1F3A3420] cursor-not-allowed"
-                    : "bg-[#1F3A3408] text-[#1F3A34] hover:bg-[#1F3A34] hover:text-white shadow-sm"
+                    ? "bg-[#1A3D63]/20 text-[#4A7FA7]/30 cursor-not-allowed"
+                    : "bg-[#1A3D63]/40 text-[#4A7FA7] hover:bg-gradient-to-r hover:from-[#4A7FA7] hover:to-[#1A3D63] hover:text-white shadow-sm"
                 )}
                 title="Next page"
               >
@@ -534,8 +534,8 @@ function AnalyticsPageContent() {
                 className={cn(
                   "w-10 h-10 rounded-xl flex items-center justify-center font-bold transition-all",
                   (calls.length < itemsPerPage || !totalCalls)
-                    ? "bg-[#1F3A3405] text-[#1F3A3420] cursor-not-allowed"
-                    : "bg-[#1F3A3408] text-[#1F3A34] hover:bg-[#1F3A34] hover:text-white shadow-sm"
+                    ? "bg-[#1A3D63]/20 text-[#4A7FA7]/30 cursor-not-allowed"
+                    : "bg-[#1A3D63]/40 text-[#4A7FA7] hover:bg-gradient-to-r hover:from-[#4A7FA7] hover:to-[#1A3D63] hover:text-white shadow-sm"
                 )}
                 title="Last page"
               >
@@ -549,31 +549,31 @@ function AnalyticsPageContent() {
       {/* Delete Confirmation Modal */}
       {deleteConfirmCallId && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-white w-full max-w-md rounded-3xl shadow-2xl border border-red-200 overflow-hidden animate-in zoom-in-95 duration-200">
-            <div className="p-8 border-b border-red-100 bg-red-50 flex items-center gap-4">
+          <div className="bg-[#1A3D63]/95 glow w-full max-w-md rounded-3xl shadow-2xl border border-red-500/50 overflow-hidden animate-in zoom-in-95 duration-200">
+            <div className="p-8 border-b border-red-500/30 bg-red-500/20 flex items-center gap-4">
               <div className="w-12 h-12 rounded-2xl bg-red-500 flex items-center justify-center text-white">
                 <AlertTriangle className="w-6 h-6" />
               </div>
               <div>
-                <h3 className="text-xl font-[850] text-red-900 tracking-tight">Delete Call</h3>
-                <p className="text-sm font-semibold text-red-600 mt-0.5">This action cannot be undone</p>
+                <h3 className="text-xl font-[850] text-[#F6FAFD] tracking-tight">Delete Call</h3>
+                <p className="text-sm font-semibold text-red-400 mt-0.5">This action cannot be undone</p>
               </div>
             </div>
 
             <div className="p-8 space-y-6">
-              <p className="text-sm font-medium text-gray-700 leading-relaxed">
+              <p className="text-sm font-medium text-[#B3CFE5] leading-relaxed">
                 Are you sure you want to delete this call and all its associated data (analytics, red flags, artifacts, jobs, and embeddings)?
               </p>
-              <div className="p-4 rounded-xl bg-gray-50 border border-gray-200">
-                <p className="text-xs font-bold text-gray-600 uppercase tracking-wider mb-1">Call ID</p>
-                <p className="text-sm font-mono font-semibold text-gray-900 break-all">{deleteConfirmCallId}</p>
+              <div className="p-4 rounded-xl bg-[#1A3D63]/40 border border-[#4A7FA7]/30">
+                <p className="text-xs font-bold text-[#B3CFE5] uppercase tracking-wider mb-1">Call ID</p>
+                <p className="text-sm font-mono font-semibold text-[#F6FAFD] break-all">{deleteConfirmCallId}</p>
               </div>
 
               <div className="flex gap-3 pt-4">
                 <button
                   onClick={() => setDeleteConfirmCallId(null)}
                   disabled={isDeleting}
-                  className="flex-1 h-12 bg-gray-100 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed text-gray-700 rounded-xl font-bold text-sm uppercase tracking-wider transition-all"
+                  className="flex-1 h-12 bg-[#1A3D63]/40 hover:bg-[#1A3D63]/60 disabled:opacity-50 disabled:cursor-not-allowed text-[#B3CFE5] rounded-xl font-bold text-sm uppercase tracking-wider transition-all"
                 >
                   Cancel
                 </button>
@@ -607,7 +607,7 @@ export default function AnalyticsPage() {
   return (
     <Suspense fallback={
       <div className="flex-1 flex items-center justify-center">
-        <div className="w-12 h-12 rounded-2xl border-4 border-[#1f3a3408] border-t-[#1F3A34] animate-spin" />
+        <div className="w-12 h-12 rounded-2xl border-4 border-[#1A3D63]/40 border-t-[#4A7FA7] animate-spin" />
       </div>
     }>
       <AnalyticsPageContent />

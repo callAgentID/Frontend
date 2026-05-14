@@ -379,10 +379,10 @@ function RedFlagsPageContent() {
   if (selectedCallId) {
     return (
       <div className="p-8 space-y-10 animate-in fade-in slide-in-from-right-8 duration-700">
-        <div className="flex items-center justify-between max-w-6xl mx-auto border-b border-[#1f3a3408] pb-8">
+        <div className="flex items-center justify-between max-w-6xl mx-auto border-b border-[#4A7FA7]/30 pb-8">
           <button
             onClick={closeDetail}
-            className="flex items-center gap-2 text-[#1F3A3450] hover:text-[#1F3A34] font-bold text-xs uppercase tracking-widest transition-all"
+            className="flex items-center gap-2 text-[#B3CFE5] hover:text-[#F6FAFD] font-bold text-xs uppercase tracking-widest transition-all"
           >
             <ArrowLeft className="w-4 h-4" /> Back to Red Flags
           </button>
@@ -392,7 +392,7 @@ function RedFlagsPageContent() {
                 const name = prompt("Enter your name to mark this as reviewed:");
                 if (name) markAsReviewed(selectedCallId, name);
               }}
-              className="flex items-center gap-2 px-5 py-2.5 bg-blue-500 hover:bg-blue-600 text-white rounded-xl font-bold text-xs uppercase tracking-widest transition-all shadow-lg shadow-blue-500/20 active:scale-95"
+              className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-[#4A7FA7] to-[#1A3D63] glow hover:opacity-90 text-white rounded-xl font-bold text-xs uppercase tracking-widest transition-all shadow-lg shadow-[#4A7FA7]/20 active:scale-95"
             >
               <Eye className="w-4 h-4" />
               Mark as Reviewed
@@ -405,29 +405,29 @@ function RedFlagsPageContent() {
         ) : detailData ? (
           <div className="max-w-6xl mx-auto space-y-8">
             {/* Header */}
-            <div className="bg-white rounded-[2.5rem] border border-[#1f3a3410] p-10 apple-shadow">
+            <div className="bg-[#1A3D63]/60 glow rounded-[2.5rem] border border-[#4A7FA7]/30 p-10">
               <div className="flex items-start justify-between mb-6">
                 <div>
-                  <h2 className="text-3xl font-[850] text-[#1F3A34] tracking-tight mb-2">
+                  <h2 className="text-3xl font-[850] text-[#F6FAFD] tracking-tight mb-2">
                     Red Flag Analysis
                   </h2>
-                  <p className="text-sm font-medium text-[#1F3A3460]">
+                  <p className="text-sm font-medium text-[#B3CFE5]">
                     {detailData.file_name || `Call ID: ${detailData.call_id}`}
                   </p>
                 </div>
                 <div className="flex items-center gap-3">
                   {detailData.has_critical_issues && (
-                    <span className="px-3 py-1.5 bg-red-100 text-red-700 border border-red-200 rounded-lg text-xs font-black uppercase tracking-wider">
+                    <span className="px-3 py-1.5 bg-red-500/20 text-red-400 border border-red-500/30 rounded-lg text-xs font-black uppercase tracking-wider">
                       Critical Issues
                     </span>
                   )}
                   {detailData.requires_immediate_attention && (
-                    <span className="px-3 py-1.5 bg-orange-100 text-orange-700 border border-orange-200 rounded-lg text-xs font-black uppercase tracking-wider">
+                    <span className="px-3 py-1.5 bg-orange-500/20 text-orange-400 border border-orange-500/30 rounded-lg text-xs font-black uppercase tracking-wider">
                       Immediate Attention
                     </span>
                   )}
                   {detailData.reviewed_at && (
-                    <span className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-100 text-blue-700 border border-blue-200 rounded-lg text-xs font-black uppercase tracking-wider">
+                    <span className="flex items-center gap-1.5 px-3 py-1.5 bg-[#4A7FA7]/20 text-[#4A7FA7] border border-[#4A7FA7]/30 rounded-lg text-xs font-black uppercase tracking-wider">
                       <Eye className="w-3 h-3" /> Reviewed
                     </span>
                   )}
@@ -435,19 +435,19 @@ function RedFlagsPageContent() {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="p-6 rounded-2xl bg-[#F4F8F9] border border-[#1f3a3408]">
-                  <p className="text-[10px] font-black uppercase tracking-widest text-[#1F3A3440] mb-2">Risk Score</p>
-                  <p className="text-3xl font-[850] text-[#1F3A34]">{detailData.score.toFixed(1)}</p>
+                <div className="p-6 rounded-2xl bg-[#1A3D63]/40 border border-[#4A7FA7]/30">
+                  <p className="text-[10px] font-black uppercase tracking-widest text-[#B3CFE5] mb-2">Risk Score</p>
+                  <p className="text-3xl font-[850] text-[#F6FAFD]">{detailData.score.toFixed(1)}</p>
                 </div>
-                <div className="p-6 rounded-2xl bg-[#F4F8F9] border border-[#1f3a3408]">
-                  <p className="text-[10px] font-black uppercase tracking-widest text-[#1F3A3440] mb-2">Created</p>
-                  <p className="text-sm font-bold text-[#1F3A34]">{new Date(detailData.created_at).toLocaleString()}</p>
+                <div className="p-6 rounded-2xl bg-[#1A3D63]/40 border border-[#4A7FA7]/30">
+                  <p className="text-[10px] font-black uppercase tracking-widest text-[#B3CFE5] mb-2">Created</p>
+                  <p className="text-sm font-bold text-[#F6FAFD]">{new Date(detailData.created_at).toLocaleString()}</p>
                 </div>
                 {detailData.reviewed_at && (
-                  <div className="p-6 rounded-2xl bg-blue-50 border border-blue-200">
-                    <p className="text-[10px] font-black uppercase tracking-widest text-blue-600 mb-2">Reviewed By</p>
-                    <p className="text-sm font-bold text-blue-700">{detailData.reviewed_by}</p>
-                    <p className="text-xs text-blue-600 mt-1">{new Date(detailData.reviewed_at).toLocaleString()}</p>
+                  <div className="p-6 rounded-2xl bg-[#4A7FA7]/20 border border-[#4A7FA7]/30">
+                    <p className="text-[10px] font-black uppercase tracking-widest text-[#4A7FA7] mb-2">Reviewed By</p>
+                    <p className="text-sm font-bold text-[#F6FAFD]">{detailData.reviewed_by}</p>
+                    <p className="text-xs text-[#B3CFE5] mt-1">{new Date(detailData.reviewed_at).toLocaleString()}</p>
                   </div>
                 )}
               </div>
@@ -455,18 +455,18 @@ function RedFlagsPageContent() {
 
             {/* Audio Player - Check if audio is available */}
             {detailData.full_result?.provider_metadata?.provider !== 'manual' && (
-              <div className="p-8 rounded-[2.5rem] bg-[#1F3A34] text-white apple-shadow-lg border border-[#1f3a3410] flex flex-col md:flex-row items-center gap-8">
+              <div className="p-8 rounded-[2.5rem] bg-gradient-to-r from-[#4A7FA7] to-[#1A3D63] glow text-white border border-[#4A7FA7]/30 flex flex-col md:flex-row items-center gap-8">
                 <div className="flex-1 space-y-2">
-                  <h4 className="text-lg font-black uppercase tracking-widest text-white/50 flex items-center gap-2">
+                  <h4 className="text-lg font-black uppercase tracking-widest text-[#B3CFE5] flex items-center gap-2">
                     <Play className="w-4 h-4 fill-current" /> Call Audio Signal
                   </h4>
-                  <p className="text-sm font-medium text-white/80">Stream high-fidelity conversation audio with seek support.</p>
+                  <p className="text-sm font-medium text-[#F6FAFD]/80">Stream high-fidelity conversation audio with seek support.</p>
                 </div>
                 <audio
                   id="red-flag-audio-player"
                   controls
                   preload="metadata"
-                  className="w-full md:w-2/3 h-10 accent-[#F4F8F9] bg-[#1F3A3405] rounded-xl"
+                  className="w-full md:w-2/3 h-10 accent-[#4A7FA7] bg-[#1A3D63]/40 rounded-xl"
                   src={`${process.env.NEXT_PUBLIC_BASE_URL || "https://zk1354qz0k.execute-api.eu-central-1.amazonaws.com"}/api/v1/media/calls/${detailData.call_id}/audio`}
                 >
                   Your browser does not support audio playback.
@@ -476,21 +476,21 @@ function RedFlagsPageContent() {
 
             {/* Questionnaire Results */}
             {detailData.full_result?.answers && (
-              <div className="bg-white rounded-[2.5rem] border border-[#1f3a3410] p-10 apple-shadow space-y-6">
-                <div className="border-b border-[#1f3a3408] pb-6 space-y-4">
+              <div className="bg-[#1A3D63]/60 glow rounded-[2.5rem] border border-[#4A7FA7]/30 p-10 space-y-6">
+                <div className="border-b border-[#4A7FA7]/30 pb-6 space-y-4">
                   <div className="flex items-center gap-4">
-                    <h3 className="text-xl font-[850] text-[#1F3A34] tracking-tight">Questionnaire Analysis</h3>
+                    <h3 className="text-xl font-[850] text-[#F6FAFD] tracking-tight">Questionnaire Analysis</h3>
                     {detailData.human_interventions && detailData.human_interventions.length > 0 && (
-                      <span className="flex items-center gap-1.5 px-3 py-1 bg-green-50 rounded-lg border border-green-200">
-                        <CheckCircle2 className="w-3.5 h-3.5 text-green-600" />
-                        <span className="text-xs font-black uppercase tracking-wider text-green-700">{detailData.human_interventions.length} Human Verifications</span>
+                      <span className="flex items-center gap-1.5 px-3 py-1 bg-[#4A7FA7]/20 rounded-lg border border-[#4A7FA7]/30">
+                        <CheckCircle2 className="w-3.5 h-3.5 text-[#4A7FA7]" />
+                        <span className="text-xs font-black uppercase tracking-wider text-[#4A7FA7]">{detailData.human_interventions.length} Human Verifications</span>
                       </span>
                     )}
                   </div>
                   {detailData.full_result.summary && (
-                    <div className="p-4 bg-[#1F3A3405] rounded-xl border border-[#1f3a3410]">
-                      <p className="text-[10px] font-black uppercase tracking-widest text-[#1F3A3440] mb-2">Overall Summary</p>
-                      <p className="text-sm font-bold text-[#1F3A34] leading-relaxed">{detailData.full_result.summary}</p>
+                    <div className="p-4 bg-[#1A3D63]/40 rounded-xl border border-[#4A7FA7]/30">
+                      <p className="text-[10px] font-black uppercase tracking-widest text-[#B3CFE5] mb-2">Overall Summary</p>
+                      <p className="text-sm font-bold text-[#F6FAFD] leading-relaxed">{detailData.full_result.summary}</p>
                     </div>
                   )}
                 </div>
@@ -503,16 +503,16 @@ function RedFlagsPageContent() {
                     return (
                       <div
                         key={questionId}
-                        className="group p-6 rounded-2xl border border-[#1f3a3410] bg-[#F4F8F9]/30 hover:bg-[#F4F8F9]/60 transition-all space-y-4"
+                        className="group p-6 rounded-2xl bg-[#1A3D63]/40 border border-[#4A7FA7]/30 hover:bg-[#1A3D63]/60 transition-all space-y-4"
                       >
                         {/* Header Row with Question ID, Badges, and Edit Button */}
                         <div className="flex items-center justify-between mb-4">
                           <div className="flex items-center gap-3">
-                            <span className="text-[10px] font-black uppercase tracking-widest text-[#1F3A3460]">
+                            <span className="text-[10px] font-black uppercase tracking-widest text-[#B3CFE5]">
                               Question {questionId}
                             </span>
                             {answer.skipped && (
-                              <span className="px-2 py-0.5 text-[9px] font-black uppercase tracking-wider rounded-md bg-gray-100 text-gray-600 border border-gray-200">
+                              <span className="px-2 py-0.5 text-[9px] font-black uppercase tracking-wider rounded-md bg-[#1A3D63]/60 text-[#B3CFE5] border border-[#4A7FA7]/30">
                                 Skipped
                               </span>
                             )}
@@ -534,7 +534,7 @@ function RedFlagsPageContent() {
                               )}
                               <button
                                 onClick={() => setEditingQuestionId(`${templateId}_${questionId}`)}
-                                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg border border-blue-200 transition-all"
+                                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-[#4A7FA7] bg-[#1A3D63]/40 hover:bg-[#1A3D63]/60 rounded-lg border border-[#4A7FA7]/30 transition-all"
                                 title="Edit answer"
                               >
                                 <Edit className="w-3 h-3" />
@@ -546,7 +546,7 @@ function RedFlagsPageContent() {
 
                         {/* Question Text - Full Width */}
                         {answer.question_text && (
-                          <p className="text-sm font-bold text-purple-600 bg-purple-50 px-3 py-2 rounded-lg border border-purple-200 mb-4">
+                          <p className="text-sm font-bold text-[#4A7FA7] bg-[#1A3D63]/60 px-3 py-2 rounded-lg border border-[#4A7FA7]/30 mb-4">
                             Q: {answer.question_text}
                           </p>
                         )}
@@ -555,12 +555,12 @@ function RedFlagsPageContent() {
                         <div className="flex items-start justify-between mb-4">
                           <div className="flex-1">
                             {answer.reasoning_summary && (
-                              <p className="text-sm font-bold text-[#1F3A34]">{answer.reasoning_summary}</p>
+                              <p className="text-sm font-bold text-[#F6FAFD]">{answer.reasoning_summary}</p>
                             )}
                           </div>
                           <div className="flex items-center gap-4 shrink-0 ml-6">
                             <div className="text-right">
-                              <p className="text-[9px] font-black uppercase tracking-widest text-[#1F3A3460]">Answer</p>
+                              <p className="text-[9px] font-black uppercase tracking-widest text-[#B3CFE5]">Answer</p>
                               <p className={cn(
                                 "text-sm font-black uppercase tracking-wider",
                                 answer.answer === "yes" ? "text-green-600" : "text-red-600"
@@ -625,8 +625,8 @@ function RedFlagsPageContent() {
                         })()}
 
                         {answer.evidence && answer.evidence.length > 0 && (
-                          <div className="mt-4 pt-4 border-t border-[#1f3a3410]">
-                            <p className="text-[9px] font-black uppercase tracking-widest text-[#1F3A3460] mb-3">Evidence</p>
+                          <div className="mt-4 pt-4 border-t border-[#4A7FA7]/30">
+                            <p className="text-[9px] font-black uppercase tracking-widest text-[#B3CFE5] mb-3">Evidence</p>
                             <div className="space-y-2">
                               {answer.evidence.map((ev: any, evIdx: number) => {
                                 const hasAudio = detailData.full_result?.provider_metadata?.provider !== 'manual';
@@ -666,19 +666,19 @@ function RedFlagsPageContent() {
                                       }
                                     }}
                                     className={cn(
-                                      "p-3 bg-white rounded-xl border border-[#1f3a3408] transition-all",
-                                      hasAudio && ev.start_ms >= 0 && "cursor-pointer hover:border-[#1F3A3420] hover:bg-[#F4F8F9]",
-                                      isPlaying && "border-[#1F3A34] bg-[#1F3A3410]"
+                                      "p-3 bg-[#1A3D63]/20 rounded-xl border border-[#4A7FA7]/20 transition-all",
+                                      hasAudio && ev.start_ms >= 0 && "cursor-pointer hover:border-[#4A7FA7]/40 hover:bg-[#1A3D63]/30",
+                                      isPlaying && "border-[#4A7FA7] bg-[#1A3D63]/40"
                                     )}
                                   >
-                                    <p className="text-xs text-[#1F3A34] leading-relaxed italic mb-2">"{ev.quote}"</p>
+                                    <p className="text-xs text-[#F6FAFD] leading-relaxed italic mb-2">"{ev.quote}"</p>
                                     <div className="flex items-center justify-between gap-4">
                                       <div className="flex items-center gap-4">
-                                        <span className="text-[9px] font-bold text-[#1F3A3460] uppercase tracking-wider">
+                                        <span className="text-[9px] font-bold text-[#B3CFE5] uppercase tracking-wider">
                                           Match: {(ev.score * 100).toFixed(1)}%
                                         </span>
                                         {ev.start_ms >= 0 && (
-                                          <span className="text-[9px] font-bold text-[#1F3A3460] uppercase tracking-wider">
+                                          <span className="text-[9px] font-bold text-[#B3CFE5] uppercase tracking-wider">
                                             {Math.floor(ev.start_ms / 1000)}s - {Math.floor(ev.end_ms / 1000)}s
                                           </span>
                                         )}
@@ -687,13 +687,13 @@ function RedFlagsPageContent() {
                                         <div className="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-wider">
                                           {isPlaying ? (
                                             <>
-                                              <Pause className="w-3 h-3 fill-current text-[#1F3A34]" />
-                                              <span className="text-[#1F3A34]">Playing</span>
+                                              <Pause className="w-3 h-3 fill-current text-[#4A7FA7]" />
+                                              <span className="text-[#4A7FA7]">Playing</span>
                                             </>
                                           ) : (
                                             <>
-                                              <Play className="w-3 h-3 fill-current text-[#1F3A3460]" />
-                                              <span className="text-[#1F3A3460]">Play</span>
+                                              <Play className="w-3 h-3 fill-current text-[#B3CFE5]" />
+                                              <span className="text-[#B3CFE5]">Play</span>
                                             </>
                                           )}
                                         </div>
@@ -706,9 +706,9 @@ function RedFlagsPageContent() {
                           </div>
                         )}
 
-                        <div className="mt-3 flex items-center gap-4 text-[9px] font-bold text-[#1F3A3460] uppercase tracking-wider">
+                        <div className="mt-3 flex items-center gap-4 text-[9px] font-bold text-[#B3CFE5] uppercase tracking-wider">
                           <span>Weight: {answer.weight}</span>
-                          <span className="w-1 h-1 rounded-full bg-[#1F3A3420]" />
+                          <span className="w-1 h-1 rounded-full bg-[#4A7FA7]/30" />
                           <span>Confidence: {answer.confidence}</span>
                         </div>
                       </div>
@@ -897,17 +897,17 @@ function RedFlagsPageContent() {
 
   // List view
   return (
-    <main className="flex-1 overflow-y-auto bg-[#F4F8F9]/50 p-4 sm:p-6 md:p-8 space-y-10">
+    <main className="flex-1 overflow-y-auto p-4 sm:p-6 md:p-8 space-y-10">
       {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div>
           <div className="flex items-center gap-3 mb-2">
-            <div className="w-10 h-10 rounded-2xl bg-red-500 flex items-center justify-center text-white apple-shadow">
+            <div className="w-10 h-10 rounded-2xl bg-gradient-to-r from-red-500 to-orange-500 flex items-center justify-center text-white glow">
               <ShieldAlert className="w-6 h-6" />
             </div>
-            <h1 className="text-3xl font-[900] text-[#1F3A34] tracking-tight">{t('title')}</h1>
+            <h1 className="text-3xl font-[900] text-[#F6FAFD] tracking-tight">{t('title')}</h1>
           </div>
-          <p className="text-[#1F3A3470] text-sm font-medium">
+          <p className="text-[#B3CFE5] text-sm font-medium">
             {t('subtitle')}
           </p>
         </div>
@@ -916,56 +916,56 @@ function RedFlagsPageContent() {
       {/* Stats Cards */}
       {stats && (
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          <div className="bg-white rounded-2xl border border-[#1f3a3408] p-6 apple-shadow">
+          <div className="bg-[#1A3D63]/60 glow rounded-2xl border border-[#4A7FA7]/30 p-6">
             <div className="flex items-center justify-between mb-4">
-              <Activity className="w-5 h-5 text-[#1F3A3460]" />
-              <div className="w-2 h-2 rounded-full bg-blue-500" />
+              <Activity className="w-5 h-5 text-[#4A7FA7]" />
+              <div className="w-2 h-2 rounded-full bg-[#4A7FA7]" />
             </div>
-            <p className="text-[10px] font-black uppercase tracking-widest text-[#1F3A3440] mb-1">{t('totalCalls')}</p>
-            <p className="text-2xl font-[850] text-[#1F3A34]">{stats.total_red_flag_calls}</p>
+            <p className="text-[10px] font-black uppercase tracking-widest text-[#B3CFE5] mb-1">{t('totalCalls')}</p>
+            <p className="text-2xl font-[850] text-[#F6FAFD]">{stats.total_red_flag_calls}</p>
           </div>
 
-          <div className="bg-white rounded-2xl border border-[#1f3a3408] p-6 apple-shadow">
+          <div className="bg-[#1A3D63]/60 glow rounded-2xl border border-[#4A7FA7]/30 p-6">
             <div className="flex items-center justify-between mb-4">
               <XCircle className="w-5 h-5 text-red-500" />
               <div className="w-2 h-2 rounded-full bg-red-500" />
             </div>
-            <p className="text-[10px] font-black uppercase tracking-widest text-[#1F3A3440] mb-1">{t('criticalIssues')}</p>
-            <p className="text-2xl font-[850] text-[#1F3A34]">{stats.critical_issues_count}</p>
+            <p className="text-[10px] font-black uppercase tracking-widest text-[#B3CFE5] mb-1">{t('criticalIssues')}</p>
+            <p className="text-2xl font-[850] text-[#F6FAFD]">{stats.critical_issues_count}</p>
           </div>
 
-          <div className="bg-white rounded-2xl border border-[#1f3a3408] p-6 apple-shadow">
+          <div className="bg-[#1A3D63]/60 glow rounded-2xl border border-[#4A7FA7]/30 p-6">
             <div className="flex items-center justify-between mb-4">
               <AlertCircle className="w-5 h-5 text-orange-500" />
               <div className="w-2 h-2 rounded-full bg-orange-500" />
             </div>
-            <p className="text-[10px] font-black uppercase tracking-widest text-[#1F3A3440] mb-1">{t('needsAttention')}</p>
-            <p className="text-2xl font-[850] text-[#1F3A34]">{stats.immediate_attention_count}</p>
+            <p className="text-[10px] font-black uppercase tracking-widest text-[#B3CFE5] mb-1">{t('needsAttention')}</p>
+            <p className="text-2xl font-[850] text-[#F6FAFD]">{stats.immediate_attention_count}</p>
           </div>
 
-          <div className="bg-white rounded-2xl border border-[#1f3a3408] p-6 apple-shadow">
+          <div className="bg-[#1A3D63]/60 glow rounded-2xl border border-[#4A7FA7]/30 p-6">
             <div className="flex items-center justify-between mb-4">
-              <BarChart3 className="w-5 h-5 text-[#1F3A3460]" />
-              <div className="w-2 h-2 rounded-full bg-green-500" />
+              <BarChart3 className="w-5 h-5 text-[#4A7FA7]" />
+              <div className="w-2 h-2 rounded-full bg-[#4A7FA7]" />
             </div>
-            <p className="text-[10px] font-black uppercase tracking-widest text-[#1F3A3440] mb-1">{t('avgScore')}</p>
-            <p className="text-2xl font-[850] text-[#1F3A34]">{stats.average_score.toFixed(1)}</p>
+            <p className="text-[10px] font-black uppercase tracking-widest text-[#B3CFE5] mb-1">{t('avgScore')}</p>
+            <p className="text-2xl font-[850] text-[#F6FAFD]">{stats.average_score.toFixed(1)}</p>
           </div>
         </div>
       )}
 
       {/* Filters */}
-      <div className="bg-white rounded-2xl border border-[#1f3a3410] p-6 apple-shadow space-y-4">
-        <h3 className="text-sm font-black uppercase tracking-widest text-[#1F3A34] flex items-center gap-2">
+      <div className="bg-[#1A3D63]/60 glow rounded-2xl border border-[#4A7FA7]/30 p-6 space-y-4">
+        <h3 className="text-sm font-black uppercase tracking-widest text-[#F6FAFD] flex items-center gap-2">
           <Filter className="w-4 h-4" /> {t('filters')}
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div className="space-y-2">
-            <label className="text-[10px] font-black uppercase tracking-[0.2em] text-[#1F3A3440]">{t('criticalFilter')}</label>
+            <label className="text-[10px] font-black uppercase tracking-[0.2em] text-[#B3CFE5]">{t('criticalFilter')}</label>
             <select
               value={filterCritical === null ? "" : String(filterCritical)}
               onChange={(e) => setFilterCritical(e.target.value === "" ? null : e.target.value === "true")}
-              className="w-full h-12 bg-[#1F3A3405] border border-[#1f3a3410] rounded-xl px-4 text-[#1F3A34] font-semibold text-sm outline-none cursor-pointer"
+              className="w-full h-12 bg-[#1A3D63]/40 border border-[#4A7FA7]/30 rounded-xl px-4 text-[#F6FAFD] font-semibold text-sm outline-none cursor-pointer"
             >
               <option value="">{t('all')}</option>
               <option value="true">Yes</option>
@@ -974,11 +974,11 @@ function RedFlagsPageContent() {
           </div>
 
           <div className="space-y-2">
-            <label className="text-[10px] font-black uppercase tracking-[0.2em] text-[#1F3A3440]">{t('attentionFilter')}</label>
+            <label className="text-[10px] font-black uppercase tracking-[0.2em] text-[#B3CFE5]">{t('attentionFilter')}</label>
             <select
               value={filterAttention === null ? "" : String(filterAttention)}
               onChange={(e) => setFilterAttention(e.target.value === "" ? null : e.target.value === "true")}
-              className="w-full h-12 bg-[#1F3A3405] border border-[#1f3a3410] rounded-xl px-4 text-[#1F3A34] font-semibold text-sm outline-none cursor-pointer"
+              className="w-full h-12 bg-[#1A3D63]/40 border border-[#4A7FA7]/30 rounded-xl px-4 text-[#F6FAFD] font-semibold text-sm outline-none cursor-pointer"
             >
               <option value="">{t('all')}</option>
               <option value="true">Yes</option>
@@ -987,7 +987,7 @@ function RedFlagsPageContent() {
           </div>
 
           <div className="space-y-2">
-            <label className="text-[10px] font-black uppercase tracking-[0.2em] text-[#1F3A3440]">{t('minScore')}</label>
+            <label className="text-[10px] font-black uppercase tracking-[0.2em] text-[#B3CFE5]">{t('minScore')}</label>
             <input
               type="number"
               min="0"
@@ -995,12 +995,12 @@ function RedFlagsPageContent() {
               value={minScore}
               onChange={(e) => setMinScore(e.target.value)}
               placeholder="0"
-              className="w-full h-12 bg-[#1F3A3405] border border-[#1f3a3410] rounded-xl px-4 text-[#1F3A34] font-semibold text-sm outline-none"
+              className="w-full h-12 bg-[#1A3D63]/40 border border-[#4A7FA7]/30 rounded-xl px-4 text-[#F6FAFD] font-semibold text-sm outline-none"
             />
           </div>
 
           <div className="space-y-2">
-            <label className="text-[10px] font-black uppercase tracking-[0.2em] text-[#1F3A3440]">{t('maxScore')}</label>
+            <label className="text-[10px] font-black uppercase tracking-[0.2em] text-[#B3CFE5]">{t('maxScore')}</label>
             <input
               type="number"
               min="0"
@@ -1008,16 +1008,16 @@ function RedFlagsPageContent() {
               value={maxScore}
               onChange={(e) => setMaxScore(e.target.value)}
               placeholder="100"
-              className="w-full h-12 bg-[#1F3A3405] border border-[#1f3a3410] rounded-xl px-4 text-[#1F3A34] font-semibold text-sm outline-none"
+              className="w-full h-12 bg-[#1A3D63]/40 border border-[#4A7FA7]/30 rounded-xl px-4 text-[#F6FAFD] font-semibold text-sm outline-none"
             />
           </div>
         </div>
       </div>
 
       {/* Red Flags List */}
-      <div className="bg-white rounded-[2.5rem] border border-[#1f3a3408] overflow-hidden apple-shadow">
+      <div className="bg-[#1A3D63]/60 glow rounded-[2.5rem] border border-[#4A7FA7]/30 overflow-hidden">
         {loading ? (
-          <div className="divide-y divide-[#1f3a3405]">
+          <div className="divide-y divide-[#4A7FA7]/20">
             {[1, 2, 3, 4].map((i) => (
               <RedFlagItemSkeleton key={i} />
             ))}
@@ -1025,7 +1025,7 @@ function RedFlagsPageContent() {
         ) : error ? (
           <div className="p-20 text-center space-y-4">
             <AlertCircle className="w-12 h-12 text-red-500 mx-auto" />
-            <p className="text-red-700 font-bold">{error}</p>
+            <p className="text-red-400 font-bold">{error}</p>
             <button
               onClick={() => window.location.reload()}
               className="px-6 py-2 bg-red-500 text-white rounded-xl font-bold text-xs uppercase tracking-widest"
@@ -1035,16 +1035,16 @@ function RedFlagsPageContent() {
           </div>
         ) : redFlags.length === 0 ? (
           <div className="p-20 text-center space-y-4">
-            <CheckCircle2 className="w-12 h-12 text-green-500 mx-auto" />
-            <p className="text-[#1F3A3440] font-bold">No red flags found. All calls are compliant!</p>
+            <CheckCircle2 className="w-12 h-12 text-[#4A7FA7] mx-auto" />
+            <p className="text-[#B3CFE5] font-bold">No red flags found. All calls are compliant!</p>
           </div>
         ) : (
-          <div className="divide-y divide-[#1f3a3405]">
+          <div className="divide-y divide-[#4A7FA7]/20">
             {redFlags.map((flag) => (
               <div
                 key={flag.id}
                 onClick={() => viewDetail(flag.call_id)}
-                className="flex items-center gap-6 p-8 hover:bg-[#1F3A3403] transition-all cursor-pointer group"
+                className="flex items-center gap-6 p-8 hover:bg-[#1A3D63]/80 transition-all cursor-pointer group"
               >
                 {/* Priority Icon */}
                 {flag.has_critical_issues && (
@@ -1056,7 +1056,7 @@ function RedFlagsPageContent() {
                 {/* Score Badge */}
                 <div className={cn(
                   "w-14 h-14 rounded-2xl flex items-center justify-center font-black text-base shrink-0 shadow-lg",
-                  flag.score >= 80 ? "bg-green-500 text-white shadow-green-500/20" :
+                  flag.score >= 80 ? "bg-gradient-to-br from-[#4A7FA7] to-[#1A3D63] text-white shadow-[#4A7FA7]/20" :
                     flag.score >= 60 ? "bg-yellow-500 text-white shadow-yellow-500/20" :
                       flag.score >= 40 ? "bg-orange-500 text-white shadow-orange-500/20" :
                         "bg-red-500 text-white shadow-red-500/20"
@@ -1067,37 +1067,37 @@ function RedFlagsPageContent() {
                 {/* Main Info */}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-3 mb-2">
-                    <h5 className="text-[17px] font-extrabold text-[#1F3A34] tracking-tight truncate">
+                    <h5 className="text-[17px] font-extrabold text-[#F6FAFD] tracking-tight truncate">
                       {flag.file_name || `Call #${flag.call_id.split('-')[0]}`}
                     </h5>
                     {!flag.reviewed_at ? (
-                      <span className="px-2 py-0.5 text-[9px] font-black uppercase tracking-wider rounded-md bg-orange-50 text-orange-700 border border-orange-200">
+                      <span className="px-2 py-0.5 text-[9px] font-black uppercase tracking-wider rounded-md bg-orange-500/20 text-orange-400 border border-orange-500/30">
                         Pending Review
                       </span>
                     ) : (
-                      <span className="flex items-center gap-1 px-2 py-0.5 text-[9px] font-black uppercase tracking-wider rounded-md bg-blue-50 text-blue-600 border border-blue-200">
+                      <span className="flex items-center gap-1 px-2 py-0.5 text-[9px] font-black uppercase tracking-wider rounded-md bg-[#4A7FA7]/20 text-[#4A7FA7] border border-[#4A7FA7]/30">
                         <Eye className="w-3 h-3" />
                         Reviewed
                       </span>
                     )}
                   </div>
                   <div className="flex items-center gap-5">
-                    <span className="text-[10px] font-bold text-[#1F3A3430] uppercase tracking-widest">
+                    <span className="text-[10px] font-bold text-[#B3CFE5] uppercase tracking-widest">
                       ID: {flag.call_id.split('-')[0]}
                     </span>
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#1F3A3415]" />
-                    <span className="flex items-center gap-2 text-[11px] font-black text-[#1F3A3460] uppercase tracking-widest">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#4A7FA7]/30" />
+                    <span className="flex items-center gap-2 text-[11px] font-black text-[#B3CFE5] uppercase tracking-widest">
                       <AlertCircle className="w-3.5 h-3.5" /> {flag.flags_count} Flag{flag.flags_count !== 1 ? 's' : ''}
                     </span>
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#1F3A3415]" />
-                    <span className="text-[11px] font-bold text-[#1F3A3480] uppercase tracking-widest">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#4A7FA7]/30" />
+                    <span className="text-[11px] font-bold text-[#B3CFE5] uppercase tracking-widest">
                       {new Date(flag.created_at).toLocaleDateString()}
                     </span>
                   </div>
                 </div>
 
                 {/* Arrow */}
-                <div className="w-11 h-11 rounded-2xl bg-[#1F3A3408] text-[#1F3A3440] flex items-center justify-center group-hover:bg-[#1F3A34] group-hover:text-white transition-all group-hover:scale-110 shadow-sm">
+                <div className="w-11 h-11 rounded-2xl bg-[#1A3D63]/40 text-[#4A7FA7] flex items-center justify-center group-hover:bg-gradient-to-r group-hover:from-[#4A7FA7] group-hover:to-[#1A3D63] group-hover:text-white transition-all group-hover:scale-110 shadow-sm">
                   <ChevronRight className="w-5 h-5" />
                 </div>
               </div>
@@ -1175,16 +1175,16 @@ function InterventionModal({ modal, onClose, onSubmit, existingEdit, onRemove }:
 
         <div className="p-8 space-y-6">
           {/* Current Answer */}
-          <div className="p-4 rounded-xl bg-gray-50 border border-gray-200 space-y-2">
-            <p className="text-xs font-black uppercase tracking-wider text-gray-600">Current Answer</p>
-            <p className="text-sm font-bold text-gray-900">{modal.current_answer}</p>
-            <p className="text-xs font-medium text-gray-600">{modal.current_reasoning}</p>
-            <p className="text-xs font-bold text-gray-700">Score: {modal.current_score}</p>
+          <div className="p-4 rounded-xl bg-[#1A3D63]/40 border border-[#4A7FA7]/30 space-y-2">
+            <p className="text-xs font-black uppercase tracking-wider text-[#B3CFE5]">Current Answer</p>
+            <p className="text-sm font-bold text-[#F6FAFD]">{modal.current_answer}</p>
+            <p className="text-xs font-medium text-[#B3CFE5]">{modal.current_reasoning}</p>
+            <p className="text-xs font-bold text-[#4A7FA7]">Score: {modal.current_score}</p>
           </div>
 
           {/* Corrected Answer */}
           <div className="space-y-2">
-            <label className="text-xs font-black uppercase tracking-wider text-[#1F3A3440]">
+            <label className="text-xs font-black uppercase tracking-wider text-[#B3CFE5]">
               Corrected Answer
             </label>
             <select
@@ -1196,7 +1196,7 @@ function InterventionModal({ modal, onClose, onSubmit, existingEdit, onRemove }:
                 if (val.toLowerCase() === 'yes') setCorrectedScore(100);
                 else if (val.toLowerCase() === 'no') setCorrectedScore(0);
               }}
-              className="w-full h-12 px-4 bg-[#1F3A3403] border border-[#1f3a3410] rounded-xl text-[#1F3A34] font-semibold outline-none focus:border-[#1F3A34] transition-all"
+              className="w-full h-12 px-4 bg-[#1A3D63]/40 border border-[#4A7FA7]/30 rounded-xl text-[#F6FAFD] font-semibold outline-none focus:border-[#4A7FA7] transition-all"
             >
               <option value="Yes">Yes</option>
               <option value="No">No</option>
@@ -1205,7 +1205,7 @@ function InterventionModal({ modal, onClose, onSubmit, existingEdit, onRemove }:
 
           {/* Corrected Score */}
           <div className="space-y-2">
-            <label className="text-xs font-black uppercase tracking-wider text-[#1F3A3440]">
+            <label className="text-xs font-black uppercase tracking-wider text-[#B3CFE5]">
               Corrected Score (0-100)
             </label>
             <input
@@ -1214,13 +1214,13 @@ function InterventionModal({ modal, onClose, onSubmit, existingEdit, onRemove }:
               max="100"
               value={correctedScore}
               onChange={(e) => setCorrectedScore(Number(e.target.value))}
-              className="w-full h-12 px-4 bg-[#1F3A3403] border border-[#1f3a3410] rounded-xl text-[#1F3A34] font-semibold outline-none focus:border-[#1F3A34] transition-all"
+              className="w-full h-12 px-4 bg-[#1A3D63]/40 border border-[#4A7FA7]/30 rounded-xl text-[#F6FAFD] font-semibold outline-none focus:border-[#4A7FA7] transition-all"
             />
           </div>
 
           {/* Reasoning */}
           <div className="space-y-2">
-            <label className="text-xs font-black uppercase tracking-wider text-[#1F3A3440]">
+            <label className="text-xs font-black uppercase tracking-wider text-[#B3CFE5]">
               Reason for Correction *
             </label>
             <textarea
@@ -1228,7 +1228,7 @@ function InterventionModal({ modal, onClose, onSubmit, existingEdit, onRemove }:
               onChange={(e) => setCorrectedReasoning(e.target.value)}
               placeholder="Explain why you're correcting this answer..."
               rows={4}
-              className="w-full px-4 py-3 bg-[#1F3A3403] border border-[#1f3a3410] rounded-xl text-[#1F3A34] font-medium outline-none focus:border-[#1F3A34] transition-all resize-none"
+              className="w-full px-4 py-3 bg-[#1A3D63]/40 border border-[#4A7FA7]/30 rounded-xl text-[#F6FAFD] font-medium outline-none focus:border-[#4A7FA7] transition-all resize-none"
             />
           </div>
 
@@ -1266,7 +1266,7 @@ export default function RedFlagsPage() {
   return (
     <Suspense fallback={
       <div className="flex-1 flex items-center justify-center">
-        <div className="w-12 h-12 rounded-2xl border-4 border-[#1f3a3408] border-t-[#1F3A34] animate-spin" />
+        <div className="w-12 h-12 rounded-2xl border-4 border-[#1A3D63]/40 border-t-[#4A7FA7] animate-spin" />
       </div>
     }>
       <RedFlagsPageContent />

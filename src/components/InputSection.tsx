@@ -434,20 +434,20 @@ export function InputSection({
     <section className="max-w-4xl mx-auto w-full space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-1000">
       {/* Header & Subtext */}
       <div className="flex flex-col gap-2 items-center text-center px-4">
-        <h3 className="text-3xl font-[850] text-[#1F3A34] tracking-tight">{t('signalInput')}</h3>
-        <p className="text-[#1F3A3450] text-sm font-semibold max-w-sm">{t('provideData')}</p>
+        <h3 className="text-3xl font-[850] text-[#F6FAFD] tracking-tight">{t('signalInput')}</h3>
+        <p className="text-[#B3CFE5] text-sm font-semibold max-w-sm">{t('provideData')}</p>
       </div>
 
       {/* Mode Toggle Tabs */}
       <div className="flex justify-center">
-        <div className="flex p-1.5 bg-[#1F3A3408] rounded-2xl border border-[#1f3a3405] w-full max-w-[400px]">
+        <div className="flex p-1.5 bg-[#1A3D63]/30 rounded-2xl border border-[#4A7FA7]/20 w-full max-w-[400px]">
           <button
             onClick={() => handleModeChange("audio")}
             className={cn(
               "flex-1 flex items-center justify-center gap-2.5 py-3 rounded-xl text-sm font-extrabold transition-all",
               mode === "audio"
-                ? "bg-[#1F3A34] text-white apple-shadow"
-                : "text-[#1F3A3450] hover:text-[#1F3A34]"
+                ? "bg-gradient-to-r from-[#4A7FA7] to-[#1A3D63] text-[#F6FAFD] apple-shadow glow"
+                : "text-[#B3CFE5] hover:text-[#F6FAFD]"
             )}
           >
             <FileAudio className="w-4 h-4 opacity-70" />
@@ -458,8 +458,8 @@ export function InputSection({
             className={cn(
               "flex-1 flex items-center justify-center gap-2.5 py-3 rounded-xl text-sm font-extrabold transition-all",
               mode === "transcript"
-                ? "bg-[#1F3A34] text-white apple-shadow"
-                : "text-[#1F3A3450] hover:text-[#1F3A34]"
+                ? "bg-gradient-to-r from-[#4A7FA7] to-[#1A3D63] text-[#F6FAFD] apple-shadow glow"
+                : "text-[#B3CFE5] hover:text-[#F6FAFD]"
             )}
           >
             <FileText className="w-4 h-4 opacity-70" />
@@ -469,21 +469,21 @@ export function InputSection({
       </div>
 
       {/* Input Content Area */}
-      <div className="glass-blur apple-blur bg-white p-8 md:p-12 rounded-[40px] apple-shadow border border-[#1f3a3405]">
+      <div className="glass-blur apple-blur bg-[#1A3D63]/40 p-8 md:p-12 rounded-[40px] apple-shadow border border-[#4A7FA7]/30">
         <div className="space-y-10">
           {mode === "audio" ? (
             <div className="space-y-8">
               {!audioFile ? (
                 <div
                   onClick={() => fileInputRef.current?.click()}
-                  className="group w-full aspect-video md:aspect-[3/1] border-2 border-dashed border-[#1f3a3410] hover:border-[#1f3a34] rounded-[2.5rem] flex flex-col items-center justify-center gap-6 cursor-pointer transition-all hover:bg-[#1f3a3403]"
+                  className="group w-full aspect-video md:aspect-[3/1] border-2 border-dashed border-[#4A7FA7]/30 hover:border-[#4A7FA7] rounded-[2.5rem] flex flex-col items-center justify-center gap-6 cursor-pointer transition-all hover:bg-[#1A3D63]/30"
                 >
-                  <div className="w-16 h-16 rounded-[2rem] bg-[#1F3A3408] group-hover:bg-[#1F3A34] group-hover:scale-110 transition-all flex items-center justify-center">
-                    <Upload className="w-7 h-7 text-[#1F3A3460] group-hover:text-white transition-colors" />
+                  <div className="w-16 h-16 rounded-[2rem] bg-[#1A3D63]/40 group-hover:bg-[#4A7FA7] group-hover:scale-110 transition-all flex items-center justify-center glow">
+                    <Upload className="w-7 h-7 text-[#B3CFE5] group-hover:text-[#F6FAFD] transition-colors" />
                   </div>
                   <div className="text-center">
-                    <p className="text-lg font-extrabold text-[#1F3A34] group-hover:translate-y-[-2px] transition-transform">{t('uploadSignalFile')}</p>
-                    <p className="text-xs font-bold text-[#1F3A3440] uppercase tracking-widest mt-1.5">{t('mp3WavInfo')}</p>
+                    <p className="text-lg font-extrabold text-[#F6FAFD] group-hover:translate-y-[-2px] transition-transform">{t('uploadSignalFile')}</p>
+                    <p className="text-xs font-bold text-[#B3CFE5] uppercase tracking-widest mt-1.5">{t('mp3WavInfo')}</p>
                   </div>
                   <input
                     type="file"
@@ -494,18 +494,18 @@ export function InputSection({
                   />
                 </div>
               ) : (
-                <div className="flex items-center justify-between p-6 rounded-[2rem] bg-[#1F3A3405] border border-[#1f3a3408] animate-in zoom-in-95 duration-500">
+                <div className="flex items-center justify-between p-6 rounded-[2rem] bg-[#1A3D63]/40 border border-[#4A7FA7]/30 animate-in zoom-in-95 duration-500">
                   <div className="flex items-center gap-5">
-                    <div className="w-14 h-14 rounded-2xl bg-[#1F3A34] flex items-center justify-center shadow-lg shadow-[#1f3a3420]">
-                      <FileAudio className="w-6 h-6 text-white" />
+                    <div className="w-14 h-14 rounded-2xl bg-[#4A7FA7] flex items-center justify-center shadow-lg shadow-[#4A7FA7]/20 glow">
+                      <FileAudio className="w-6 h-6 text-[#F6FAFD]" />
                     </div>
                     <div className="min-w-0">
-                      <p className="font-extrabold text-[#1F3A34] truncate max-w-[200px] md:max-w-md">{audioFile.name}</p>
-                      <p className="text-[10px] font-black uppercase tracking-widest text-[#1F3A3440] mt-1">{(audioFile.size / (1024 * 1024)).toFixed(2)} MB • READY TO PROCESS</p>
+                      <p className="font-extrabold text-[#F6FAFD] truncate max-w-[200px] md:max-w-md">{audioFile.name}</p>
+                      <p className="text-[10px] font-black uppercase tracking-widest text-[#B3CFE5] mt-1">{(audioFile.size / (1024 * 1024)).toFixed(2)} MB • READY TO PROCESS</p>
                     </div>
                   </div>
                   {!isProcessing && (
-                    <button onClick={removeFile} className="p-3 hover:bg-red-50 text-[#1F3A3420] hover:text-red-500 rounded-xl transition-all">
+                    <button onClick={removeFile} className="p-3 hover:bg-red-50 text-[#B3CFE5] hover:text-red-500 rounded-xl transition-all">
                       <Trash2 className="w-5 h-5" />
                     </button>
                   )}
@@ -516,10 +516,10 @@ export function InputSection({
             <div className="space-y-8 animate-in fade-in zoom-in-95 duration-500">
               <div className="flex flex-col gap-4">
                 <div className="flex items-center justify-between">
-                  <h4 className="text-sm font-extrabold uppercase tracking-widest text-[#1F3A34] flex items-center gap-2">
+                  <h4 className="text-sm font-extrabold uppercase tracking-widest text-[#F6FAFD] flex items-center gap-2">
                     <FileText className="w-4 h-4" /> {t('bypassedInput')}
                   </h4>
-                  <label className="flex items-center gap-2 px-3 py-1.5 bg-[#1F3A3408] hover:bg-[#1F3A3415] text-[#1F3A3480] text-[10px] font-black uppercase tracking-widest rounded-xl transition-all cursor-pointer">
+                  <label className="flex items-center gap-2 px-3 py-1.5 bg-[#1A3D63]/40 hover:bg-[#4A7FA7] text-[#B3CFE5] hover:text-[#F6FAFD] text-[10px] font-black uppercase tracking-widest rounded-xl transition-all cursor-pointer">
                     <FileUp className="w-3.5 h-3.5" /> {manualFile ? manualFile.name : t('uploadDocument')}
                     <input
                       type="file"
@@ -533,7 +533,7 @@ export function InputSection({
                   value={manualTranscript}
                   onChange={(e) => setManualTranscript(e.target.value)}
                   placeholder={t('transcriptPlaceholderImmediate')}
-                  className="w-full h-48 p-8 rounded-[2.5rem] bg-[#1F3A3405] border border-transparent focus:border-[#1f3a3410] focus:bg-white focus:apple-shadow transition-all text-base font-medium leading-relaxed resize-none text-[#1F3A34] outline-none placeholder:text-[#1F3A3430]"
+                  className="w-full h-48 p-8 rounded-[2.5rem] bg-[#1A3D63]/40 border border-transparent focus:border-[#4A7FA7]/30 focus:bg-[#1A3D63]/50 focus:apple-shadow transition-all text-base font-medium leading-relaxed resize-none text-[#F6FAFD] outline-none placeholder:text-[#B3CFE5]"
                 />
               </div>
             </div>
@@ -541,41 +541,41 @@ export function InputSection({
 
           {/* SHARED STRATEGIC CONTEXT GRID */}
           {(audioFile || manualTranscript.trim() || manualFile) && !isProcessing && (
-            <div className="space-y-8 pt-10 border-t border-[#1f3a3408] animate-in slide-in-from-top-8 duration-700">
+            <div className="space-y-8 pt-10 border-t border-[#4A7FA7]/20 animate-in slide-in-from-top-8 duration-700">
               <div className="flex items-center justify-between px-1">
-                <h4 className="text-sm font-extrabold uppercase tracking-widest text-[#1F3A34] flex items-center gap-2">
+                <h4 className="text-sm font-extrabold uppercase tracking-widest text-[#F6FAFD] flex items-center gap-2">
                   <Target className="w-4 h-4" /> Strategic Context
                 </h4>
                 <div className="flex items-center gap-2">
-                  <span className="text-[9px] font-black text-green-600 bg-green-50 px-2 py-1 rounded-md border border-green-100 uppercase tracking-widest animate-pulse">Neural Ready</span>
+                  <span className="text-[9px] font-black text-green-600 bg-green-500/20 px-2 py-1 rounded-md border border-green-500/30 uppercase tracking-widest animate-pulse">Neural Ready</span>
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pb-6 border-b border-[#1f3a3408]">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pb-6 border-b border-[#4A7FA7]/20">
                 {/* Red Flag Multi-Select */}
                 <div className="relative group/select">
-                  <label className="text-[10px] font-black uppercase tracking-[0.2em] text-red-500/60 mb-2 block px-1">Risk / High Priority</label>
+                  <label className="text-[10px] font-black uppercase tracking-[0.2em] text-red-400/80 mb-2 block px-1">Risk / High Priority</label>
                   <div
                     onClick={() => setIsRedFlagOpen(!isRedFlagOpen)}
                     className={cn(
-                      "w-full h-16 bg-red-500/5 border border-transparent rounded-2xl px-14 flex items-center cursor-pointer transition-all hover:bg-red-500/8",
-                      isRedFlagOpen && "border-red-500/20 bg-white shadow-lg text-[#1F3A34]"
+                      "w-full h-16 bg-red-500/10 border border-transparent rounded-2xl px-14 flex items-center cursor-pointer transition-all hover:bg-red-500/15",
+                      isRedFlagOpen && "border-red-500/30 bg-[#1A3D63]/50 shadow-lg text-[#F6FAFD]"
                     )}
                   >
-                    <span className={cn("font-bold tracking-tight text-base truncate", selectedRedFlagIds.length > 0 ? "text-red-600" : "text-[#1F3A3440]")}>
+                    <span className={cn("font-bold tracking-tight text-base truncate", selectedRedFlagIds.length > 0 ? "text-red-400" : "text-[#B3CFE5]")}>
                       {selectedRedFlagIds.length === 0 ? "Identify Red Flags..." : `${selectedRedFlagIds.length} Red Flags Marked`}
                     </span>
                   </div>
-                  <ShieldAlert className={cn("absolute left-5 top-[65%] -translate-y-1/2 w-5 h-5 transition-colors", selectedRedFlagIds.length > 0 ? "text-red-500" : "text-[#1F3A3420]")} />
-                  <ChevronRight className={cn("absolute right-5 top-[65%] -translate-y-1/2 w-5 h-5 text-[#1F3A3420] transition-transform", isRedFlagOpen ? "-rotate-90 text-red-500" : "rotate-90")} />
+                  <ShieldAlert className={cn("absolute left-5 top-[65%] -translate-y-1/2 w-5 h-5 transition-colors", selectedRedFlagIds.length > 0 ? "text-red-400" : "text-[#B3CFE5]")} />
+                  <ChevronRight className={cn("absolute right-5 top-[65%] -translate-y-1/2 w-5 h-5 text-[#B3CFE5] transition-transform", isRedFlagOpen ? "-rotate-90 text-red-400" : "rotate-90")} />
 
                   {isRedFlagOpen && (
-                    <div className="absolute top-[105%] left-0 right-0 bg-white border border-red-100 rounded-2xl shadow-2xl p-4 z-[60] space-y-1.5 animate-in fade-in slide-in-from-top-2 duration-200 lg:max-h-[300px] overflow-y-auto">
-                      {questionnaires.map(q => {
+                    <div className="absolute top-[105%] left-0 right-0 bg-[#1A3D63]/95 border border-red-500/30 rounded-2xl shadow-2xl p-4 z-[60] space-y-1.5 animate-in fade-in slide-in-from-top-2 duration-200 lg:max-h-[300px] overflow-y-auto">
+                      {questionnaires.filter(q => q.is_redflag === true).map(q => {
                         const qId = q.id || q._id;
                         const isChecked = selectedRedFlagIds.includes(qId);
                         return (
-                          <label key={`rf-${qId}`} className="flex items-center gap-3 p-3 rounded-xl transition-all cursor-pointer hover:bg-red-50">
+                          <label key={`rf-${qId}`} className="flex items-center gap-3 p-3 rounded-xl transition-all cursor-pointer hover:bg-red-500/20">
                             <input
                               type="checkbox"
                               checked={isChecked}
@@ -587,41 +587,45 @@ export function InputSection({
                                   setSelectedRedFlagIds(selectedRedFlagIds.filter(id => id !== qId));
                                 }
                               }}
-                              className="w-4 h-4 rounded-md border-red-200 text-red-600 focus:ring-red-500"
+                              className="w-4 h-4 rounded-md border-red-400 text-red-500 focus:ring-red-500"
                             />
-                            <span className="text-sm font-bold text-[#1F3A34]">{q.name}</span>
+                            <span className="text-sm font-bold text-[#F6FAFD]">{q.name}</span>
                           </label>
                         );
                       })}
+                      {questionnaires.filter(q => q.is_redflag === true).length === 0 && (
+                        <div className="text-center py-4 text-[#B3CFE5]/50 text-xs">
+                          No red flag questionnaires available
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
 
                 {/* Standard Audit Multi-Select */}
                 <div className="relative group/select">
-                  <label className="text-[10px] font-black uppercase tracking-[0.2em] text-[#1F3A3440] mb-2 block px-1">Questionaire</label>
+                  <label className="text-[10px] font-black uppercase tracking-[0.2em] text-[#B3CFE5] mb-2 block px-1">Questionaire</label>
                   <div
                     onClick={() => setIsOtherOpen(!isOtherOpen)}
                     className={cn(
-                      "w-full h-16 bg-[#1F3A3405] border border-transparent rounded-2xl px-14 flex items-center cursor-pointer transition-all hover:bg-[#1F3A3408]",
-                      isOtherOpen && "border-[#1F3A3415] bg-white shadow-lg text-[#1F3A34]"
+                      "w-full h-16 bg-[#1A3D63]/40 border border-transparent rounded-2xl px-14 flex items-center cursor-pointer transition-all hover:bg-[#1A3D63]/60",
+                      isOtherOpen && "border-[#4A7FA7]/30 bg-[#1A3D63]/50 shadow-lg text-[#F6FAFD]"
                     )}
                   >
-                    <span className={cn("font-bold tracking-tight text-base truncate", selectedOtherIds.length > 0 ? "text-[#1F3A34]" : "text-[#1F3A3440]")}>
+                    <span className={cn("font-bold tracking-tight text-base truncate", selectedOtherIds.length > 0 ? "text-[#F6FAFD]" : "text-[#B3CFE5]")}>
                       {selectedOtherIds.length === 0 ? "Select Questionaire..." : `${selectedOtherIds.length} Frameworks Selected`}
                     </span>
                   </div>
-                  <FileSearch className={cn("absolute left-5 top-[65%] -translate-y-1/2 w-5 h-5 transition-colors", selectedOtherIds.length > 0 ? "text-[#1F3A34]" : "text-[#1F3A3420]")} />
-                  <ChevronRight className={cn("absolute right-5 top-[65%] -translate-y-1/2 w-5 h-5 text-[#1F3A3420] transition-transform", isOtherOpen ? "-rotate-90 text-[#1F3A34]" : "rotate-90")} />
+                  <FileSearch className={cn("absolute left-5 top-[65%] -translate-y-1/2 w-5 h-5 transition-colors", selectedOtherIds.length > 0 ? "text-[#4A7FA7]" : "text-[#B3CFE5]")} />
+                  <ChevronRight className={cn("absolute right-5 top-[65%] -translate-y-1/2 w-5 h-5 text-[#B3CFE5] transition-transform", isOtherOpen ? "-rotate-90 text-[#4A7FA7]" : "rotate-90")} />
 
                   {isOtherOpen && (
-                    <div className="absolute top-[105%] left-0 right-0 bg-white border border-[#1f3a3410] rounded-2xl shadow-2xl p-4 z-50 space-y-1.5 animate-in fade-in slide-in-from-top-2 duration-200 lg:max-h-[300px] overflow-y-auto">
-                      {questionnaires.map(q => {
+                    <div className="absolute top-[105%] left-0 right-0 bg-[#1A3D63]/95 border border-[#4A7FA7]/30 rounded-2xl shadow-2xl p-4 z-50 space-y-1.5 animate-in fade-in slide-in-from-top-2 duration-200 lg:max-h-[300px] overflow-y-auto">
+                      {questionnaires.filter(q => q.is_redflag === false).map(q => {
                         const qId = q.id || q._id;
                         const isChecked = selectedOtherIds.includes(qId);
-                        const isAlsoRedFlag = selectedRedFlagIds.includes(qId);
                         return (
-                          <label key={`oa-${qId}`} className="flex items-center gap-3 p-3 rounded-xl transition-all cursor-pointer hover:bg-[#1F3A3405]">
+                          <label key={`oa-${qId}`} className="flex items-center gap-3 p-3 rounded-xl transition-all cursor-pointer hover:bg-[#1A3D63]/60">
                             <input
                               type="checkbox"
                               checked={isChecked}
@@ -630,18 +634,19 @@ export function InputSection({
                                   setSelectedOtherIds([...selectedOtherIds, qId]);
                                 } else {
                                   setSelectedOtherIds(selectedOtherIds.filter(id => id !== qId));
-                                  if (isAlsoRedFlag) setSelectedRedFlagIds(selectedRedFlagIds.filter(id => id !== qId));
                                 }
                               }}
-                              className="w-4 h-4 rounded-md border-[#1F3A3415] text-[#1F3A34] focus:ring-[#1F3A34]"
+                              className="w-4 h-4 rounded-md border-[#4A7FA7] text-[#4A7FA7] focus:ring-[#4A7FA7]"
                             />
-                            <div className="flex flex-col">
-                              <span className="text-sm font-bold text-[#1F3A34]">{q.name}</span>
-                              {isAlsoRedFlag && <span className="text-[8px] font-black text-red-500 uppercase tracking-widest leading-none mt-1">(Red Flag Priority)</span>}
-                            </div>
+                            <span className="text-sm font-bold text-[#F6FAFD]">{q.name}</span>
                           </label>
                         );
                       })}
+                      {questionnaires.filter(q => q.is_redflag === false).length === 0 && (
+                        <div className="text-center py-4 text-[#B3CFE5]/50 text-xs">
+                          No questionnaires available
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
@@ -649,51 +654,51 @@ export function InputSection({
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="relative group/select">
-                  <label className="text-[10px] font-black uppercase tracking-[0.2em] text-[#1F3A3440] mb-2 block px-1">Campaign Name</label>
+                  <label className="text-[10px] font-black uppercase tracking-[0.2em] text-[#B3CFE5] mb-2 block px-1">Campaign Name</label>
                   <select
                     value={selectedCampaignId}
                     onChange={(e) => setSelectedCampaignId(e.target.value)}
-                    className="w-full h-16 bg-[#1F3A3405] border border-transparent focus:border-[#1F3A3415] rounded-2xl px-14 appearance-none text-[#1F3A34] font-bold tracking-tight text-base cursor-pointer outline-none transition-all"
+                    className="w-full h-16 bg-[#1A3D63]/40 border border-transparent focus:border-[#4A7FA7]/30 rounded-2xl px-14 appearance-none text-[#F6FAFD] font-bold tracking-tight text-base cursor-pointer outline-none transition-all"
                   >
                     <option value="">{t('selectPlaceholder')}</option>
                     {campaigns.map(c => <option key={c.id || c._id} value={c.id || c._id}>{c.name}</option>)}
                   </select>
-                  <Layers className="absolute left-5 top-[65%] -translate-y-1/2 w-5 h-5 text-[#1F3A3420]" />
-                  <ChevronRight className="absolute right-5 top-[65%] -translate-y-1/2 w-5 h-5 text-[#1F3A3420] rotate-90" />
+                  <Layers className="absolute left-5 top-[65%] -translate-y-1/2 w-5 h-5 text-[#B3CFE5]" />
+                  <ChevronRight className="absolute right-5 top-[65%] -translate-y-1/2 w-5 h-5 text-[#B3CFE5] rotate-90" />
                 </div>
                 <div className="relative group/select">
-                  <label className="text-[10px] font-black uppercase tracking-[0.2em] text-[#1F3A3440] mb-2 block px-1">Intelligence Profile</label>
+                  <label className="text-[10px] font-black uppercase tracking-[0.2em] text-[#B3CFE5] mb-2 block px-1">Intelligence Profile</label>
                   <select
                     value={selectedProfileId}
                     onChange={(e) => setSelectedProfileId(e.target.value)}
-                    className="w-full h-16 bg-[#1F3A3405] border border-transparent focus:border-[#1F3A3415] rounded-2xl px-14 appearance-none text-[#1F3A34] font-bold tracking-tight text-base cursor-pointer outline-none transition-all"
+                    className="w-full h-16 bg-[#1A3D63]/40 border border-transparent focus:border-[#4A7FA7]/30 rounded-2xl px-14 appearance-none text-[#F6FAFD] font-bold tracking-tight text-base cursor-pointer outline-none transition-all"
                   >
                     <option value="">Select Profile...</option>
                     {profiles.map(p => <option key={p.id || p._id} value={p.id || p._id}>{p.name}</option>)}
                   </select>
-                  <Zap className="absolute left-5 top-[65%] -translate-y-1/2 w-5 h-5 text-[#1F3A3420]" />
-                  <ChevronRight className="absolute right-5 top-[65%] -translate-y-1/2 w-5 h-5 text-[#1F3A3420] rotate-90" />
+                  <Zap className="absolute left-5 top-[65%] -translate-y-1/2 w-5 h-5 text-[#B3CFE5]" />
+                  <ChevronRight className="absolute right-5 top-[65%] -translate-y-1/2 w-5 h-5 text-[#B3CFE5] rotate-90" />
                 </div>
               </div>
 
               {/* Meta Tags Input (Optional) */}
-              <div className="space-y-4 pt-6 border-t border-[#1f3a3408]">
+              <div className="space-y-4 pt-6 border-t border-[#4A7FA7]/20">
                 <div className="flex items-center justify-between px-1">
-                  <label className="text-[10px] font-black uppercase tracking-[0.2em] text-[#1F3A3440] flex items-center gap-2">
+                  <label className="text-[10px] font-black uppercase tracking-[0.2em] text-[#B3CFE5] flex items-center gap-2">
                     <Tag className="w-3.5 h-3.5" /> {t('metaTags')}
                     {metaTags.length > 0 && (
-                      <span className="text-[9px] font-black text-blue-600 bg-blue-50 px-2 py-0.5 rounded-md border border-blue-200">
+                      <span className="text-[9px] font-black text-blue-400 bg-blue-500/20 px-2 py-0.5 rounded-md border border-blue-400/30">
                         {metaTags.length} tag{metaTags.length !== 1 ? 's' : ''} added
                       </span>
                     )}
                   </label>
-                  <span className="text-[9px] font-bold text-[#1F3A3430] uppercase tracking-wider">Comma-separated or Enter</span>
+                  <span className="text-[9px] font-bold text-[#B3CFE5] uppercase tracking-wider">Comma-separated or Enter</span>
                 </div>
                 <div className="space-y-3">
                   <input
                     type="text"
                     placeholder={t('metaTagsPlaceholder')}
-                    className="w-full h-12 px-4 rounded-xl bg-[#1F3A3405] border border-transparent focus:border-[#1F3A3415] focus:bg-white text-[#1F3A34] font-medium transition-all outline-none placeholder:text-[#1F3A3430]"
+                    className="w-full h-12 px-4 rounded-xl bg-[#1A3D63]/40 border border-transparent focus:border-[#4A7FA7]/30 focus:bg-[#1A3D63]/50 text-[#F6FAFD] font-medium transition-all outline-none placeholder:text-[#B3CFE5]"
                     onKeyDown={(e) => {
                       if (e.key === 'Enter') {
                         e.preventDefault();
@@ -735,17 +740,17 @@ export function InputSection({
 
                   {/* Display Added Tags */}
                   {metaTags.length > 0 && (
-                    <div className="flex flex-wrap gap-2 p-3 rounded-xl bg-[#1F3A3405] border border-[#1f3a3408]">
+                    <div className="flex flex-wrap gap-2 p-3 rounded-xl bg-[#1A3D63]/40 border border-[#4A7FA7]/20">
                       {metaTags.map((tag, idx) => (
                         <span
                           key={idx}
-                          className="flex items-center gap-2 px-3 py-1.5 bg-blue-50 text-blue-700 border border-blue-200 rounded-lg text-xs font-bold group hover:bg-blue-100 transition-all"
+                          className="flex items-center gap-2 px-3 py-1.5 bg-blue-500/20 text-blue-300 border border-blue-400/30 rounded-lg text-xs font-bold group hover:bg-blue-500/30 transition-all"
                         >
                           #{tag}
                           <button
                             type="button"
                             onClick={() => setMetaTags(metaTags.filter((_, i) => i !== idx))}
-                            className="w-4 h-4 rounded-full hover:bg-blue-200 flex items-center justify-center transition-all"
+                            className="w-4 h-4 rounded-full hover:bg-blue-400/40 flex items-center justify-center transition-all"
                             title="Remove tag"
                           >
                             <X className="w-3 h-3" />
@@ -758,13 +763,13 @@ export function InputSection({
               </div>
 
               {/* Custom Questions Input (Optional) */}
-              <div className="space-y-4 pt-6 border-t border-[#1f3a3408]">
+              <div className="space-y-4 pt-6 border-t border-[#4A7FA7]/20">
                 <div className="flex items-center justify-between px-1">
-                  <label className="text-[10px] font-black uppercase tracking-[0.2em] text-[#1F3A3440] flex items-center gap-2">
+                  <label className="text-[10px] font-black uppercase tracking-[0.2em] text-[#B3CFE5] flex items-center gap-2">
                     <HelpCircle className="w-3.5 h-3.5" /> Custom Questions (Optional)
                   </label>
                   {customQuestions.length > 0 && (
-                    <span className="px-2 py-0.5 bg-blue-50 text-blue-700 border border-blue-200 rounded-md text-[9px] font-black">
+                    <span className="px-2 py-0.5 bg-blue-500/20 text-blue-300 border border-blue-400/30 rounded-md text-[9px] font-black">
                       {customQuestions.length} ADDED
                     </span>
                   )}
@@ -774,7 +779,7 @@ export function InputSection({
                   <input
                     type="text"
                     placeholder="Enter your question and press Enter..."
-                    className="w-full h-12 px-4 rounded-xl bg-[#1F3A3405] border border-transparent focus:border-[#1F3A3415] focus:bg-white text-[#1F3A34] font-medium transition-all outline-none placeholder:text-[#1F3A3430]"
+                    className="w-full h-12 px-4 rounded-xl bg-[#1A3D63]/40 border border-transparent focus:border-[#4A7FA7]/30 focus:bg-[#1A3D63]/50 text-[#F6FAFD] font-medium transition-all outline-none placeholder:text-[#B3CFE5]"
                     onKeyDown={(e) => {
                       if (e.key === 'Enter') {
                         e.preventDefault();
@@ -791,15 +796,15 @@ export function InputSection({
 
                   {/* Display Added Questions */}
                   {customQuestions.length > 0 && (
-                    <div className="space-y-2 p-3 rounded-xl bg-[#1F3A3405] border border-[#1f3a3408]">
+                    <div className="space-y-2 p-3 rounded-xl bg-[#1A3D63]/40 border border-[#4A7FA7]/20">
                       {customQuestions.map((q, idx) => (
                         <div
                           key={idx}
-                          className="flex items-center justify-between gap-3 px-4 py-3 bg-white border border-[#1f3a3408] rounded-lg group hover:border-[#1F3A3420] transition-all"
+                          className="flex items-center justify-between gap-3 px-4 py-3 bg-[#1A3D63]/50 border border-[#4A7FA7]/20 rounded-lg group hover:border-[#4A7FA7]/40 transition-all"
                         >
                           <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-[#1F3A34] truncate">{q.text}</p>
-                            <p className="text-[10px] font-bold text-[#1F3A3440] uppercase tracking-wider mt-1">
+                            <p className="text-sm font-medium text-[#F6FAFD] truncate">{q.text}</p>
+                            <p className="text-[10px] font-bold text-[#B3CFE5] uppercase tracking-wider mt-1">
                               Weight: {q.weight}
                             </p>
                           </div>
@@ -814,12 +819,12 @@ export function InputSection({
                                 updated[idx].weight = parseInt(e.target.value) || 0;
                                 setCustomQuestions(updated);
                               }}
-                              className="w-14 h-8 px-2 rounded-lg bg-[#1F3A3405] border border-[#1f3a3408] text-[#1F3A34] font-bold text-xs text-center outline-none focus:border-[#1F3A3415] transition-all"
+                              className="w-14 h-8 px-2 rounded-lg bg-[#1A3D63]/60 border border-[#4A7FA7]/20 text-[#F6FAFD] font-bold text-xs text-center outline-none focus:border-[#4A7FA7]/40 transition-all"
                             />
                             <button
                               type="button"
                               onClick={() => setCustomQuestions(customQuestions.filter((_, i) => i !== idx))}
-                              className="w-7 h-7 rounded-lg hover:bg-red-50 text-[#1F3A3420] hover:text-red-500 flex items-center justify-center transition-all"
+                              className="w-7 h-7 rounded-lg hover:bg-red-500/20 text-[#B3CFE5] hover:text-red-400 flex items-center justify-center transition-all"
                               title="Remove question"
                             >
                               <X className="w-3.5 h-3.5" />
@@ -835,7 +840,7 @@ export function InputSection({
               <button
                 onClick={mode === "audio" ? handleUploadSubmit : handleTranscriptSubmit}
                 disabled={isProcessing || !selectedCampaignId || !selectedProfileId}
-                className="w-full h-16 bg-[#1F3A34] hover:bg-[#1F3A34E0] disabled:bg-[#1F3A3450] text-white rounded-[1.25rem] font-bold text-sm uppercase tracking-widest transition-all apple-shadow active:scale-[0.98] flex items-center justify-center gap-3 mt-4"
+                className="w-full h-16 bg-gradient-to-r from-[#4A7FA7] to-[#1A3D63] hover:from-[#4A7FA7]/90 hover:to-[#1A3D63]/90 disabled:bg-[#1A3D63]/50 text-[#F6FAFD] rounded-[1.25rem] font-bold text-sm uppercase tracking-widest transition-all apple-shadow active:scale-[0.98] flex items-center justify-center gap-3 mt-4 glow"
               >
                 <ArrowRight className="w-5 h-5 opacity-50" />
                 {t('analyze')}
@@ -845,17 +850,17 @@ export function InputSection({
 
           {/* PROCESSING VIEW */}
           {isProcessing && (
-            <div className="p-12 rounded-[2.5rem] bg-[#1F3A3405] border border-[#1f3a3408] animate-in zoom-in-95 duration-500">
+            <div className="p-12 rounded-[2.5rem] bg-[#1A3D63]/40 border border-[#4A7FA7]/30 animate-in zoom-in-95 duration-500">
               <div className="flex flex-col items-center gap-8">
                 <div className="relative">
-                  <div className="w-20 h-20 rounded-[2.5rem] border-4 border-[#1f3a3408] border-t-[#1F3A34] animate-spin" />
+                  <div className="w-20 h-20 rounded-[2.5rem] border-4 border-[#4A7FA7]/20 border-t-[#4A7FA7] animate-spin glow" />
                   <div className="absolute inset-0 flex items-center justify-center">
-                    <Zap className="w-6 h-6 text-[#1F3A34] fill-current animate-pulse delay-700" />
+                    <Zap className="w-6 h-6 text-[#4A7FA7] fill-current animate-pulse delay-700" />
                   </div>
                 </div>
                 <div className="text-center space-y-2">
-                  <h4 className="text-xl font-[850] text-[#1F3A34] tracking-tight uppercase">AI Signal Analysis</h4>
-                  <p className="text-[#1F3A3440] text-[10px] font-black uppercase tracking-[0.2em] animate-pulse">
+                  <h4 className="text-xl font-[850] text-[#F6FAFD] tracking-tight uppercase">AI Signal Analysis</h4>
+                  <p className="text-[#B3CFE5] text-[10px] font-black uppercase tracking-[0.2em] animate-pulse">
                     {processingStatus === "uploading" ? "Broadcasting Signal..." : "Cognitive Engine Active..."}
                   </p>
                 </div>
@@ -873,17 +878,17 @@ export function InputSection({
                     return (
                       <div key={key} className={cn(
                         "flex items-center gap-4 p-4 rounded-2xl border transition-all duration-500",
-                        isActive ? "bg-white border-[#1f3a3410] apple-shadow scale-[1.02]" : "bg-transparent border-transparent opacity-30"
+                        isActive ? "bg-[#1A3D63]/50 border-[#4A7FA7]/30 apple-shadow scale-[1.02]" : "bg-transparent border-transparent opacity-30"
                       )}>
                         <div className={cn(
                           "w-9 h-9 rounded-xl flex items-center justify-center transition-all",
-                          isActive ? "bg-[#1F3A34] text-white shadow-lg shadow-[#1f3a3420]" : isDone ? "bg-green-500 text-white" : "bg-[#1f3a3410] text-[#1f3a3440]"
+                          isActive ? "bg-[#4A7FA7] text-[#F6FAFD] shadow-lg shadow-[#4A7FA7]/20 glow" : isDone ? "bg-green-500 text-[#F6FAFD]" : "bg-[#4A7FA7]/20 text-[#B3CFE5]"
                         )}>
                           {isDone ? <CheckCircle2 className="w-4 h-4" /> : isActive ? <Loader2 className="w-4 h-4 animate-spin" /> : <div className="w-1.5 h-1.5 rounded-full bg-current" />}
                         </div>
                         <div className="flex-1 text-left">
-                          <p className="text-[10px] font-black uppercase tracking-wider text-[#1F3A34] leading-none mb-1">{labels.t}</p>
-                          <p className="text-[9px] font-bold text-[#1F3A3440] tracking-tight">{labels.s}</p>
+                          <p className="text-[10px] font-black uppercase tracking-wider text-[#F6FAFD] leading-none mb-1">{labels.t}</p>
+                          <p className="text-[9px] font-bold text-[#B3CFE5] tracking-tight">{labels.s}</p>
                         </div>
                       </div>
                     );
@@ -895,18 +900,18 @@ export function InputSection({
 
           {/* SHARED RESULTS AREA */}
           {generatedTranscript && !isProcessing && (
-            <div className="space-y-6 pt-10 border-t border-[#1f3a3410] animate-in slide-in-from-top-4 duration-700">
+            <div className="space-y-6 pt-10 border-t border-[#4A7FA7]/30 animate-in slide-in-from-top-4 duration-700">
               <div className="flex items-center justify-between">
-                <h4 className="text-sm font-extrabold uppercase tracking-widest text-[#1F3A3450]">Intelligence Extraction</h4>
+                <h4 className="text-sm font-extrabold uppercase tracking-widest text-[#B3CFE5]">Intelligence Extraction</h4>
                 <div className="flex items-center gap-2">
-                  <button onClick={downloadTranscript} className="flex items-center gap-1.5 px-3 py-1 bg-[#1F3A3408] hover:bg-[#1F3A3415] text-[#1F3A3480] text-[10px] font-black uppercase tracking-widest rounded-lg transition-all"><Download className="w-3 h-3" /> Download</button>
-                  <span className="text-[10px] uppercase font-black text-green-600 bg-green-500/10 px-2 py-1 rounded-full">Signal Locked</span>
+                  <button onClick={downloadTranscript} className="flex items-center gap-1.5 px-3 py-1 bg-[#1A3D63]/40 hover:bg-[#4A7FA7] text-[#B3CFE5] hover:text-[#F6FAFD] text-[10px] font-black uppercase tracking-widest rounded-lg transition-all"><Download className="w-3 h-3" /> Download</button>
+                  <span className="text-[10px] uppercase font-black text-green-400 bg-green-500/20 px-2 py-1 rounded-full border border-green-400/30">Signal Locked</span>
                 </div>
               </div>
               <textarea
                 value={generatedTranscript}
                 readOnly
-                className="w-full min-h-[160px] p-8 rounded-[2rem] bg-[#F4F8F9] border border-[#1f3a3410] text-[#1F3A3480] text-base leading-relaxed italic font-medium apple-shadow outline-none"
+                className="w-full min-h-[160px] p-8 rounded-[2rem] bg-[#1A3D63]/40 border border-[#4A7FA7]/30 text-[#B3CFE5] text-base leading-relaxed italic font-medium apple-shadow outline-none"
               />
               {callAnalytics && (
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -916,9 +921,9 @@ export function InputSection({
                     { l: "Turns", v: String(callAnalytics.turn_count || 0) },
                     { l: "Diarization", v: `${callAnalytics.speakers?.length || 0} IDs` }
                   ].map((m) => (
-                    <div key={m.l} className="flex flex-col items-center justify-center p-4 rounded-2xl bg-[#1F3A3406] border border-[#1f3a3408]">
-                      <span className="text-[10px] font-black uppercase tracking-widest text-[#1F3A3440]">{m.l}</span>
-                      <span className="text-xl font-[850] text-[#1F3A34] tracking-tight">{m.v}</span>
+                    <div key={m.l} className="flex flex-col items-center justify-center p-4 rounded-2xl bg-[#1A3D63]/40 border border-[#4A7FA7]/20">
+                      <span className="text-[10px] font-black uppercase tracking-widest text-[#B3CFE5]">{m.l}</span>
+                      <span className="text-xl font-[850] text-[#F6FAFD] tracking-tight">{m.v}</span>
                     </div>
                   ))}
                 </div>
@@ -930,8 +935,8 @@ export function InputSection({
 
       {/* Disclaimer / Status footer */}
       <div className="text-center">
-        <p className="text-[10px] font-[850] text-[#1f3a3420] uppercase tracking-widest flex items-center justify-center gap-2">
-          Encrypted Signal Tunnel <span className="w-1 h-1 rounded-full bg-[#1F3A3420]" /> Latency: 12ms
+        <p className="text-[10px] font-[850] text-[#B3CFE5] uppercase tracking-widest flex items-center justify-center gap-2">
+          Encrypted Signal Tunnel <span className="w-1 h-1 rounded-full bg-[#4A7FA7]" /> Latency: 12ms
         </p>
       </div>
     </section>

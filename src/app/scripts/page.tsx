@@ -186,24 +186,24 @@ function ScriptsPageContent() {
   );
 
   return (
-    <main className="flex-1 overflow-y-auto bg-[#F4F8F9]/50 p-8 space-y-10">
+    <main className="flex-1 overflow-y-auto p-8 space-y-10">
       {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div>
           <div className="flex items-center gap-3 mb-2">
-            <div className="w-10 h-10 rounded-2xl bg-[#1F3A34] flex items-center justify-center text-white apple-shadow">
+            <div className="w-10 h-10 rounded-2xl bg-gradient-to-r from-[#4A7FA7] to-[#1A3D63] flex items-center justify-center text-white glow">
               <FileCode className="w-6 h-6" />
             </div>
-            <h1 className="text-3xl font-[900] text-[#1F3A34] tracking-tight">{t('title')}</h1>
+            <h1 className="text-3xl font-[900] text-[#F6FAFD] tracking-tight">{t('title')}</h1>
           </div>
-          <p className="text-[#1F3A3470] text-sm font-medium">
+          <p className="text-[#B3CFE5] text-sm font-medium">
             {t('subtitle')}
           </p>
         </div>
 
         <button
           onClick={() => setIsCreateModalOpen(true)}
-          className="flex items-center gap-2 px-6 py-3.5 bg-[#1F3A34] text-white rounded-2xl font-bold text-sm uppercase tracking-widest transition-all hover:bg-[#1F3A34E0] apple-shadow active:scale-[0.98]"
+          className="flex items-center gap-2 px-6 py-3.5 bg-gradient-to-r from-[#4A7FA7] to-[#1A3D63] glow text-white rounded-2xl font-bold text-sm uppercase tracking-widest transition-all hover:opacity-90 active:scale-[0.98]"
         >
           <Plus className="w-5 h-5" />
           {t('createScript')}
@@ -212,13 +212,13 @@ function ScriptsPageContent() {
 
       {/* Search Filter */}
       <div className="relative group">
-        <Search className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-[#1F3A3430] group-focus-within:text-[#1F3A34] transition-colors" />
+        <Search className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-[#B3CFE5] group-focus-within:text-[#4A7FA7] transition-colors" />
         <input
           type="text"
           placeholder={t('filterPlaceholder')}
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full h-16 bg-white border border-[#1f3a3410] rounded-[1.25rem] pl-16 pr-6 text-[#1F3A34] font-bold tracking-tight placeholder:text-[#1F3A3430] outline-none focus:border-[#1F3A3420] transition-all apple-shadow-sm"
+          className="w-full h-16 bg-[#1A3D63]/60 glow border border-[#4A7FA7]/30 rounded-[1.25rem] pl-16 pr-6 text-[#F6FAFD] font-bold tracking-tight placeholder:text-[#B3CFE5] outline-none focus:border-[#4A7FA7] transition-all"
         />
       </div>
 
@@ -231,9 +231,9 @@ function ScriptsPageContent() {
             ))}
           </div>
         ) : error ? (
-          <div className="p-10 bg-red-50 border border-red-100 rounded-3xl text-center space-y-4">
+          <div className="p-10 bg-red-500/20 border border-red-500/30 rounded-3xl text-center space-y-4">
             <AlertCircle className="w-12 h-12 text-red-500 mx-auto" />
-            <p className="text-red-700 font-bold">{error}</p>
+            <p className="text-red-400 font-bold">{error}</p>
             <button
               onClick={() => window.location.reload()}
               className="px-6 py-2 bg-red-500 text-white rounded-xl font-bold text-xs uppercase tracking-widest"
@@ -243,8 +243,8 @@ function ScriptsPageContent() {
           </div>
         ) : filtered.length === 0 ? (
           <div className="p-20 text-center space-y-4">
-            <FileCode className="w-16 h-16 text-[#1F3A3410] mx-auto" />
-            <p className="text-[#1F3A3440] font-bold">
+            <FileCode className="w-16 h-16 text-[#4A7FA7] mx-auto" />
+            <p className="text-[#B3CFE5] font-bold">
               {searchQuery ? "No scripts found matching your search." : "No scripts found. Create your first script to get started."}
             </p>
           </div>
@@ -253,8 +253,8 @@ function ScriptsPageContent() {
             <div
               key={script.id}
               className={cn(
-                "group bg-white border rounded-[2rem] transition-all duration-500 overflow-hidden",
-                expandedId === script.id ? "border-[#1F3A3420] apple-shadow-lg" : "border-[#1f3a3408] hover:border-[#1f3a3415] apple-shadow-sm"
+                "group bg-[#1A3D63]/60 glow border rounded-[2rem] transition-all duration-500 overflow-hidden",
+                expandedId === script.id ? "border-[#4A7FA7]/50" : "border-[#4A7FA7]/30 hover:border-[#4A7FA7]/40"
               )}
             >
               <div
@@ -272,26 +272,26 @@ function ScriptsPageContent() {
               >
                 <div className="flex-1 space-y-2">
                   <div className="flex items-center gap-3">
-                    <h3 className="text-xl font-[850] text-[#1F3A34] tracking-tight">{script.title}</h3>
+                    <h3 className="text-xl font-[850] text-[#F6FAFD] tracking-tight">{script.title}</h3>
                     <span className={cn(
                       "px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-widest",
-                      script.status === 'active' ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500"
+                      script.status === 'active' ? "bg-[#4A7FA7]/20 text-[#4A7FA7] border border-[#4A7FA7]/30" : "bg-[#1A3D63]/40 text-[#B3CFE5]"
                     )}>
                       v{script.version} • {script.status}
                     </span>
-                    <span className="px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-widest bg-blue-100 text-blue-700">
+                    <span className="px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-widest bg-[#4A7FA7]/20 text-[#4A7FA7] border border-[#4A7FA7]/30">
                       {script.call_direction}
                     </span>
                   </div>
-                  <p className="text-[#1F3A3460] text-sm font-medium leading-relaxed">
+                  <p className="text-[#B3CFE5] text-sm font-medium leading-relaxed">
                     Campaign: <span className="font-bold">{getCampaignName(script.campaign_id)}</span>
                   </p>
                 </div>
 
                 <div className="flex items-center gap-4">
                   <div className="text-right hidden md:block">
-                    <div className="text-[10px] font-black uppercase tracking-[0.2em] text-[#1F3A3430] mb-1">Created</div>
-                    <div className="text-sm font-[900] text-[#1F3A34]">
+                    <div className="text-[10px] font-black uppercase tracking-[0.2em] text-[#B3CFE5] mb-1">Created</div>
+                    <div className="text-sm font-[900] text-[#F6FAFD]">
                       {new Date(script.created_at).toLocaleDateString()}
                     </div>
                   </div>
@@ -300,12 +300,12 @@ function ScriptsPageContent() {
                       e.stopPropagation();
                       handleDeleteScript(script.id);
                     }}
-                    className="w-10 h-10 rounded-xl bg-red-50 hover:bg-red-100 text-red-500 flex items-center justify-center transition-all opacity-0 group-hover:opacity-100"
+                    className="w-10 h-10 rounded-xl bg-red-500/20 hover:bg-red-500 hover:text-white text-red-500 flex items-center justify-center transition-all opacity-0 group-hover:opacity-100"
                     title="Delete script"
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
-                  <div className="w-12 h-12 rounded-2xl bg-[#1F3A3405] flex items-center justify-center text-[#1F3A3440] group-hover:bg-[#1F3A34] group-hover:text-white transition-all duration-500">
+                  <div className="w-12 h-12 rounded-2xl bg-[#1A3D63]/40 flex items-center justify-center text-[#4A7FA7] group-hover:bg-gradient-to-r group-hover:from-[#4A7FA7] group-hover:to-[#1A3D63] group-hover:text-white transition-all duration-500">
                     {expandedId === script.id ? <ChevronDown className="w-6 h-6" /> : <ChevronRight className="w-6 h-6" />}
                   </div>
                 </div>
@@ -313,13 +313,13 @@ function ScriptsPageContent() {
 
               {expandedId === script.id && (
                 <div className="px-8 pb-8 space-y-8 animate-in fade-in slide-in-from-top-4 duration-500">
-                  <div className="h-px bg-[#1f3a3408]" />
+                  <div className="h-px bg-[#4A7FA7]/30" />
 
                   <div className="space-y-6">
                     <div>
-                      <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-[#1F3A3440] mb-3">Source Text</h4>
-                      <div className="bg-[#F4F8F9] p-6 rounded-2xl border border-[#1f3a3410] max-h-[400px] overflow-y-auto">
-                        <p className="text-sm text-[#1F3A3480] whitespace-pre-wrap leading-relaxed">{script.source_text}</p>
+                      <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-[#B3CFE5] mb-3">Source Text</h4>
+                      <div className="bg-[#1A3D63]/40 p-6 rounded-2xl border border-[#4A7FA7]/30 max-h-[400px] overflow-y-auto">
+                        <p className="text-sm text-[#B3CFE5] whitespace-pre-wrap leading-relaxed">{script.source_text}</p>
                       </div>
                     </div>
                   </div>
@@ -332,16 +332,16 @@ function ScriptsPageContent() {
 
       {/* Create Script Modal */}
       {isCreateModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-[#11231f20] backdrop-blur-md animate-in fade-in duration-300">
-          <div className="bg-white w-full max-w-xl rounded-[2.5rem] shadow-2xl border border-[#1f3a3410] overflow-hidden animate-in zoom-in-95 duration-300">
-            <div className="p-8 border-b border-[#1f3a3405] bg-[#1F3A3402] flex items-center justify-between">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/50 backdrop-blur-md animate-in fade-in duration-300">
+          <div className="bg-[#1A3D63]/95 glow w-full max-w-xl rounded-[2.5rem] shadow-2xl border border-[#4A7FA7]/30 overflow-hidden animate-in zoom-in-95 duration-300">
+            <div className="p-8 border-b border-[#4A7FA7]/30 bg-[#1A3D63]/40 flex items-center justify-between">
               <div>
-                <h3 className="text-2xl font-[850] text-[#1F3A34] tracking-tight">Create Neural Script</h3>
-                <p className="text-sm font-semibold text-[#1F3A3440] mt-1">Define a new conversation script.</p>
+                <h3 className="text-2xl font-[850] text-[#F6FAFD] tracking-tight">Create Neural Script</h3>
+                <p className="text-sm font-semibold text-[#B3CFE5] mt-1">Define a new conversation script.</p>
               </div>
               <button
                 onClick={() => setIsCreateModalOpen(false)}
-                className="w-10 h-10 rounded-xl hover:bg-[#1F3A3410] flex items-center justify-center transition-all text-[#1F3A3420]"
+                className="w-10 h-10 rounded-xl hover:bg-[#4A7FA7]/20 flex items-center justify-center transition-all text-[#B3CFE5]"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -482,7 +482,7 @@ export default function ScriptsPage() {
   return (
     <Suspense fallback={
       <div className="flex-1 flex items-center justify-center">
-        <div className="w-12 h-12 rounded-2xl border-4 border-[#1f3a3408] border-t-[#1F3A34] animate-spin" />
+        <div className="w-12 h-12 rounded-2xl border-4 border-[#1A3D63]/40 border-t-[#4A7FA7] animate-spin" />
       </div>
     }>
       <ScriptsPageContent />
