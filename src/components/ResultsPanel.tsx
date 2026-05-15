@@ -877,7 +877,7 @@ export function ResultsPanel({ data, isHydrating = false }: { data: ResultData, 
         </div>
 
         {/* Right Column (4 cols): Metrics & Script Reference */}
-        <div className="lg:col-span-4 space-y-12 h-fit md:sticky md:top-8">
+        <div className="lg:col-span-4 space-y-12 md:sticky md:top-8 md:max-h-[calc(100vh-4rem)] md:overflow-y-auto md:pr-2">
           {/* Signal Dynamics Card */}
           <div className="rounded-[3rem] bg-gradient-to-br from-[#1A3D63] to-[#0A1931] p-10 shadow-2xl shadow-[#0A1931]/60 text-white overflow-hidden relative group border border-[#4A7FA7]/30">
             <div className="absolute top-0 right-0 p-10 opacity-5 group-hover:scale-110 transition-transform">
