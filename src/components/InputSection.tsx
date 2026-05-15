@@ -595,6 +595,10 @@ export function InputSection({
                             onClick={() => {
                               setSelectedRedFlagId(qId);
                               setSelectedRedFlagIds([qId]);
+                              // Add red flag to questionnaire IDs if not already there
+                              if (!selectedOtherIds.includes(qId)) {
+                                setSelectedOtherIds([...selectedOtherIds, qId]);
+                              }
                               setIsRedFlagOpen(false);
                             }}
                             className={cn(
