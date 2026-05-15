@@ -61,34 +61,49 @@ export function InputSection({
   const [selectedCampaignId, setSelectedCampaignId] = useState<string>("");
   const [selectedProfileId, setSelectedProfileId] = useState<string>("");
   const [selectedRedFlagIds, setSelectedRedFlagIds] = useState<string[]>([]);
+  const [selectedRedFlagId, setSelectedRedFlagId] = useState<string>("");
   const [selectedOtherIds, setSelectedOtherIds] = useState<string[]>([]);
   const [isRedFlagOpen, setIsRedFlagOpen] = useState(false);
   const [isOtherOpen, setIsOtherOpen] = useState(false);
+  const [isCampaignOpen, setIsCampaignOpen] = useState(false);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [questionnaires, setQuestionnaires] = useState<any[]>([]);
   const [metaTags, setMetaTags] = useState<string[]>([]);
   const [customQuestions, setCustomQuestions] = useState<Array<{ text: string; weight: number }>>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // UI Governance: Handle click-outside for dual selectors
+  // UI Governance: Handle click-outside for all selectors
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as HTMLElement;
-      if (!target.closest(".group\\/select")) {
+
+      const redFlagContainer = document.getElementById('red-flag-dropdown');
+      const otherContainer = document.getElementById('questionnaire-dropdown');
+      const campaignContainer = document.getElementById('campaign-dropdown');
+      const profileContainer = document.getElementById('profile-dropdown');
+
+      if (redFlagContainer && !redFlagContainer.contains(target)) {
         setIsRedFlagOpen(false);
+      }
+      if (otherContainer && !otherContainer.contains(target)) {
         setIsOtherOpen(false);
+      }
+      if (campaignContainer && !campaignContainer.contains(target)) {
+        setIsCampaignOpen(false);
+      }
+      if (profileContainer && !profileContainer.contains(target)) {
+        setIsProfileOpen(false);
       }
     };
 
-    if (isRedFlagOpen || isOtherOpen) {
+    if (isRedFlagOpen || isOtherOpen || isCampaignOpen || isProfileOpen) {
       document.addEventListener("mousedown", handleClickOutside);
-    } else {
-      document.removeEventListener("mousedown", handleClickOutside);
     }
 
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, [isRedFlagOpen, isOtherOpen]);
+  }, [isRedFlagOpen, isOtherOpen, isCampaignOpen, isProfileOpen]);
 
   // Fetch all strategic contexts for selectors
   useEffect(() => {
@@ -552,49 +567,50 @@ export function InputSection({
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pb-6 border-b border-[#4A7FA7]/20">
-                {/* Red Flag Multi-Select */}
-                <div className="relative group/select">
+                {/* Red Flag Single-Select */}
+                <div id="red-flag-dropdown" className="relative group/select">
                   <label className="text-[10px] font-black uppercase tracking-[0.2em] text-red-400/80 mb-2 block px-1">Risk / High Priority</label>
                   <div
                     onClick={() => setIsRedFlagOpen(!isRedFlagOpen)}
                     className={cn(
                       "w-full h-16 bg-red-500/10 border border-transparent rounded-2xl px-14 flex items-center cursor-pointer transition-all hover:bg-red-500/15",
-                      isRedFlagOpen && "border-red-500/30 bg-[#1A3D63]/50 shadow-lg text-[#F6FAFD]"
+                      isRedFlagOpen && "border-red-500/30 bg-[#502D55]/50 shadow-lg"
                     )}
                   >
-                    <span className={cn("font-bold tracking-tight text-base truncate", selectedRedFlagIds.length > 0 ? "text-red-400" : "text-[#B3CFE5]")}>
-                      {selectedRedFlagIds.length === 0 ? "Identify Red Flags..." : `${selectedRedFlagIds.length} Red Flags Marked`}
+                    <span className={cn("font-bold tracking-tight text-base truncate", selectedRedFlagId ? "text-red-400" : "text-[#F8F4E9]")}>
+                      {!selectedRedFlagId ? "Identify Red Flags..." : questionnaires.find(q => (q.id || q._id) === selectedRedFlagId)?.name || "Red Flag Selected"}
                     </span>
                   </div>
-                  <ShieldAlert className={cn("absolute left-5 top-[65%] -translate-y-1/2 w-5 h-5 transition-colors", selectedRedFlagIds.length > 0 ? "text-red-400" : "text-[#B3CFE5]")} />
-                  <ChevronRight className={cn("absolute right-5 top-[65%] -translate-y-1/2 w-5 h-5 text-[#B3CFE5] transition-transform", isRedFlagOpen ? "-rotate-90 text-red-400" : "rotate-90")} />
+                  <ShieldAlert className={cn("absolute left-5 top-[65%] -translate-y-1/2 w-5 h-5 transition-colors", selectedRedFlagId ? "text-red-400" : "text-[#F8F4E9]")} />
+                  <ChevronRight className={cn("absolute right-5 top-[65%] -translate-y-1/2 w-5 h-5 text-[#F8F4E9] transition-transform", isRedFlagOpen ? "-rotate-90 text-red-400" : "rotate-90")} />
 
                   {isRedFlagOpen && (
-                    <div className="absolute top-[105%] left-0 right-0 bg-[#1A3D63]/95 border border-red-500/30 rounded-2xl shadow-2xl p-4 z-[60] space-y-1.5 animate-in fade-in slide-in-from-top-2 duration-200 lg:max-h-[300px] overflow-y-auto">
+                    <div className="absolute top-[105%] left-0 right-0 bg-[#502D55]/95 border border-red-500/30 rounded-2xl shadow-2xl p-4 z-[60] space-y-1.5 animate-in fade-in slide-in-from-top-2 duration-200 lg:max-h-[300px] overflow-y-auto">
                       {questionnaires.filter(q => q.is_redflag === true).map(q => {
                         const qId = q.id || q._id;
-                        const isChecked = selectedRedFlagIds.includes(qId);
+                        const isSelected = selectedRedFlagId === qId;
                         return (
-                          <label key={`rf-${qId}`} className="flex items-center gap-3 p-3 rounded-xl transition-all cursor-pointer hover:bg-red-500/20">
-                            <input
-                              type="checkbox"
-                              checked={isChecked}
-                              onChange={(e) => {
-                                if (e.target.checked) {
-                                  setSelectedRedFlagIds([...selectedRedFlagIds, qId]);
-                                  if (!selectedOtherIds.includes(qId)) setSelectedOtherIds([...selectedOtherIds, qId]);
-                                } else {
-                                  setSelectedRedFlagIds(selectedRedFlagIds.filter(id => id !== qId));
-                                }
-                              }}
-                              className="w-4 h-4 rounded-md border-red-400 text-red-500 focus:ring-red-500"
-                            />
-                            <span className="text-sm font-bold text-[#F6FAFD]">{q.name}</span>
-                          </label>
+                          <div
+                            key={`rf-${qId}`}
+                            onClick={() => {
+                              setSelectedRedFlagId(qId);
+                              setSelectedRedFlagIds([qId]);
+                              setIsRedFlagOpen(false);
+                            }}
+                            className={cn(
+                              "flex items-center gap-3 p-3 rounded-xl transition-all cursor-pointer",
+                              isSelected ? "bg-red-500/30 text-[#F8F4E9]" : "hover:bg-red-500/20 text-[#F8F4E9]"
+                            )}
+                          >
+                            <div className={cn("w-4 h-4 rounded-full border-2 flex items-center justify-center", isSelected ? "border-red-400 bg-red-500" : "border-red-400")}>
+                              {isSelected && <div className="w-2 h-2 rounded-full bg-white" />}
+                            </div>
+                            <span className="text-sm font-bold">{q.name}</span>
+                          </div>
                         );
                       })}
                       {questionnaires.filter(q => q.is_redflag === true).length === 0 && (
-                        <div className="text-center py-4 text-[#B3CFE5]/50 text-xs">
+                        <div className="text-center py-4 text-[#935073]/50 text-xs">
                           No red flag questionnaires available
                         </div>
                       )}
@@ -603,29 +619,29 @@ export function InputSection({
                 </div>
 
                 {/* Standard Audit Multi-Select */}
-                <div className="relative group/select">
-                  <label className="text-[10px] font-black uppercase tracking-[0.2em] text-[#B3CFE5] mb-2 block px-1">Questionaire</label>
+                <div id="questionnaire-dropdown" className="relative group/select">
+                  <label className="text-[10px] font-black uppercase tracking-[0.2em] text-[#F8F4E9]/80 mb-2 block px-1">Questionaire</label>
                   <div
                     onClick={() => setIsOtherOpen(!isOtherOpen)}
                     className={cn(
-                      "w-full h-16 bg-[#1A3D63]/40 border border-transparent rounded-2xl px-14 flex items-center cursor-pointer transition-all hover:bg-[#1A3D63]/60",
-                      isOtherOpen && "border-[#4A7FA7]/30 bg-[#1A3D63]/50 shadow-lg text-[#F6FAFD]"
+                      "w-full h-16 bg-[#2A4A5E]/60 border border-transparent rounded-2xl px-14 flex items-center cursor-pointer transition-all hover:bg-[#2A4A5E]/80",
+                      isOtherOpen && "border-[#5A8FB4]/40 bg-[#2A4A5E]/70 shadow-lg"
                     )}
                   >
-                    <span className={cn("font-bold tracking-tight text-base truncate", selectedOtherIds.length > 0 ? "text-[#F6FAFD]" : "text-[#B3CFE5]")}>
-                      {selectedOtherIds.length === 0 ? "Select Questionaire..." : `${selectedOtherIds.length} Frameworks Selected`}
+                    <span className="font-bold tracking-tight text-base truncate text-[#F8F4E9]">
+                      {selectedOtherIds.length === 0 ? "Select Questionaire..." : `${selectedOtherIds.length} Questionaires Selected`}
                     </span>
                   </div>
-                  <FileSearch className={cn("absolute left-5 top-[65%] -translate-y-1/2 w-5 h-5 transition-colors", selectedOtherIds.length > 0 ? "text-[#4A7FA7]" : "text-[#B3CFE5]")} />
-                  <ChevronRight className={cn("absolute right-5 top-[65%] -translate-y-1/2 w-5 h-5 text-[#B3CFE5] transition-transform", isOtherOpen ? "-rotate-90 text-[#4A7FA7]" : "rotate-90")} />
+                  <FileSearch className="absolute left-5 top-[65%] -translate-y-1/2 w-5 h-5 text-[#F8F4E9]" />
+                  <ChevronRight className={cn("absolute right-5 top-[65%] -translate-y-1/2 w-5 h-5 text-[#F8F4E9] transition-transform", isOtherOpen && "-rotate-90")} />
 
                   {isOtherOpen && (
-                    <div className="absolute top-[105%] left-0 right-0 bg-[#1A3D63]/95 border border-[#4A7FA7]/30 rounded-2xl shadow-2xl p-4 z-50 space-y-1.5 animate-in fade-in slide-in-from-top-2 duration-200 lg:max-h-[300px] overflow-y-auto">
+                    <div className="absolute top-[105%] left-0 right-0 bg-[#2A4A5E]/95 border border-[#5A8FB4]/40 rounded-2xl shadow-2xl p-4 z-50 space-y-1.5 animate-in fade-in slide-in-from-top-2 duration-200 lg:max-h-[300px] overflow-y-auto">
                       {questionnaires.filter(q => q.is_redflag === false).map(q => {
                         const qId = q.id || q._id;
                         const isChecked = selectedOtherIds.includes(qId);
                         return (
-                          <label key={`oa-${qId}`} className="flex items-center gap-3 p-3 rounded-xl transition-all cursor-pointer hover:bg-[#1A3D63]/60">
+                          <label key={`oa-${qId}`} className="flex items-center gap-3 p-3 rounded-xl transition-all cursor-pointer hover:bg-[#5A8FB4]/20">
                             <input
                               type="checkbox"
                               checked={isChecked}
@@ -636,14 +652,14 @@ export function InputSection({
                                   setSelectedOtherIds(selectedOtherIds.filter(id => id !== qId));
                                 }
                               }}
-                              className="w-4 h-4 rounded-md border-[#4A7FA7] text-[#4A7FA7] focus:ring-[#4A7FA7]"
+                              className="w-4 h-4 rounded-md border-[#5A8FB4] text-[#5A8FB4] focus:ring-[#5A8FB4]"
                             />
-                            <span className="text-sm font-bold text-[#F6FAFD]">{q.name}</span>
+                            <span className="text-sm font-bold text-[#F8F4E9]">{q.name}</span>
                           </label>
                         );
                       })}
                       {questionnaires.filter(q => q.is_redflag === false).length === 0 && (
-                        <div className="text-center py-4 text-[#B3CFE5]/50 text-xs">
+                        <div className="text-center py-4 text-[#5A8FB4]/50 text-xs">
                           No questionnaires available
                         </div>
                       )}
@@ -653,31 +669,104 @@ export function InputSection({
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="relative group/select">
-                  <label className="text-[10px] font-black uppercase tracking-[0.2em] text-[#B3CFE5] mb-2 block px-1">Campaign Name</label>
-                  <select
-                    value={selectedCampaignId}
-                    onChange={(e) => setSelectedCampaignId(e.target.value)}
-                    className="w-full h-16 bg-[#1A3D63]/40 border border-transparent focus:border-[#4A7FA7]/30 rounded-2xl px-14 appearance-none text-[#F6FAFD] font-bold tracking-tight text-base cursor-pointer outline-none transition-all"
+                {/* Campaign Dropdown */}
+                <div id="campaign-dropdown" className="relative group/select">
+                  <label className="text-[10px] font-black uppercase tracking-[0.2em] text-[#F8F4E9]/80 mb-2 block px-1">Campaign Name</label>
+                  <div
+                    onClick={() => setIsCampaignOpen(!isCampaignOpen)}
+                    className={cn(
+                      "w-full h-16 bg-[#2A4A5E]/60 border border-transparent rounded-2xl px-14 flex items-center cursor-pointer transition-all hover:bg-[#2A4A5E]/80",
+                      isCampaignOpen && "border-[#5A8FB4]/40 bg-[#2A4A5E]/70 shadow-lg"
+                    )}
                   >
-                    <option value="">{t('selectPlaceholder')}</option>
-                    {campaigns.map(c => <option key={c.id || c._id} value={c.id || c._id}>{c.name}</option>)}
-                  </select>
-                  <Layers className="absolute left-5 top-[65%] -translate-y-1/2 w-5 h-5 text-[#B3CFE5]" />
-                  <ChevronRight className="absolute right-5 top-[65%] -translate-y-1/2 w-5 h-5 text-[#B3CFE5] rotate-90" />
+                    <span className="font-bold tracking-tight text-base truncate text-[#F8F4E9]">
+                      {!selectedCampaignId ? t('selectPlaceholder') : campaigns.find(c => (c.id || c._id) === selectedCampaignId)?.name || "Campaign Selected"}
+                    </span>
+                  </div>
+                  <Layers className="absolute left-5 top-[65%] -translate-y-1/2 w-5 h-5 text-[#F8F4E9]" />
+                  <ChevronRight className={cn("absolute right-5 top-[65%] -translate-y-1/2 w-5 h-5 text-[#F8F4E9] transition-transform", isCampaignOpen && "-rotate-90")} />
+
+                  {isCampaignOpen && (
+                    <div className="absolute top-[105%] left-0 right-0 bg-[#2A4A5E]/95 border border-[#5A8FB4]/40 rounded-2xl shadow-2xl p-4 z-50 space-y-1.5 animate-in fade-in slide-in-from-top-2 duration-200 lg:max-h-[300px] overflow-y-auto">
+                      {campaigns.map(c => {
+                        const cId = c.id || c._id;
+                        const isSelected = selectedCampaignId === cId;
+                        return (
+                          <div
+                            key={cId}
+                            onClick={() => {
+                              setSelectedCampaignId(cId);
+                              setIsCampaignOpen(false);
+                            }}
+                            className={cn(
+                              "flex items-center gap-3 p-3 rounded-xl transition-all cursor-pointer",
+                              isSelected ? "bg-[#5A8FB4]/30 text-[#F8F4E9]" : "hover:bg-[#5A8FB4]/20 text-[#F8F4E9]"
+                            )}
+                          >
+                            <div className={cn("w-4 h-4 rounded-full border-2 flex items-center justify-center", isSelected ? "border-[#5A8FB4] bg-[#5A8FB4]" : "border-[#5A8FB4]")}>
+                              {isSelected && <div className="w-2 h-2 rounded-full bg-white" />}
+                            </div>
+                            <span className="text-sm font-bold">{c.name}</span>
+                          </div>
+                        );
+                      })}
+                      {campaigns.length === 0 && (
+                        <div className="text-center py-4 text-[#5A8FB4]/50 text-xs">
+                          No campaigns available
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
-                <div className="relative group/select">
-                  <label className="text-[10px] font-black uppercase tracking-[0.2em] text-[#B3CFE5] mb-2 block px-1">Intelligence Profile</label>
-                  <select
-                    value={selectedProfileId}
-                    onChange={(e) => setSelectedProfileId(e.target.value)}
-                    className="w-full h-16 bg-[#1A3D63]/40 border border-transparent focus:border-[#4A7FA7]/30 rounded-2xl px-14 appearance-none text-[#F6FAFD] font-bold tracking-tight text-base cursor-pointer outline-none transition-all"
+
+                {/* Profile Dropdown */}
+                <div id="profile-dropdown" className="relative group/select">
+                  <label className="text-[10px] font-black uppercase tracking-[0.2em] text-[#F8F4E9]/80 mb-2 block px-1">Intelligence Profile</label>
+                  <div
+                    onClick={() => setIsProfileOpen(!isProfileOpen)}
+                    className={cn(
+                      "w-full h-16 bg-[#2A4A5E]/60 border border-transparent rounded-2xl px-14 flex items-center cursor-pointer transition-all hover:bg-[#2A4A5E]/80",
+                      isProfileOpen && "border-[#5A8FB4]/40 bg-[#2A4A5E]/70 shadow-lg"
+                    )}
                   >
-                    <option value="">Select Profile...</option>
-                    {profiles.map(p => <option key={p.id || p._id} value={p.id || p._id}>{p.name}</option>)}
-                  </select>
-                  <Zap className="absolute left-5 top-[65%] -translate-y-1/2 w-5 h-5 text-[#B3CFE5]" />
-                  <ChevronRight className="absolute right-5 top-[65%] -translate-y-1/2 w-5 h-5 text-[#B3CFE5] rotate-90" />
+                    <span className="font-bold tracking-tight text-base truncate text-[#F8F4E9]">
+                      {!selectedProfileId ? "Select Profile..." : profiles.find(p => (p.id || p._id) === selectedProfileId)?.name || "Profile Selected"}
+                    </span>
+                  </div>
+                  <Zap className="absolute left-5 top-[65%] -translate-y-1/2 w-5 h-5 text-[#F8F4E9]" />
+                  <ChevronRight className={cn("absolute right-5 top-[65%] -translate-y-1/2 w-5 h-5 text-[#F8F4E9] transition-transform", isProfileOpen && "-rotate-90")} />
+
+                  {isProfileOpen && (
+                    <div className="absolute top-[105%] left-0 right-0 bg-[#2A4A5E]/95 border border-[#5A8FB4]/40 rounded-2xl shadow-2xl p-4 z-50 space-y-1.5 animate-in fade-in slide-in-from-top-2 duration-200 lg:max-h-[300px] overflow-y-auto">
+                      {profiles.map(p => {
+                        const pId = p.id || p._id;
+                        const isSelected = selectedProfileId === pId;
+                        return (
+                          <div
+                            key={pId}
+                            onClick={() => {
+                              setSelectedProfileId(pId);
+                              setIsProfileOpen(false);
+                            }}
+                            className={cn(
+                              "flex items-center gap-3 p-3 rounded-xl transition-all cursor-pointer",
+                              isSelected ? "bg-[#5A8FB4]/30 text-[#F8F4E9]" : "hover:bg-[#5A8FB4]/20 text-[#F8F4E9]"
+                            )}
+                          >
+                            <div className={cn("w-4 h-4 rounded-full border-2 flex items-center justify-center", isSelected ? "border-[#5A8FB4] bg-[#5A8FB4]" : "border-[#5A8FB4]")}>
+                              {isSelected && <div className="w-2 h-2 rounded-full bg-white" />}
+                            </div>
+                            <span className="text-sm font-bold">{p.name}</span>
+                          </div>
+                        );
+                      })}
+                      {profiles.length === 0 && (
+                        <div className="text-center py-4 text-[#5A8FB4]/50 text-xs">
+                          No profiles available
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
 
