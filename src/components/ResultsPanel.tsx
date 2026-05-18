@@ -1241,22 +1241,22 @@ function InterventionModal({ modal, onClose, onSubmit, existingEdit, onRemove }:
   if (!mounted) return null;
 
   return createPortal(
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-6 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="bg-[#1A3D63] w-full max-w-2xl rounded-3xl shadow-2xl border border-[#4A7FA7]/30 overflow-hidden animate-in zoom-in-95 duration-200">
-        <div className="p-8 border-b border-[#4A7FA7]/20 bg-[#0A1931]/60 flex items-center justify-between">
-          <div>
-            <h3 className="text-2xl font-[850] text-[#F6FAFD] tracking-tight">Edit Answer</h3>
-            <p className="text-sm font-semibold text-[#B3CFE5] mt-1">Manual correction for {modal.question_id}</p>
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 md:p-6 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
+      <div className="bg-[#1A3D63] w-full max-w-2xl max-h-[90vh] md:max-h-[85vh] flex flex-col rounded-3xl shadow-2xl border border-[#4A7FA7]/30 overflow-hidden animate-in zoom-in-95 duration-200">
+        <div className="p-6 md:p-8 border-b border-[#4A7FA7]/20 bg-[#0A1931]/60 flex items-center justify-between flex-shrink-0">
+          <div className="flex-1 min-w-0 pr-4">
+            <h3 className="text-xl md:text-2xl font-[850] text-[#F6FAFD] tracking-tight">Edit Answer</h3>
+            <p className="text-xs md:text-sm font-semibold text-[#B3CFE5] mt-1 truncate">Manual correction for {modal.question_id}</p>
           </div>
           <button
             onClick={onClose}
-            className="w-10 h-10 rounded-xl hover:bg-[#1A3D63]/60 flex items-center justify-center transition-all text-[#B3CFE5]"
+            className="w-10 h-10 rounded-xl hover:bg-[#1A3D63]/60 flex items-center justify-center transition-all text-[#B3CFE5] flex-shrink-0"
           >
             <XIcon className="w-5 h-5" />
           </button>
         </div>
 
-        <div className="p-8 space-y-6">
+        <div className="p-6 md:p-8 space-y-4 md:space-y-6 overflow-y-auto flex-1">
           {/* Current Answer */}
           <div className="p-4 rounded-xl bg-[#0A1931]/60 border border-[#4A7FA7]/20 space-y-2">
             <p className="text-xs font-black uppercase tracking-wider text-[#B3CFE5]">Current Answer</p>
@@ -1316,27 +1316,28 @@ function InterventionModal({ modal, onClose, onSubmit, existingEdit, onRemove }:
           </div>
 
           {/* Actions */}
-          <div className="flex gap-3 pt-4">
+          <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 pt-4 sticky bottom-0 bg-[#1A3D63] pb-2">
             {existingEdit && onRemove && (
               <button
                 onClick={onRemove}
-                className="h-12 px-4 bg-red-50 hover:bg-red-100 text-red-600 rounded-xl font-bold text-sm uppercase tracking-wider transition-all border border-red-200"
+                className="h-11 sm:h-12 px-4 bg-red-50 hover:bg-red-100 text-red-600 rounded-xl font-bold text-xs sm:text-sm uppercase tracking-wider transition-all border border-red-200"
               >
                 Remove
               </button>
             )}
             <button
               onClick={onClose}
-              className="flex-1 h-12 bg-[#0A1931] hover:bg-[#0A1931]/80 text-[#B3CFE5] rounded-xl font-bold text-sm uppercase tracking-wider transition-all border border-[#4A7FA7]/20"
+              className="flex-1 h-11 sm:h-12 bg-[#0A1931] hover:bg-[#0A1931]/80 text-[#B3CFE5] rounded-xl font-bold text-xs sm:text-sm uppercase tracking-wider transition-all border border-[#4A7FA7]/20"
             >
               Cancel
             </button>
             <button
               onClick={handleSubmit}
-              className="flex-1 h-12 bg-gradient-to-r from-[#4A7FA7] to-[#1A3D63] hover:opacity-90 text-[#F6FAFD] rounded-xl font-bold text-sm uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-lg shadow-[#4A7FA7]/20"
+              className="flex-1 h-11 sm:h-12 bg-gradient-to-r from-[#4A7FA7] to-[#1A3D63] hover:opacity-90 text-[#F6FAFD] rounded-xl font-bold text-xs sm:text-sm uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-lg shadow-[#4A7FA7]/20"
             >
               <Save className="w-4 h-4" />
-              {existingEdit ? 'Update' : 'Add to Queue'}
+              <span className="hidden sm:inline">{existingEdit ? 'Update' : 'Add to Queue'}</span>
+              <span className="sm:hidden">{existingEdit ? 'Update' : 'Add'}</span>
             </button>
           </div>
         </div>
