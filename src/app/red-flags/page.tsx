@@ -114,11 +114,19 @@ function RedFlagsPageContent() {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(20);
 
-  // Read call ID from URL
+  // Read call ID from URL and reset when removed
   useEffect(() => {
     const callIdFromUrl = searchParams.get('callId');
     if (callIdFromUrl && callIdFromUrl !== selectedCallId) {
       viewDetail(callIdFromUrl);
+    } else if (!callIdFromUrl && selectedCallId) {
+      // Reset to list view when callId is removed from URL
+      setSelectedCallId(null);
+      setDetailData(null);
+      setPlayingSegment(null);
+      setPendingEdits(new Map());
+      setEditingQuestionId(null);
+      setViewHistoryFor(null);
     }
   }, [searchParams]);
 

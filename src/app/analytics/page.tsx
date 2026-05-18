@@ -3,6 +3,7 @@
 import { useEffect, useState, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useTranslations } from 'next-intl';
+import { createPortal } from 'react-dom';
 import {
   BarChart3,
   Search,
@@ -42,6 +43,7 @@ function AnalyticsPageContent() {
   const [selectedCallId, setSelectedCallId] = useState<string | null>(null);
   const [detailedResult, setDetailedResult] = useState<any>(null);
   const [isDetailLoading, setIsDetailLoading] = useState(false);
+  const [mounted, setMounted] = useState(false);
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -54,11 +56,19 @@ function AnalyticsPageContent() {
   const [deleteConfirmCallId, setDeleteConfirmCallId] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  // Read call ID from URL on mount
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Read call ID from URL on mount and reset when removed
   useEffect(() => {
     const callIdFromUrl = searchParams.get('callId');
     if (callIdFromUrl) {
       setSelectedCallId(callIdFromUrl);
+    } else {
+      // Reset to list view when callId is removed from URL
+      setSelectedCallId(null);
+      setDetailedResult(null);
     }
   }, [searchParams]);
 
@@ -546,9 +556,9 @@ function AnalyticsPageContent() {
         )}
       </div>
 
-      {/* Delete Confirmation Modal */}
-      {deleteConfirmCallId && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
+      {/* Delete Confirmation Modal - Rendered via Portal */}
+      {mounted && deleteConfirmCallId && createPortal(
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-6 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
           <div className="bg-[#1A3D63]/95 glow w-full max-w-md rounded-3xl shadow-2xl border border-red-500/50 overflow-hidden animate-in zoom-in-95 duration-200">
             <div className="p-8 border-b border-red-500/30 bg-red-500/20 flex items-center gap-4">
               <div className="w-12 h-12 rounded-2xl bg-red-500 flex items-center justify-center text-white">
@@ -597,7 +607,8 @@ function AnalyticsPageContent() {
               </div>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

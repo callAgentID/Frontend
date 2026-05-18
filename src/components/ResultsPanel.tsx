@@ -33,7 +33,8 @@ import {
   History
 } from "lucide-react";
 import { cn } from "../lib/utils";
-import { ReactElement, JSXElementConstructor, ReactNode, ReactPortal, Key, useState } from "react";
+import { ReactElement, JSXElementConstructor, ReactNode, ReactPortal, Key, useState, useEffect } from "react";
+import { createPortal } from 'react-dom';
 
 interface ResultData {
   call_id: string;
@@ -1216,6 +1217,11 @@ function InterventionModal({ modal, onClose, onSubmit, existingEdit, onRemove }:
   const [correctedAnswer, setCorrectedAnswer] = useState(existingEdit?.corrected_answer || modal.current_answer);
   const [correctedScore, setCorrectedScore] = useState(existingEdit?.corrected_score || modal.current_score);
   const [correctedReasoning, setCorrectedReasoning] = useState(existingEdit?.corrected_reasoning || '');
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const handleSubmit = () => {
     if (!correctedReasoning.trim()) {
@@ -1232,8 +1238,10 @@ function InterventionModal({ modal, onClose, onSubmit, existingEdit, onRemove }:
     });
   };
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
+  if (!mounted) return null;
+
+  return createPortal(
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-6 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
       <div className="bg-[#1A3D63] w-full max-w-2xl rounded-3xl shadow-2xl border border-[#4A7FA7]/30 overflow-hidden animate-in zoom-in-95 duration-200">
         <div className="p-8 border-b border-[#4A7FA7]/20 bg-[#0A1931]/60 flex items-center justify-between">
           <div>
@@ -1333,7 +1341,8 @@ function InterventionModal({ modal, onClose, onSubmit, existingEdit, onRemove }:
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
 
