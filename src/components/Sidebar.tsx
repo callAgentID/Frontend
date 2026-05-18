@@ -7,10 +7,6 @@ import { useTranslations } from 'next-intl';
 import {
   LayoutDashboard,
   BarChart3,
-  Users,
-  Settings,
-  MessageSquare,
-  ShieldCheck,
   Command,
   Layers,
   FileSearch,
@@ -30,10 +26,6 @@ const NAV_ITEMS = [
   { name: "campaigns", href: "/campaigns", icon: Layers },
   { name: "scripts", href: "/scripts", icon: FileCode },
   { name: "questionnaires", href: "/questionnaires", icon: FileSearch },
-  { name: "feed", href: "/conversations", icon: MessageSquare },
-  { name: "team", href: "/users", icon: Users },
-  { name: "security", href: "/security", icon: ShieldCheck },
-  { name: "preferences", href: "/settings", icon: Settings },
 ];
 
 export function Sidebar() {
@@ -44,25 +36,29 @@ export function Sidebar() {
 
   return (
     <>
-      {/* Mobile Menu Button */}
-      <button
-        onClick={() => setIsMobileOpen(true)}
-        className="fixed top-4 left-4 z-30 lg:hidden p-2 rounded-xl glass-blur border border-[#4A7FA7]/30 shadow-lg glow"
-      >
-        <Menu className="w-6 h-6 text-[#B3CFE5]" />
-      </button>
+      {/* Mobile Menu Button - Only show when sidebar is closed */}
+      {!isMobileOpen && (
+        <button
+          onClick={() => setIsMobileOpen(true)}
+          className="fixed top-5 left-4 z-[60] lg:hidden p-2 rounded-xl bg-[#1A3D63]/95 backdrop-blur-md border border-[#4A7FA7]/30 shadow-xl hover:bg-[#4A7FA7]/90 transition-all"
+          aria-label="Open menu"
+        >
+          <Menu className="w-5 h-5 text-[#F6FAFD]" />
+        </button>
+      )}
 
       {/* Mobile Overlay */}
       {isMobileOpen && (
         <div
-          className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+          className="fixed inset-0 bg-black/70 z-[45] lg:hidden backdrop-blur-sm"
           onClick={() => setIsMobileOpen(false)}
         />
       )}
 
       {/* Sidebar */}
       <aside className={cn(
-        "h-screen flex-shrink-0 flex flex-col border-r border-[#4A7FA7]/20 glass-blur apple-blur transition-all duration-300 fixed lg:relative z-50 shadow-2xl",
+        "h-screen flex-shrink-0 flex flex-col border-r border-[#4A7FA7]/20 glass-blur apple-blur transition-all duration-300 top-0 left-0 bg-[#0A1931]/95",
+        "fixed lg:relative z-[50]",
         isCollapsed ? "w-[80px]" : "w-[280px]",
         isMobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
       )}>
@@ -102,50 +98,14 @@ export function Sidebar() {
             <ChevronLeft className={cn("w-5 h-5 transition-transform", isCollapsed && "rotate-180")} />
           </button>
 
-          {/* Navigation Groups */}
-          <div className="space-y-8 flex-1 overflow-y-auto">
+          {/* Navigation */}
+          <div className="flex-1 overflow-y-auto">
             <div>
               {!isCollapsed && (
                 <h2 className="px-4 text-[11px] font-bold uppercase tracking-widest text-[#B3CFE5]/60 mb-4">{t('navigation')}</h2>
               )}
               <nav className="space-y-1">
-                {NAV_ITEMS.slice(0, 6).map((item) => {
-                  const isActive = pathname === item.href;
-                  const Icon = item.icon;
-
-                  return (
-                    <Link
-                      key={item.href}
-                      href={item.href}
-                      onClick={() => setIsMobileOpen(false)}
-                      className={cn(
-                        "flex items-center rounded-2xl text-[14px] font-medium transition-all group",
-                        isCollapsed ? "justify-center p-2.5" : "gap-3.5 px-4 py-2.5",
-                        isActive
-                          ? "bg-gradient-to-r from-[#4A7FA7] to-[#1A3D63] text-[#F6FAFD] glow border border-[#4A7FA7]/40"
-                          : "text-[#B3CFE5] hover:bg-[#1A3D63]/40 border border-transparent hover:border-[#4A7FA7]/20"
-                      )}
-                      title={isCollapsed ? t(item.name as any) : undefined}
-                    >
-                      <Icon
-                        className={cn(
-                          "w-[18px] h-[18px] opacity-70 shrink-0",
-                          isActive ? "text-[#F6FAFD]" : "text-[#B3CFE5]/70"
-                        )}
-                      />
-                      {!isCollapsed && t(item.name as any)}
-                    </Link>
-                  );
-                })}
-              </nav>
-            </div>
-
-            <div>
-              {!isCollapsed && (
-                <h2 className="px-4 text-[11px] font-bold uppercase tracking-widest text-[#B3CFE5]/60 mb-4">{t('management')}</h2>
-              )}
-              <nav className="space-y-1">
-                {NAV_ITEMS.slice(6).map((item) => {
+                {NAV_ITEMS.map((item) => {
                   const isActive = pathname === item.href;
                   const Icon = item.icon;
 

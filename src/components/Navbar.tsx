@@ -5,11 +5,11 @@ export function Navbar() {
   const t = useTranslations('common');
 
   return (
-    <header className="h-14 flex items-center justify-between px-4 sm:px-8 glass-blur border-b border-[#4A7FA7]/20 sticky top-0 z-10 backdrop-blur-xl">
+    <header className="h-16 flex items-center justify-between pr-6 sm:pr-8 pl-16 lg:pl-6 glass-blur border-b border-[#4A7FA7]/20 sticky top-0 z-10 backdrop-blur-xl">
       {/* Page Context */}
       <div className="flex-1 flex items-center gap-6">
         <div className="flex items-center gap-2">
-           <h3 className="text-sm font-bold text-[#F6FAFD]">{t('summaryOverview')}</h3>
+           <h3 className="text-sm font-bold text-[#F6FAFD] truncate">{t('summaryOverview')}</h3>
            <span className="w-1 h-1 rounded-full bg-[#4A7FA7] hidden sm:block" />
            <span className="text-xs font-bold text-[#B3CFE5]/70 uppercase tracking-wider hidden sm:block">{t('dashboard')}</span>
         </div>
