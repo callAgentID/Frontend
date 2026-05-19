@@ -247,6 +247,65 @@ export function InputSection({
 
     setIsProcessing(true);
     setProcessingStatus("uploading");
+
+    try {
+      const formData = new FormData();
+      formData.append("file", audioFile);
+      formData.append("campaign_id", selectedCampaignId);
+      formData.append("processing_profile_id", selectedProfileId);
+
+      const selectedCampaign = campaigns.find(c => (c.id === selectedCampaignId || c._id === selectedCampaignId));
+      const campaignTemplateId = selectedCampaign?.questionnaire_template_id;
+
+      const globalIds = Array.from(new Set([
+        ...(campaignTemplateId ? [campaignTemplateId] : []),
+        ...selectedOtherIds
+      ]));
+
+      const highPriorityValue = selectedRedFlagIds.length > 0
+        ? (selectedRedFlagIds.length > 1 ? JSON.stringify(selectedRedFlagIds) : selectedRedFlagIds[0])
+        : (campaignTemplateId || globalIds[0]);
+
+      if (!highPriorityValue) throw new Error("Misconfiguration: No audit frameworks selected.");
+
+      formData.append("high_priority_questionnaire_template_id", highPriorityValue);
+      formData.append("questionnaire_template_ids", JSON.stringify(globalIds));
+      formData.append("language", "en");
+
+      // New optional fields
+      if (metaTags.length > 0) {
+        formData.append("meta_tags", JSON.stringify(metaTags));
+      }
+      if (customQuestions.length > 0) {
+        formData.append("custom_questions", JSON.stringify(customQuestions));
+      }
+
+      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://zk1354qz0k.execute-api.eu-central-1.amazonaws.com";
+      const response = await fetch(`${baseUrl}/api/v1/calls/`, {
+        method: "POST",
+        headers: {
+          "Accept": "application/json",
+          "ngrok-skip-browser-warning": "true",
+        },
+        body: formData,
+      });
+
+      if (!response.ok) throw new Error("Audio ingestion failed");
+
+      const data = await response.json();
+      console.log("Audio Analysis Queued:", data);
+
+      if (data.call_id) {
+        await pollForTranscript(data.call_id);
+      } else {
+        throw new Error("No call_id returned from audio ingestion");
+      }
+    } catch (error: any) {
+      console.error("Audio API Error:", error);
+      alert(error.message || "Failed to connect to the analysis engine. Please check your connection.");
+      setIsProcessing(false);
+      setProcessingStatus("idle");
+    }
   };
 
   const [showManualSuccess, setShowManualSuccess] = useState(false);
