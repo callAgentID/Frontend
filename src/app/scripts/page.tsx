@@ -14,10 +14,7 @@ import {
   X,
   Upload,
   FileText,
-  Edit,
   Trash2,
-  Eye,
-  MoreVertical
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ScriptCardSkeleton } from "@/components/Skeleton";

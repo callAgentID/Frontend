@@ -33,7 +33,7 @@ import {
   History
 } from "lucide-react";
 import { cn } from "../lib/utils";
-import { ReactElement, JSXElementConstructor, ReactNode, ReactPortal, Key, useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { createPortal } from 'react-dom';
 
 interface ResultData {

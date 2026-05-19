@@ -20,7 +20,6 @@ import {
   ShieldAlert,
   Target,
   Zap,
-  Activity as Waveform,
   Tag,
   HelpCircle
 } from "lucide-react";
@@ -55,7 +54,6 @@ export function InputSection({
   const [processingStatus, setProcessingStatus] = useState<"uploading" | "transcribing" | "idle" | "Transcription complete, analyzing..." | "Running QA evaluation..." | "Finalizing results...">("idle");
   const [generatedTranscript, setGeneratedTranscript] = useState("");
   const [callAnalytics, setCallAnalytics] = useState<CallAnalytics | null>(null);
-  const [processingError, setProcessingError] = useState<string | null>(null);
   const [campaigns, setCampaigns] = useState<any[]>([]);
   const [profiles, setProfiles] = useState<any[]>([]);
   const [selectedCampaignId, setSelectedCampaignId] = useState<string>("");
@@ -153,7 +151,6 @@ export function InputSection({
       setAudioFile(null);
       setGeneratedTranscript("");
       setCallAnalytics(null);
-      setProcessingError(null);
     }
     setMode(newMode);
     setIsProcessing(false);
@@ -204,7 +201,6 @@ export function InputSection({
         if (data.status === "failed") {
           setIsProcessing(false);
           setProcessingStatus("idle");
-          setProcessingError(data.error_message || "Transcription failed. Please try again.");
           return true; // Stop polling
         }
 
@@ -251,71 +247,6 @@ export function InputSection({
 
     setIsProcessing(true);
     setProcessingStatus("uploading");
-    setProcessingError(null); try {
-      const formData = new FormData();
-      formData.append("file", audioFile!);
-
-      // Integration: Using live IDs from selection
-      formData.append("campaign_id", selectedCampaignId);
-      formData.append("processing_profile_id", selectedProfileId);
-
-      // Mandatory Questionnaire Mapping (Dual-Dropdown Strategy)
-      const selectedCampaign = campaigns.find(c => (c.id === selectedCampaignId || c._id === selectedCampaignId));
-      const campaignTemplateId = selectedCampaign?.questionnaire_template_id;
-
-      // Global IDs = Campaign Logic + All Others (which includes Red Flags per auto-sync rule)
-      const globalIds = Array.from(new Set([
-        ...(campaignTemplateId ? [campaignTemplateId] : []),
-        ...selectedOtherIds
-      ]));
-
-      // High Priority IDs = All Red Flags (per user requirement)
-      // We package the red flag selected IDs here.
-      const highPriorityValue = selectedRedFlagIds.length > 0
-        ? (selectedRedFlagIds.length > 1 ? JSON.stringify(selectedRedFlagIds) : selectedRedFlagIds[0])
-        : (campaignTemplateId || globalIds[0]);
-
-      if (!highPriorityValue) throw new Error("Misconfiguration: No audit frameworks selected.");
-
-      formData.append("high_priority_questionnaire_template_id", highPriorityValue);
-      formData.append("questionnaire_template_ids", JSON.stringify(globalIds));
-
-      formData.append("language", "en");
-
-      // New optional fields
-      if (metaTags.length > 0) {
-        formData.append("meta_tags", JSON.stringify(metaTags));
-      }
-      if (customQuestions.length > 0) {
-        formData.append("custom_questions", JSON.stringify(customQuestions));
-      }
-
-      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://zk1354qz0k.execute-api.eu-central-1.amazonaws.com";
-      const response = await fetch(`${baseUrl}/api/v1/calls/`, {
-        method: "POST",
-        headers: {
-          "Accept": "application/json",
-          "ngrok-skip-browser-warning": "true",
-        },
-        body: formData,
-      });
-
-      if (!response.ok) throw new Error("Upload failed");
-
-      const data = await response.json();
-      console.log("Analysis Queued:", data);
-
-      if (data.call_id) {
-        await pollForTranscript(data.call_id);
-      } else {
-        throw new Error("No call_id returned");
-      }
-    } catch (error: any) {
-      console.error("API Error:", error);
-      alert(error.message || "Failed to connect to the analysis engine. Please check your connection.");
-      setIsProcessing(false);
-      setProcessingStatus("idle");
-    }
   };
 
   const [showManualSuccess, setShowManualSuccess] = useState(false);
@@ -325,7 +256,6 @@ export function InputSection({
 
     setIsProcessing(true);
     setProcessingStatus("uploading");
-    setProcessingError(null);
 
     try {
       const formData = new FormData();
@@ -441,7 +371,6 @@ export function InputSection({
     setManualTranscript("");
     setGeneratedTranscript("");
     setCallAnalytics(null);
-    setProcessingError(null);
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
@@ -905,14 +834,14 @@ export function InputSection({
                             <input
                               type="number"
                               min="0"
-                              max="10"
+                              max="100"
                               value={q.weight}
                               onChange={(e) => {
                                 const updated = [...customQuestions];
                                 updated[idx].weight = parseInt(e.target.value) || 0;
                                 setCustomQuestions(updated);
                               }}
-                              className="w-14 h-8 px-2 rounded-lg bg-[#1A3D63]/60 border border-[#4A7FA7]/20 text-[#F6FAFD] font-bold text-xs text-center outline-none focus:border-[#4A7FA7]/40 transition-all"
+                              className="w-18 h-8 px-2 rounded-lg bg-[#1A3D63]/60 border border-[#4A7FA7]/20 text-[#F6FAFD] font-bold text-xs text-center outline-none focus:border-[#4A7FA7]/40 transition-all"
                             />
                             <button
                               type="button"

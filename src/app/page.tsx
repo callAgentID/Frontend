@@ -58,14 +58,11 @@ function HomeContent() {
       router.push(`/?callId=${data.call_id}`, { scroll: false });
     }
 
-    // Ensure we stop showing processing if it was happening in parallel
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handlePartialResult = (data: any) => {
     setAnalysisResult(data);
-    // Don't switch state to 'results' fully yet if we want to keep input visible,
-    // but we want to show the panel.
   };
 
   const resetPipeline = () => {
