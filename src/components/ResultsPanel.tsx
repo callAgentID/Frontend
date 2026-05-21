@@ -12,9 +12,7 @@ import {
   TrendingUp,
   Clock,
   Sparkles,
-  Search,
   Users,
-  AlertCircle,
   FileSearch,
   ChevronRight,
   ShieldCheck,
@@ -68,10 +66,24 @@ interface ResultData {
       text: string;
       start_ms: number;
       end_ms: number;
+      sentiment?: string;
+      emotion?: string;
+      confidence?: number;
+    }>;
+    speakers?: Array<{
+      speaker_id: string;
+      role?: string;
+      talk_time_ms?: number;
+      turn_count: number;
+      avg_sentiment: number;
+      avg_sentiment_label?: string;
     }>;
     metrics: {
       silence_ratio: number;
       turn_count: number;
+      total_silence_ms?: number;
+      initial_silence_ms?: number;
+      end_silence_ms?: number;
     };
     provider_metadata?: { // 🆕 Provider info (check for manual uploads)
       provider: string;
@@ -414,6 +426,7 @@ export function ResultsPanel({ data, isHydrating = false }: { data: ResultData, 
                 onClick={handleMarkAsReviewed}
                 disabled={isMarkingReviewed}
                 className="flex items-center gap-2 px-5 py-2.5 bg-blue-500 hover:bg-blue-600 disabled:bg-blue-300 text-white rounded-xl font-bold text-xs uppercase tracking-widest transition-all shadow-lg shadow-blue-500/20 active:scale-95"
+                title="Mark this call as reviewed"
               >
                 {isMarkingReviewed ? (
                   <>
@@ -467,7 +480,6 @@ export function ResultsPanel({ data, isHydrating = false }: { data: ResultData, 
                         isAiTag && !isUserTag ? "bg-purple-50 text-purple-700 border-purple-200" :
                           "bg-[#1A3D63]/30 text-[#B3CFE5] border-[#4A7FA7]/20"
                     )}
-                    title={isUserTag && !isAiTag ? "User-provided tag" : isAiTag && !isUserTag ? "AI-generated tag" : "User + AI tag"}
                   >
                     #{tag}
                   </span>
@@ -610,7 +622,7 @@ export function ResultsPanel({ data, isHydrating = false }: { data: ResultData, 
                                       <button
                                         onClick={() => setEditingQuestionId(`${templateResult.template_id}_${answer.question_id}`)}
                                         className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg border border-blue-200 transition-all opacity-0 group-hover:opacity-100"
-                                        title="Edit answer"
+                                        title="Edit this answer and provide human correction"
                                       >
                                         <Edit className="w-3 h-3" />
                                         Edit
@@ -684,6 +696,7 @@ export function ResultsPanel({ data, isHydrating = false }: { data: ResultData, 
                                       <button
                                         onClick={() => setViewHistoryFor({ template_id: templateResult.template_id, question_id: answer.question_id })}
                                         className="flex items-center gap-1 px-2 py-1 text-[10px] font-bold text-green-700 hover:text-green-900 hover:bg-green-100 rounded-md transition-all"
+                                        title="View full edit history for this question"
                                       >
                                         <History className="w-3 h-3" />
                                         View History ({interventions.length})
@@ -799,6 +812,129 @@ export function ResultsPanel({ data, isHydrating = false }: { data: ResultData, 
             </div>
           </section>
 
+          {/* Speakers Section */}
+          {safeData.transcript?.speakers && safeData.transcript.speakers.length > 0 && (
+            <section className="space-y-6">
+              <div className="flex items-center justify-between px-1">
+                <h4 className="text-xl font-[850] text-[#F6FAFD] tracking-tight flex items-center gap-3">
+                  <Users className="w-5 h-5 text-[#4A7FA7]" /> Speakers
+                </h4>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {safeData.transcript.speakers.map((speaker) => {
+                  // Determine display name - show speaker_id formatted if role is unknown or missing
+                  const displayName = speaker.role && speaker.role.toLowerCase() !== 'unknown'
+                    ? speaker.role
+                    : `Speaker ${speaker.speaker_id}`;
+
+                  return (
+                    <div
+                      key={speaker.speaker_id}
+                      className="p-6 rounded-[2rem] bg-[#1A3D63]/60 border border-[#4A7FA7]/30 shadow-xl space-y-4"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#4A7FA7] to-[#1A3D63] flex items-center justify-center font-black text-[#F6FAFD] text-lg">
+                          {speaker.speaker_id === "user_1" || speaker.speaker_id === "0" || speaker.speaker_id === "speaker_0" ? "A" : "C"}
+                        </div>
+                        <div>
+                          <p className="text-sm font-black text-[#F6FAFD]">
+                            {displayName}
+                          </p>
+                          <p className="text-[10px] font-bold text-[#B3CFE5] uppercase tracking-wider">
+                            ID: {speaker.speaker_id}
+                          </p>
+                        </div>
+                      </div>
+
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between p-3 rounded-xl bg-[#0A1931]/60 border border-[#4A7FA7]/20">
+                        <span className="text-[10px] font-black uppercase tracking-widest text-[#B3CFE5]">Turn Count</span>
+                        <span className="text-lg font-[850] text-[#F6FAFD]">{speaker.turn_count}</span>
+                      </div>
+
+                      <div className="flex items-center justify-between p-3 rounded-xl bg-[#0A1931]/60 border border-[#4A7FA7]/20">
+                        <span className="text-[10px] font-black uppercase tracking-widest text-[#B3CFE5]">Avg Sentiment</span>
+                        <div className="flex items-center gap-2">
+                          {speaker.avg_sentiment_label && (
+                            <span className={cn(
+                              "px-2 py-0.5 text-[9px] font-black uppercase tracking-wider rounded-md border",
+                              speaker.avg_sentiment_label === 'positive' ? "bg-green-50 text-green-700 border-green-200" :
+                              speaker.avg_sentiment_label === 'negative' ? "bg-red-50 text-red-700 border-red-200" :
+                              "bg-gray-50 text-gray-700 border-gray-200"
+                            )}>
+                              {speaker.avg_sentiment_label}
+                            </span>
+                          )}
+                          <span className={cn(
+                            "text-lg font-[850]",
+                            speaker.avg_sentiment > 0 ? "text-green-400" : speaker.avg_sentiment < 0 ? "text-red-400" : "text-[#B3CFE5]"
+                          )}>
+                            {speaker.avg_sentiment.toFixed(2)}
+                          </span>
+                        </div>
+                      </div>
+
+                      {speaker.talk_time_ms !== undefined && (
+                        <div className="flex items-center justify-between p-3 rounded-xl bg-[#0A1931]/60 border border-[#4A7FA7]/20">
+                          <span className="text-[10px] font-black uppercase tracking-widest text-[#B3CFE5]">Talk Time</span>
+                          <span className="text-lg font-[850] text-[#F6FAFD]">{(speaker.talk_time_ms / 1000).toFixed(1)}s</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  );
+                })}
+              </div>
+            </section>
+          )}
+
+          {/* Call Metrics Section */}
+          <section className="space-y-6">
+            <div className="flex items-center justify-between px-1">
+              <h4 className="text-xl font-[850] text-[#F6FAFD] tracking-tight flex items-center gap-3">
+                <BarChart3 className="w-5 h-5 text-[#4A7FA7]" /> Call Metrics
+              </h4>
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+              <div className="p-5 rounded-[1.5rem] bg-[#1A3D63]/60 border border-[#4A7FA7]/30 shadow-lg">
+                <p className="text-[9px] font-black uppercase tracking-widest text-[#B3CFE5] mb-2">Total Silence</p>
+                <p className="text-2xl font-[850] text-[#F6FAFD]">
+                  {((safeData.transcript?.metrics?.total_silence_ms || 0) / 1000).toFixed(1)}s
+                </p>
+              </div>
+
+              <div className="p-5 rounded-[1.5rem] bg-[#1A3D63]/60 border border-[#4A7FA7]/30 shadow-lg">
+                <p className="text-[9px] font-black uppercase tracking-widest text-[#B3CFE5] mb-2">Silence Ratio</p>
+                <p className="text-2xl font-[850] text-[#F6FAFD]">
+                  {((safeData.transcript?.metrics?.silence_ratio || 0) * 100).toFixed(1)}%
+                </p>
+              </div>
+
+              <div className="p-5 rounded-[1.5rem] bg-[#1A3D63]/60 border border-[#4A7FA7]/30 shadow-lg">
+                <p className="text-[9px] font-black uppercase tracking-widest text-[#B3CFE5] mb-2">Turn Count</p>
+                <p className="text-2xl font-[850] text-[#F6FAFD]">
+                  {safeData.transcript?.metrics?.turn_count || 0}
+                </p>
+              </div>
+
+              <div className="p-5 rounded-[1.5rem] bg-[#1A3D63]/60 border border-[#4A7FA7]/30 shadow-lg">
+                <p className="text-[9px] font-black uppercase tracking-widest text-[#B3CFE5] mb-2">Initial Silence</p>
+                <p className="text-2xl font-[850] text-[#F6FAFD]">
+                  {((safeData.transcript?.metrics?.initial_silence_ms || 0) / 1000).toFixed(1)}s
+                </p>
+              </div>
+
+              <div className="p-5 rounded-[1.5rem] bg-[#1A3D63]/60 border border-[#4A7FA7]/30 shadow-lg">
+                <p className="text-[9px] font-black uppercase tracking-widest text-[#B3CFE5] mb-2">End Silence</p>
+                <p className="text-2xl font-[850] text-[#F6FAFD]">
+                  {((safeData.transcript?.metrics?.end_silence_ms || 0) / 1000).toFixed(1)}s
+                </p>
+              </div>
+            </div>
+          </section>
+
           {/* New Conversational Transcript */}
           <section className="space-y-8">
             <div className="flex items-center justify-between px-1">
@@ -864,9 +1000,37 @@ export function ResultsPanel({ data, isHydrating = false }: { data: ResultData, 
                           )}>
                             {utt.text}
                           </p>
-                          <p className="text-[11px] font-extrabold text-[#B3CFE5] uppercase tracking-widest px-1 mt-1">
-                            At {(utt.start_ms / 1000).toFixed(1)}s
-                          </p>
+
+                          {/* Sentiment and Emotion badges */}
+                          <div className={cn(
+                            "flex flex-wrap items-center gap-2 px-1",
+                            isAgent ? "justify-start" : "justify-end"
+                          )}>
+                            {utt.sentiment && (
+                              <span
+                                className={cn(
+                                  "px-2 py-1 text-[9px] font-black uppercase tracking-wider rounded-md border",
+                                  utt.sentiment === 'positive' ? "bg-green-50 text-green-700 border-green-200" :
+                                  utt.sentiment === 'negative' ? "bg-red-50 text-red-700 border-red-200" :
+                                  "bg-gray-50 text-gray-700 border-gray-200"
+                                )}
+                                title={`Sentiment: ${utt.sentiment}`}
+                              >
+                                {utt.sentiment}
+                              </span>
+                            )}
+                            {utt.emotion && (
+                              <span
+                                className="px-2 py-1 text-[9px] font-black uppercase tracking-wider rounded-md border bg-purple-50 text-purple-700 border-purple-200"
+                                title={`Emotion: ${utt.emotion}`}
+                              >
+                                {utt.emotion}
+                              </span>
+                            )}
+                            <span className="text-[11px] font-extrabold text-[#B3CFE5] uppercase tracking-widest">
+                              At {(utt.start_ms / 1000).toFixed(1)}s
+                            </span>
+                          </div>
                         </div>
                       </div>
                     );
@@ -1041,12 +1205,14 @@ export function ResultsPanel({ data, isHydrating = false }: { data: ResultData, 
               <button
                 onClick={() => setPendingEdits(new Map())}
                 className="flex-1 h-10 px-4 bg-[#0A1931] hover:bg-[#0A1931]/80 text-[#B3CFE5] rounded-xl font-bold text-xs uppercase tracking-wider transition-all border border-[#4A7FA7]/20"
+                title="Clear all pending edits"
               >
                 Clear All
               </button>
               <button
                 onClick={handleSubmitAllEdits}
                 className="flex-1 h-10 px-4 bg-gradient-to-r from-[#4A7FA7] to-[#1A3D63] hover:opacity-90 text-[#F6FAFD] rounded-xl font-bold text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-lg shadow-[#4A7FA7]/20"
+                title="Submit all pending edits and recalculate scores"
               >
                 <Save className="w-3 h-3" />
                 Submit All
@@ -1091,6 +1257,7 @@ export function ResultsPanel({ data, isHydrating = false }: { data: ResultData, 
                 <button
                   onClick={() => setViewHistoryFor(null)}
                   className="w-10 h-10 rounded-xl hover:bg-[#1A3D63]/60 flex items-center justify-center transition-all text-[#B3CFE5]"
+                  title="Close history modal"
                 >
                   <XIcon className="w-5 h-5" />
                 </button>
@@ -1142,6 +1309,7 @@ export function ResultsPanel({ data, isHydrating = false }: { data: ResultData, 
                 <button
                   onClick={() => setViewHistoryFor(null)}
                   className="w-full h-12 bg-gradient-to-r from-[#4A7FA7] to-[#1A3D63] hover:opacity-90 text-[#F6FAFD] rounded-xl font-bold text-sm uppercase tracking-wider transition-all"
+                  title="Close history modal"
                 >
                   Close
                 </button>
@@ -1251,6 +1419,7 @@ function InterventionModal({ modal, onClose, onSubmit, existingEdit, onRemove }:
           <button
             onClick={onClose}
             className="w-10 h-10 rounded-xl hover:bg-[#1A3D63]/60 flex items-center justify-center transition-all text-[#B3CFE5] flex-shrink-0"
+            title="Close edit dialog"
           >
             <XIcon className="w-5 h-5" />
           </button>
@@ -1321,6 +1490,7 @@ function InterventionModal({ modal, onClose, onSubmit, existingEdit, onRemove }:
               <button
                 onClick={onRemove}
                 className="h-11 sm:h-12 px-4 bg-red-50 hover:bg-red-100 text-red-600 rounded-xl font-bold text-xs sm:text-sm uppercase tracking-wider transition-all border border-red-200"
+                title="Remove this pending edit"
               >
                 Remove
               </button>
@@ -1328,12 +1498,14 @@ function InterventionModal({ modal, onClose, onSubmit, existingEdit, onRemove }:
             <button
               onClick={onClose}
               className="flex-1 h-11 sm:h-12 bg-[#0A1931] hover:bg-[#0A1931]/80 text-[#B3CFE5] rounded-xl font-bold text-xs sm:text-sm uppercase tracking-wider transition-all border border-[#4A7FA7]/20"
+              title="Cancel and close dialog"
             >
               Cancel
             </button>
             <button
               onClick={handleSubmit}
               className="flex-1 h-11 sm:h-12 bg-gradient-to-r from-[#4A7FA7] to-[#1A3D63] hover:opacity-90 text-[#F6FAFD] rounded-xl font-bold text-xs sm:text-sm uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-lg shadow-[#4A7FA7]/20"
+              title={existingEdit ? "Update this pending edit" : "Add edit to queue for batch submission"}
             >
               <Save className="w-4 h-4" />
               <span className="hidden sm:inline">{existingEdit ? 'Update' : 'Add to Queue'}</span>

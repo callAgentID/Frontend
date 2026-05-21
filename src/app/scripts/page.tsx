@@ -298,7 +298,7 @@ function ScriptsPageContent() {
                       handleDeleteScript(script.id);
                     }}
                     className="w-10 h-10 rounded-xl bg-red-500/20 hover:bg-red-500 hover:text-white text-red-500 flex items-center justify-center transition-all opacity-0 group-hover:opacity-100"
-                    title="Delete script"
+                   
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>

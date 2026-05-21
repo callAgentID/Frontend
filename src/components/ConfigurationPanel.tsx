@@ -83,7 +83,7 @@ export function ConfigurationPanel({ onProcess, disabled }: ConfigPanelProps) {
             <button
               onClick={generateId}
               className="text-[#B3CFE5]/80 hover:text-[#4A7FA7] transition-colors"
-              title="Regenerate ID"
+             
             >
               <RefreshCw className="w-3 h-3" />
             </button>

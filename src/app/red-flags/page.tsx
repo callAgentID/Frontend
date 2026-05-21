@@ -387,6 +387,7 @@ function RedFlagsPageContent() {
           <button
             onClick={closeDetail}
             className="flex items-center gap-2 text-[#B3CFE5] hover:text-[#F6FAFD] font-bold text-xs uppercase tracking-widest transition-all"
+            title="Return to red flags list"
           >
             <ArrowLeft className="w-4 h-4" /> Back to Red Flags
           </button>
@@ -397,6 +398,7 @@ function RedFlagsPageContent() {
                 if (name) markAsReviewed(selectedCallId, name);
               }}
               className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-[#4A7FA7] to-[#1A3D63] glow hover:opacity-90 text-white rounded-xl font-bold text-xs uppercase tracking-widest transition-all shadow-lg shadow-[#4A7FA7]/20 active:scale-95"
+              title="Mark this red flag as reviewed"
             >
               <Eye className="w-4 h-4" />
               Mark as Reviewed
@@ -539,7 +541,7 @@ function RedFlagsPageContent() {
                               <button
                                 onClick={() => setEditingQuestionId(`${templateId}_${questionId}`)}
                                 className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-[#4A7FA7] bg-[#1A3D63]/40 hover:bg-[#1A3D63]/60 rounded-lg border border-[#4A7FA7]/30 transition-all"
-                                title="Edit answer"
+                                title="Edit this answer and provide human correction"
                               >
                                 <Edit className="w-3 h-3" />
                                 Edit
@@ -607,6 +609,7 @@ function RedFlagsPageContent() {
                                   <button
                                     onClick={() => setViewHistoryFor({ template_id: templateId, question_id: questionId })}
                                     className="flex items-center gap-1 px-2 py-1 text-[10px] font-bold text-green-700 hover:text-green-900 hover:bg-green-100 rounded-md transition-all"
+                                    title="View full edit history for this question"
                                   >
                                     <History className="w-3 h-3" />
                                     View History ({interventions.length})
@@ -743,12 +746,14 @@ function RedFlagsPageContent() {
                     <button
                       onClick={() => setPendingEdits(new Map())}
                       className="flex-1 h-10 px-4 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-bold text-xs uppercase tracking-wider transition-all"
+                      title="Clear all pending edits"
                     >
                       Clear All
                     </button>
                     <button
                       onClick={handleSubmitAllEdits}
                       className="flex-1 h-10 px-4 bg-[#1F3A34] hover:bg-[#1F3A34]/90 text-white rounded-xl font-bold text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-lg shadow-[#1F3A3420]"
+                      title="Submit all pending edits and recalculate scores"
                     >
                       <Save className="w-3 h-3" />
                       Submit All
@@ -793,6 +798,7 @@ function RedFlagsPageContent() {
                       <button
                         onClick={() => setViewHistoryFor(null)}
                         className="w-10 h-10 rounded-xl hover:bg-[#1F3A3410] flex items-center justify-center transition-all text-[#1F3A3420]"
+                        title="Close history modal"
                       >
                         <XIcon className="w-5 h-5" />
                       </button>
@@ -844,6 +850,7 @@ function RedFlagsPageContent() {
                       <button
                         onClick={() => setViewHistoryFor(null)}
                         className="w-full h-12 bg-[#1F3A34] hover:bg-[#1F3A34]/90 text-white rounded-xl font-bold text-sm uppercase tracking-wider transition-all"
+                        title="Close history modal"
                       >
                         Close
                       </button>
@@ -970,6 +977,7 @@ function RedFlagsPageContent() {
               value={filterCritical === null ? "" : String(filterCritical)}
               onChange={(e) => setFilterCritical(e.target.value === "" ? null : e.target.value === "true")}
               className="w-full h-12 bg-[#1A3D63]/40 border border-[#4A7FA7]/30 rounded-xl px-4 text-[#F6FAFD] font-semibold text-sm outline-none cursor-pointer"
+              title="Filter by critical issues status"
             >
               <option value="">{t('all')}</option>
               <option value="true">Yes</option>
@@ -983,6 +991,7 @@ function RedFlagsPageContent() {
               value={filterAttention === null ? "" : String(filterAttention)}
               onChange={(e) => setFilterAttention(e.target.value === "" ? null : e.target.value === "true")}
               className="w-full h-12 bg-[#1A3D63]/40 border border-[#4A7FA7]/30 rounded-xl px-4 text-[#F6FAFD] font-semibold text-sm outline-none cursor-pointer"
+              title="Filter by immediate attention required"
             >
               <option value="">{t('all')}</option>
               <option value="true">Yes</option>
@@ -1000,6 +1009,7 @@ function RedFlagsPageContent() {
               onChange={(e) => setMinScore(e.target.value)}
               placeholder="0"
               className="w-full h-12 bg-[#1A3D63]/40 border border-[#4A7FA7]/30 rounded-xl px-4 text-[#F6FAFD] font-semibold text-sm outline-none"
+              title="Set minimum score filter"
             />
           </div>
 
@@ -1013,6 +1023,7 @@ function RedFlagsPageContent() {
               onChange={(e) => setMaxScore(e.target.value)}
               placeholder="100"
               className="w-full h-12 bg-[#1A3D63]/40 border border-[#4A7FA7]/30 rounded-xl px-4 text-[#F6FAFD] font-semibold text-sm outline-none"
+              title="Set maximum score filter"
             />
           </div>
         </div>
@@ -1033,6 +1044,7 @@ function RedFlagsPageContent() {
             <button
               onClick={() => window.location.reload()}
               className="px-6 py-2 bg-red-500 text-white rounded-xl font-bold text-xs uppercase tracking-widest"
+              title="Retry loading red flags"
             >
               Retry
             </button>
@@ -1179,6 +1191,7 @@ function InterventionModal({ modal, onClose, onSubmit, existingEdit, onRemove }:
           <button
             onClick={onClose}
             className="w-10 h-10 rounded-xl hover:bg-[#1A3D63]/60 flex items-center justify-center transition-all text-[#B3CFE5] flex-shrink-0"
+            title="Close edit dialog"
           >
             <XIcon className="w-5 h-5" />
           </button>
@@ -1249,6 +1262,7 @@ function InterventionModal({ modal, onClose, onSubmit, existingEdit, onRemove }:
               <button
                 onClick={onRemove}
                 className="h-11 sm:h-12 px-4 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded-xl font-bold text-xs sm:text-sm uppercase tracking-wider transition-all border border-red-500/30"
+                title="Remove this pending edit"
               >
                 Remove
               </button>
@@ -1256,12 +1270,14 @@ function InterventionModal({ modal, onClose, onSubmit, existingEdit, onRemove }:
             <button
               onClick={onClose}
               className="flex-1 h-11 sm:h-12 bg-[#0A1931] hover:bg-[#0A1931]/80 text-[#B3CFE5] rounded-xl font-bold text-xs sm:text-sm uppercase tracking-wider transition-all border border-[#4A7FA7]/20"
+              title="Cancel and close dialog"
             >
               Cancel
             </button>
             <button
               onClick={handleSubmit}
               className="flex-1 h-11 sm:h-12 bg-gradient-to-r from-[#4A7FA7] to-[#1A3D63] hover:opacity-90 text-[#F6FAFD] rounded-xl font-bold text-xs sm:text-sm uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-lg shadow-[#4A7FA7]/20"
+              title={existingEdit ? "Update this pending edit" : "Add edit to queue for batch submission"}
             >
               <Save className="w-4 h-4" />
               <span className="hidden sm:inline">{existingEdit ? 'Update' : 'Add to Queue'}</span>

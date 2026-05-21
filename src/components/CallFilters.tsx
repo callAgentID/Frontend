@@ -356,26 +356,50 @@ export function CallFilters({ filters, onFiltersChange, campaigns = [], question
 
           {/* Score Range Slider */}
           <div>
-            <label className="block text-xs font-black uppercase tracking-widest text-[#B3CFE5] mb-2">
+            <label className="block text-xs font-black uppercase tracking-widest text-[#B3CFE5] mb-3">
               <BarChart3 className="w-3 h-3 inline mr-1" />
               Score Range: {filters.min_score || 0} - {filters.max_score || 100}
             </label>
-            <div className="space-y-2">
+            <div className="relative h-2">
+              {/* Track */}
+              <div className="absolute w-full h-2 bg-[#1A3D63]/40 rounded-full" />
+              {/* Active range */}
+              <div
+                className="absolute h-2 bg-gradient-to-r from-[#4A7FA7] to-[#1A3D63] rounded-full"
+                style={{
+                  left: `${(filters.min_score || 0)}%`,
+                  width: `${(filters.max_score || 100) - (filters.min_score || 0)}%`
+                }}
+              />
+              {/* Min slider */}
               <input
                 type="range"
                 min="0"
                 max="100"
                 value={filters.min_score || 0}
-                onChange={(e) => setScoreRange(Number(e.target.value), filters.max_score)}
-                className="w-full"
+                onChange={(e) => {
+                  const val = Number(e.target.value);
+                  if (val < (filters.max_score || 100)) {
+                    setScoreRange(val, filters.max_score);
+                  }
+                }}
+                className="absolute w-full h-2 appearance-none bg-transparent pointer-events-auto cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-[#4A7FA7] [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-[#F6FAFD] [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:shadow-lg [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-[#4A7FA7] [&::-moz-range-thumb]:border-2 [&::-moz-range-thumb]:border-[#F6FAFD] [&::-moz-range-thumb]:cursor-pointer [&::-moz-range-thumb]:shadow-lg"
+                style={{ zIndex: filters.min_score === filters.max_score ? 5 : 3 }}
               />
+              {/* Max slider */}
               <input
                 type="range"
                 min="0"
                 max="100"
                 value={filters.max_score || 100}
-                onChange={(e) => setScoreRange(filters.min_score, Number(e.target.value))}
-                className="w-full"
+                onChange={(e) => {
+                  const val = Number(e.target.value);
+                  if (val > (filters.min_score || 0)) {
+                    setScoreRange(filters.min_score, val);
+                  }
+                }}
+                className="absolute w-full h-2 appearance-none bg-transparent pointer-events-auto cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-[#4A7FA7] [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-[#F6FAFD] [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:shadow-lg [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-[#4A7FA7] [&::-moz-range-thumb]:border-2 [&::-moz-range-thumb]:border-[#F6FAFD] [&::-moz-range-thumb]:cursor-pointer [&::-moz-range-thumb]:shadow-lg"
+                style={{ zIndex: 4 }}
               />
             </div>
           </div>

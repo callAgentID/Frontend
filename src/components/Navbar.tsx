@@ -24,16 +24,17 @@ export function Navbar() {
             type="text"
             placeholder={t('searchIntelligence')}
             className="w-48 h-8 pl-9 pr-4 bg-[#1A3D63]/40 border border-[#4A7FA7]/20 rounded-lg text-xs font-medium focus:outline-none focus:w-64 focus:bg-[#1A3D63]/60 focus:glow focus:border-[#4A7FA7]/40 transition-all placeholder:text-[#B3CFE5]/50 text-[#F6FAFD]"
+            title="Search through intelligence data"
           />
         </div>
 
-        <button className="w-8 h-8 rounded-lg text-[#B3CFE5]/80 hover:text-[#F6FAFD] hover:bg-[#4A7FA7]/30 flex items-center justify-center transition-all bg-[#1A3D63]/40 border border-[#4A7FA7]/20">
+        <button className="w-8 h-8 rounded-lg text-[#B3CFE5]/80 hover:text-[#F6FAFD] hover:bg-[#4A7FA7]/30 flex items-center justify-center transition-all bg-[#1A3D63]/40 border border-[#4A7FA7]/20" title="Add new item">
           <Plus className="w-4 h-4" />
         </button>
 
         <div className="w-[1px] h-4 bg-[#4A7FA7]/20 mx-1" />
 
-        <button className="w-8 h-8 rounded-lg text-[#B3CFE5]/80 hover:text-[#F6FAFD] hover:glow flex items-center justify-center transition-all bg-[#1A3D63]/40 border border-[#4A7FA7]/20 relative">
+        <button className="w-8 h-8 rounded-lg text-[#B3CFE5]/80 hover:text-[#F6FAFD] hover:glow flex items-center justify-center transition-all bg-[#1A3D63]/40 border border-[#4A7FA7]/20 relative" title="View notifications">
           <Bell className="w-4 h-4" />
           <span className="absolute top-0 right-0 w-2 h-2 bg-[#4A7FA7] rounded-full animate-pulse" />
         </button>

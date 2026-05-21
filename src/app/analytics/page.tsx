@@ -297,7 +297,7 @@ function AnalyticsPageContent() {
                 setIsLoading(true);
               }}
               className="flex items-center gap-2 px-4 h-11 bg-gradient-to-r from-[#4A7FA7] to-[#1A3D63] glow hover:opacity-90 text-white rounded-xl font-bold text-xs uppercase tracking-wider transition-all"
-              title={t('refresh')}
+              title="Refresh call history"
             >
               <RefreshCw className="w-4 h-4" />
               {t('refresh')}
@@ -406,6 +406,7 @@ function AnalyticsPageContent() {
                     <div
                       onClick={() => viewDetail(call.call_id)}
                       className="w-11 h-11 rounded-2xl bg-[#1A3D63]/40 text-[#4A7FA7] flex items-center justify-center group-hover:bg-gradient-to-r group-hover:from-[#4A7FA7] group-hover:to-[#1A3D63] group-hover:text-white transition-all group-hover:scale-110 shadow-sm cursor-pointer"
+                      title="View call details"
                     >
                       <ArrowUpRight className="w-5 h-5" />
                     </div>
@@ -442,6 +443,7 @@ function AnalyticsPageContent() {
                     setCurrentPage(1);
                   }}
                   className="h-9 px-3 bg-[#1A3D63]/40 border border-[#4A7FA7]/30 rounded-lg text-sm font-bold text-[#F6FAFD] outline-none focus:border-[#4A7FA7] transition-all cursor-pointer"
+                  title="Select number of records per page"
                 >
                   <option value="10">10</option>
                   <option value="20">20</option>
@@ -462,7 +464,7 @@ function AnalyticsPageContent() {
                     ? "bg-[#1A3D63]/20 text-[#4A7FA7]/30 cursor-not-allowed"
                     : "bg-[#1A3D63]/40 text-[#4A7FA7] hover:bg-gradient-to-r hover:from-[#4A7FA7] hover:to-[#1A3D63] hover:text-white shadow-sm"
                 )}
-                title="First page"
+                title="Go to first page"
               >
                 <ChevronsLeft className="w-5 h-5" />
               </button>
@@ -477,7 +479,7 @@ function AnalyticsPageContent() {
                     ? "bg-[#1A3D63]/20 text-[#4A7FA7]/30 cursor-not-allowed"
                     : "bg-[#1A3D63]/40 text-[#4A7FA7] hover:bg-gradient-to-r hover:from-[#4A7FA7] hover:to-[#1A3D63] hover:text-white shadow-sm"
                 )}
-                title="Previous page"
+                title="Go to previous page"
               >
                 <ChevronRight className="w-5 h-5 rotate-180" />
               </button>
@@ -510,6 +512,7 @@ function AnalyticsPageContent() {
                           ? "bg-gradient-to-r from-[#4A7FA7] to-[#1A3D63] text-white shadow-lg shadow-[#4A7FA7]/30"
                           : "bg-[#1A3D63]/20 text-[#4A7FA7] hover:bg-[#1A3D63]/40"
                       )}
+                      title={`Go to page ${pageNum}`}
                     >
                       {pageNum}
                     </button>
@@ -527,7 +530,7 @@ function AnalyticsPageContent() {
                     ? "bg-[#1A3D63]/20 text-[#4A7FA7]/30 cursor-not-allowed"
                     : "bg-[#1A3D63]/40 text-[#4A7FA7] hover:bg-gradient-to-r hover:from-[#4A7FA7] hover:to-[#1A3D63] hover:text-white shadow-sm"
                 )}
-                title="Next page"
+                title="Go to next page"
               >
                 <ChevronRight className="w-5 h-5" />
               </button>
@@ -547,7 +550,7 @@ function AnalyticsPageContent() {
                     ? "bg-[#1A3D63]/20 text-[#4A7FA7]/30 cursor-not-allowed"
                     : "bg-[#1A3D63]/40 text-[#4A7FA7] hover:bg-gradient-to-r hover:from-[#4A7FA7] hover:to-[#1A3D63] hover:text-white shadow-sm"
                 )}
-                title="Last page"
+                title="Go to last page"
               >
                 <ChevronsRight className="w-5 h-5" />
               </button>

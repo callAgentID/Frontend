@@ -452,6 +452,7 @@ export function InputSection({
                 ? "bg-gradient-to-r from-[#4A7FA7] to-[#1A3D63] text-[#F6FAFD] apple-shadow glow"
                 : "text-[#B3CFE5] hover:text-[#F6FAFD]"
             )}
+            title="Switch to audio upload mode"
           >
             <FileAudio className="w-4 h-4 opacity-70" />
             {t('uploadAudio')}
@@ -464,6 +465,7 @@ export function InputSection({
                 ? "bg-gradient-to-r from-[#4A7FA7] to-[#1A3D63] text-[#F6FAFD] apple-shadow glow"
                 : "text-[#B3CFE5] hover:text-[#F6FAFD]"
             )}
+            title="Switch to manual transcript entry mode"
           >
             <FileText className="w-4 h-4 opacity-70" />
             {t('manualEntry')}
@@ -508,7 +510,7 @@ export function InputSection({
                     </div>
                   </div>
                   {!isProcessing && (
-                    <button onClick={removeFile} className="p-3 hover:bg-red-50 text-[#B3CFE5] hover:text-red-500 rounded-xl transition-all">
+                    <button onClick={removeFile} className="p-3 hover:bg-red-50 text-[#B3CFE5] hover:text-red-500 rounded-xl transition-all" title="Remove uploaded file">
                       <Trash2 className="w-5 h-5" />
                     </button>
                   )}
@@ -522,7 +524,7 @@ export function InputSection({
                   <h4 className="text-sm font-extrabold uppercase tracking-widest text-[#F6FAFD] flex items-center gap-2">
                     <FileText className="w-4 h-4" /> {t('bypassedInput')}
                   </h4>
-                  <label className="flex items-center gap-2 px-3 py-1.5 bg-[#1A3D63]/40 hover:bg-[#4A7FA7] text-[#B3CFE5] hover:text-[#F6FAFD] text-[10px] font-black uppercase tracking-widest rounded-xl transition-all cursor-pointer">
+                  <label className="flex items-center gap-2 px-3 py-1.5 bg-[#1A3D63]/40 hover:bg-[#4A7FA7] text-[#B3CFE5] hover:text-[#F6FAFD] text-[10px] font-black uppercase tracking-widest rounded-xl transition-all cursor-pointer" title="Upload transcript document file (TXT, PDF, DOCX)">
                     <FileUp className="w-3.5 h-3.5" /> {manualFile ? manualFile.name : t('uploadDocument')}
                     <input
                       type="file"
@@ -906,7 +908,7 @@ export function InputSection({
                               type="button"
                               onClick={() => setCustomQuestions(customQuestions.filter((_, i) => i !== idx))}
                               className="w-7 h-7 rounded-lg hover:bg-red-500/20 text-[#B3CFE5] hover:text-red-400 flex items-center justify-center transition-all"
-                              title="Remove question"
+                              title="Remove custom question"
                             >
                               <X className="w-3.5 h-3.5" />
                             </button>
@@ -922,6 +924,7 @@ export function InputSection({
                 onClick={mode === "audio" ? handleUploadSubmit : handleTranscriptSubmit}
                 disabled={isProcessing || !selectedCampaignId || !selectedProfileId}
                 className="w-full h-16 bg-gradient-to-r from-[#4A7FA7] to-[#1A3D63] hover:from-[#4A7FA7]/90 hover:to-[#1A3D63]/90 disabled:bg-[#1A3D63]/50 text-[#F6FAFD] rounded-[1.25rem] font-bold text-sm uppercase tracking-widest transition-all apple-shadow active:scale-[0.98] flex items-center justify-center gap-3 mt-4 glow"
+                title="Submit for AI analysis"
               >
                 <ArrowRight className="w-5 h-5 opacity-50" />
                 {t('analyze')}
@@ -985,7 +988,7 @@ export function InputSection({
               <div className="flex items-center justify-between">
                 <h4 className="text-sm font-extrabold uppercase tracking-widest text-[#B3CFE5]">Intelligence Extraction</h4>
                 <div className="flex items-center gap-2">
-                  <button onClick={downloadTranscript} className="flex items-center gap-1.5 px-3 py-1 bg-[#1A3D63]/40 hover:bg-[#4A7FA7] text-[#B3CFE5] hover:text-[#F6FAFD] text-[10px] font-black uppercase tracking-widest rounded-lg transition-all"><Download className="w-3 h-3" /> Download</button>
+                  <button onClick={downloadTranscript} className="flex items-center gap-1.5 px-3 py-1 bg-[#1A3D63]/40 hover:bg-[#4A7FA7] text-[#B3CFE5] hover:text-[#F6FAFD] text-[10px] font-black uppercase tracking-widest rounded-lg transition-all" title="Download transcript as text file"><Download className="w-3 h-3" /> Download</button>
                   <span className="text-[10px] uppercase font-black text-green-400 bg-green-500/20 px-2 py-1 rounded-full border border-green-400/30">Signal Locked</span>
                 </div>
               </div>

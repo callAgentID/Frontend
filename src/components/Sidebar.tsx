@@ -41,7 +41,7 @@ export function Sidebar() {
         <button
           onClick={() => setIsMobileOpen(true)}
           className="fixed top-5 left-4 z-[60] lg:hidden p-2 rounded-xl bg-[#1A3D63]/95 backdrop-blur-md border border-[#4A7FA7]/30 shadow-xl hover:bg-[#4A7FA7]/90 transition-all"
-          aria-label="Open menu"
+          title="Open Menu"
         >
           <Menu className="w-5 h-5 text-[#F6FAFD]" />
         </button>
@@ -99,10 +99,10 @@ export function Sidebar() {
           </button>
 
           {/* Navigation */}
-          <div className="flex-1 overflow-y-auto">
-            <div>
+          <div className="flex-1 overflow-y-auto overflow-x-visible">
+            <div className="px-1">
               {!isCollapsed && (
-                <h2 className="px-4 text-[11px] font-bold uppercase tracking-widest text-[#B3CFE5]/60 mb-4">{t('navigation')}</h2>
+                <h2 className="px-3 text-[11px] font-bold uppercase tracking-widest text-[#B3CFE5]/60 mb-4">{t('navigation')}</h2>
               )}
               <nav className="space-y-1">
                 {NAV_ITEMS.map((item) => {
@@ -121,7 +121,7 @@ export function Sidebar() {
                           ? "bg-gradient-to-r from-[#4A7FA7] to-[#1A3D63] text-[#F6FAFD] glow border border-[#4A7FA7]/40"
                           : "text-[#B3CFE5] hover:bg-[#1A3D63]/40 border border-transparent hover:border-[#4A7FA7]/20"
                       )}
-                      title={isCollapsed ? t(item.name as any) : undefined}
+                      title={t(item.name as any)}
                     >
                       <Icon
                         className={cn(
