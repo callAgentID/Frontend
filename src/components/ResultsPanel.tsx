@@ -868,14 +868,14 @@ export function ResultsPanel({ data, isHydrating = false }: { data: ResultData, 
                           )}
                           <span className={cn(
                             "text-lg font-[850]",
-                            speaker.avg_sentiment > 0 ? "text-green-400" : speaker.avg_sentiment < 0 ? "text-red-400" : "text-[#B3CFE5]"
+                            (speaker.avg_sentiment || 0) > 0 ? "text-green-400" : (speaker.avg_sentiment || 0) < 0 ? "text-red-400" : "text-[#B3CFE5]"
                           )}>
-                            {speaker.avg_sentiment.toFixed(2)}
+                            {(speaker.avg_sentiment !== undefined && speaker.avg_sentiment !== null) ? speaker.avg_sentiment.toFixed(2) : '0.00'}
                           </span>
                         </div>
                       </div>
 
-                      {speaker.talk_time_ms !== undefined && (
+                      {speaker.talk_time_ms !== undefined && speaker.talk_time_ms !== null && (
                         <div className="flex items-center justify-between p-3 rounded-xl bg-[#0A1931]/60 border border-[#4A7FA7]/20">
                           <span className="text-[10px] font-black uppercase tracking-widest text-[#B3CFE5]">Talk Time</span>
                           <span className="text-lg font-[850] text-[#F6FAFD]">{(speaker.talk_time_ms / 1000).toFixed(1)}s</span>

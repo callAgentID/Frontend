@@ -3,6 +3,7 @@
 import { useState, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useTranslations } from 'next-intl';
+import { createPortal } from 'react-dom';
 import {
   FileSearch,
   Plus,
@@ -88,6 +89,11 @@ function QuestionnairesPageContent() {
     active: true,
     is_redflag: false
   });
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     const questionnaireIdFromUrl = searchParams.get('id');
@@ -632,23 +638,23 @@ function QuestionnairesPageContent() {
         </div>
       )}
 
-      {isEditModalOpen && editingQuestionnaire && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/50 backdrop-blur-md animate-in fade-in duration-300">
-           <div className="bg-[#1A3D63]/95 glow w-full max-w-xl rounded-[2.5rem] shadow-2xl border border-[#4A7FA7]/30 overflow-hidden animate-in zoom-in-95 duration-300">
-              <div className="p-8 border-b border-[#4A7FA7]/30 bg-[#1A3D63]/40 flex items-center justify-between">
-                 <div>
-                    <h3 className="text-2xl font-[850] text-[#F6FAFD] tracking-tight">Edit Questionnaire</h3>
-                    <p className="text-sm font-semibold text-[#B3CFE5] mt-1">Update questionnaire properties</p>
+      {isEditModalOpen && editingQuestionnaire && mounted && createPortal(
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 md:p-6 bg-black/50 backdrop-blur-md animate-in fade-in duration-300">
+           <div className="bg-[#1A3D63]/95 glow w-full max-w-xl max-h-[90vh] flex flex-col rounded-[2.5rem] shadow-2xl border border-[#4A7FA7]/30 overflow-hidden animate-in zoom-in-95 duration-300">
+              <div className="p-6 md:p-8 border-b border-[#4A7FA7]/30 bg-[#1A3D63]/40 flex items-center justify-between flex-shrink-0">
+                 <div className="flex-1 min-w-0 pr-4">
+                    <h3 className="text-xl md:text-2xl font-[850] text-[#F6FAFD] tracking-tight">Edit Questionnaire</h3>
+                    <p className="text-xs md:text-sm font-semibold text-[#B3CFE5] mt-1 truncate">Update questionnaire properties</p>
                  </div>
                  <button onClick={() => {
                    setIsEditModalOpen(false);
                    setEditingQuestionnaire(null);
-                 }} className="w-10 h-10 rounded-xl hover:bg-[#4A7FA7]/20 flex items-center justify-center transition-all text-[#B3CFE5]">
+                 }} className="w-10 h-10 rounded-xl hover:bg-[#4A7FA7]/20 flex items-center justify-center transition-all text-[#B3CFE5] flex-shrink-0" title="Close edit dialog">
                     <X className="w-5 h-5" />
                  </button>
               </div>
 
-              <div className="p-10 space-y-6">
+              <div className="p-6 md:p-10 space-y-6 overflow-y-auto flex-1">
                  <div className="space-y-2">
                    <label className="text-[10px] font-black uppercase tracking-[0.2em] text-[#B3CFE5]">Schema Name *</label>
                    <input
@@ -656,7 +662,7 @@ function QuestionnairesPageContent() {
                     value={editForm.name}
                     onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
                     placeholder="e.g. Sales Discovery Audit"
-                    className="w-full h-14 bg-[#1A3D63]/40 border border-[#4A7FA7]/30 rounded-xl px-4 outline-none focus:border-[#4A7FA7] transition-all text-[#F6FAFD] font-semibold placeholder:text-[#B3CFE5]/50"
+                    className="w-full h-12 md:h-14 bg-[#1A3D63]/40 border border-[#4A7FA7]/30 rounded-xl px-4 outline-none focus:border-[#4A7FA7] transition-all text-[#F6FAFD] font-semibold placeholder:text-[#B3CFE5]/50"
                    />
                  </div>
                  <div className="space-y-2">
@@ -670,10 +676,10 @@ function QuestionnairesPageContent() {
                    />
                  </div>
 
-                 <div className="grid grid-cols-2 gap-6">
+                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
                    <div className="space-y-3">
                      <label className="text-[10px] font-black uppercase tracking-[0.2em] text-[#B3CFE5]">Status</label>
-                     <div className="flex items-center gap-3 p-4 bg-[#1A3D63]/40 border border-[#4A7FA7]/30 rounded-xl">
+                     <div className="flex items-center gap-3 p-3 md:p-4 bg-[#1A3D63]/40 border border-[#4A7FA7]/30 rounded-xl">
                        <input
                          type="checkbox"
                          id="edit_active"
@@ -689,7 +695,7 @@ function QuestionnairesPageContent() {
 
                    <div className="space-y-3">
                      <label className="text-[10px] font-black uppercase tracking-[0.2em] text-[#B3CFE5]">Type</label>
-                     <div className="flex items-center gap-3 p-4 bg-[#1A3D63]/40 border border-[#4A7FA7]/30 rounded-xl">
+                     <div className="flex items-center gap-3 p-3 md:p-4 bg-[#1A3D63]/40 border border-[#4A7FA7]/30 rounded-xl">
                        <input
                          type="checkbox"
                          id="edit_is_redflag"
@@ -703,15 +709,16 @@ function QuestionnairesPageContent() {
                      </div>
                    </div>
                  </div>
+              </div>
 
-                 <div className="pt-4">
-                   <button onClick={handleUpdateQuestionnaire} disabled={isSubmitting || !editForm.name} className="w-full h-14 bg-gradient-to-r from-[#4A7FA7] to-[#1A3D63] glow text-white disabled:opacity-50 disabled:cursor-not-allowed rounded-2xl font-bold flex items-center justify-center gap-3 shadow-xl hover:scale-[1.02] transition-all">
-                      {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : <><CheckCircle2 className="w-5 h-5" /> Update Questionnaire</>}
-                   </button>
-                 </div>
+              <div className="p-4 md:p-6 border-t border-[#4A7FA7]/30 bg-[#1A3D63]/40 flex-shrink-0">
+                <button onClick={handleUpdateQuestionnaire} disabled={isSubmitting || !editForm.name} className="w-full h-12 md:h-14 bg-gradient-to-r from-[#4A7FA7] to-[#1A3D63] glow text-white disabled:opacity-50 disabled:cursor-not-allowed rounded-2xl font-bold flex items-center justify-center gap-3 shadow-xl hover:scale-[1.02] transition-all" title="Save changes to questionnaire">
+                   {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : <><CheckCircle2 className="w-5 h-5" /> Update Questionnaire</>}
+                </button>
               </div>
            </div>
-        </div>
+        </div>,
+        document.body
       )}
     </main>
   );
