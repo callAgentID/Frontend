@@ -33,7 +33,9 @@
     "security": "Security",
     "preferences": "Preferences",
     "navigation": "Navigation",
-    "management": "Management"
+    "management": "Management",
+    "admin": "Admin Dashboard",
+    "analysis": "Analysis"
   },
   "home": {
     "title": "Analyze Your Conversation",

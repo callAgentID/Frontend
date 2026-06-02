@@ -29,21 +29,7 @@ import {
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { QuestionnaireCardSkeleton } from "@/components/Skeleton";
-
-interface Question {
-  question_id: string;
-  text: string;
-  type: string;
-  required: boolean;
-  weight: number;
-  options?: string[];
-}
-
-interface Section {
-  section_id: string;
-  title: string;
-  questions: Question[];
-}
+import { InlineQuestionnaireEditor, Section, Question } from "@/components/InlineQuestionnaireEditor";
 
 interface Questionnaire {
   id: string;
@@ -89,6 +75,15 @@ function QuestionnairesPageContent() {
     active: true,
     is_redflag: false
   });
+  const [editingQuestionnaireId, setEditingQuestionnaireId] = useState<string | null>(null);
+  const [isCreatingNew, setIsCreatingNew] = useState(false);
+  const [newQuestionnaire, setNewQuestionnaire] = useState({
+    name: "",
+    description: "",
+    active: true,
+    is_redflag: false,
+    sections: [] as Section[]
+  });
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -132,6 +127,120 @@ function QuestionnairesPageContent() {
       is_redflag: questionnaire.is_redflag
     });
     setIsEditModalOpen(true);
+  };
+
+  const handleEditInline = (questionnaireId: string) => {
+    setEditingQuestionnaireId(questionnaireId);
+    setExpandedId(questionnaireId);
+  };
+
+  const handleSaveInlineEdit = async (questionnaireId: string, sections: Section[]) => {
+    try {
+      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://zk1354qz0k.execute-api.eu-central-1.amazonaws.com";
+      const questionnaire = questionnaires.find(q => q.id === questionnaireId);
+      if (!questionnaire) return;
+
+      const res = await fetch(`${baseUrl}/api/v1/questionnaires/${questionnaireId}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          "accept": "application/json",
+          "ngrok-skip-browser-warning": "true"
+        },
+        body: JSON.stringify({
+          schema_definition: { sections }
+        })
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.detail || "Failed to update questionnaire");
+      }
+
+      setEditingQuestionnaireId(null);
+      fetchQuestionnaires();
+    } catch (error: any) {
+      console.error("Failed to save questionnaire:", error);
+      alert(error.message || "Failed to save questionnaire. Please try again.");
+      throw error;
+    }
+  };
+
+  const handleCancelInlineEdit = () => {
+    setEditingQuestionnaireId(null);
+  };
+
+  const handleStartCreate = () => {
+    setIsCreatingNew(true);
+    setNewQuestionnaire({
+      name: "",
+      description: "",
+      active: true,
+      is_redflag: false,
+      sections: []
+    });
+    // Scroll to top
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleSaveNewQuestionnaire = async (sections: Section[]) => {
+    if (!newQuestionnaire.name.trim()) {
+      alert("Please provide a questionnaire name.");
+      throw new Error("Name is required");
+    }
+
+    try {
+      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://zk1354qz0k.execute-api.eu-central-1.amazonaws.com";
+
+      const res = await fetch(`${baseUrl}/api/v1/questionnaires/`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "accept": "application/json",
+          "ngrok-skip-browser-warning": "true"
+        },
+        body: JSON.stringify({
+          name: newQuestionnaire.name,
+          description: newQuestionnaire.description,
+          active: newQuestionnaire.active,
+          is_redflag: newQuestionnaire.is_redflag,
+          schema_definition: { sections }
+        })
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.detail || "Failed to create questionnaire");
+      }
+
+      setIsCreatingNew(false);
+      setNewQuestionnaire({
+        name: "",
+        description: "",
+        active: true,
+        is_redflag: false,
+        sections: []
+      });
+      fetchQuestionnaires();
+    } catch (error: any) {
+      console.error("Failed to create questionnaire:", error);
+      alert(error.message || "Failed to create questionnaire. Please try again.");
+      throw error;
+    }
+  };
+
+  const handleCancelCreate = () => {
+    if (newQuestionnaire.sections.length > 0 || newQuestionnaire.name.trim()) {
+      if (!confirm("Discard changes to new questionnaire?")) return;
+    }
+    setIsCreatingNew(false);
+    setNewQuestionnaire({
+      name: "",
+      description: "",
+      active: true,
+      is_redflag: false,
+      sections: []
+    });
   };
 
   const handleUpdateQuestionnaire = async () => {
@@ -295,10 +404,16 @@ function QuestionnairesPageContent() {
           <p className="text-[#B3CFE5] text-sm font-medium">{t('subtitle')}</p>
         </div>
 
-        <button onClick={() => setIsCreateModalOpen(true)} className="flex items-center gap-2 px-6 py-3.5 bg-gradient-to-r from-[#4A7FA7] to-[#1A3D63] glow text-white rounded-2xl font-bold text-sm uppercase tracking-widest transition-all hover:opacity-90 active:scale-[0.98]">
-          <Plus className="w-5 h-5" />
-          {t('createSchema')}
-        </button>
+        <div className="flex items-center gap-3">
+          <button onClick={() => setIsCreateModalOpen(true)} className="flex items-center gap-2 px-6 py-3.5 bg-[#1A3D63]/60 glow text-[#B3CFE5] hover:text-[#F6FAFD] border border-[#4A7FA7]/30 hover:border-[#4A7FA7]/50 rounded-2xl font-bold text-sm uppercase tracking-widest transition-all hover:opacity-90 active:scale-[0.98]">
+            <Upload className="w-5 h-5" />
+            Upload Schema
+          </button>
+          <button onClick={handleStartCreate} className="flex items-center gap-2 px-6 py-3.5 bg-gradient-to-r from-[#4A7FA7] to-[#1A3D63] glow text-white rounded-2xl font-bold text-sm uppercase tracking-widest transition-all hover:opacity-90 active:scale-[0.98]">
+            <Plus className="w-5 h-5" />
+            {t('createSchema')}
+          </button>
+        </div>
       </div>
 
       <div className="relative group">
@@ -311,6 +426,81 @@ function QuestionnairesPageContent() {
           className="w-full h-16 bg-[#1A3D63]/60 glow border border-[#4A7FA7]/30 rounded-[1.25rem] pl-16 pr-6 text-[#F6FAFD] font-bold tracking-tight placeholder:text-[#B3CFE5] outline-none focus:border-[#4A7FA7] transition-all"
         />
       </div>
+
+      {/* Create New Questionnaire Inline */}
+      {isCreatingNew && (
+        <div className="space-y-6 p-8 bg-[#1A3D63]/60 glow border border-[#4A7FA7]/40 rounded-[2rem] animate-in fade-in slide-in-from-top-8 duration-500">
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-2xl bg-gradient-to-r from-[#4A7FA7] to-[#1A3D63] flex items-center justify-center text-white glow">
+                <Plus className="w-6 h-6" />
+              </div>
+              <div>
+                <h3 className="text-2xl font-[850] text-[#F6FAFD] tracking-tight">Create New Questionnaire</h3>
+                <p className="text-sm font-semibold text-[#B3CFE5] mt-1">Define metadata and build your schema</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Metadata Form */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-6 bg-[#0A1931]/60 rounded-2xl border border-[#4A7FA7]/20">
+            <div className="space-y-2">
+              <label className="text-[10px] font-black uppercase tracking-wider text-[#B3CFE5]">Name *</label>
+              <input
+                type="text"
+                value={newQuestionnaire.name}
+                onChange={(e) => setNewQuestionnaire({ ...newQuestionnaire, name: e.target.value })}
+                placeholder="e.g., Sales Discovery Audit"
+                className="w-full h-12 bg-[#1A3D63]/60 border border-[#4A7FA7]/30 rounded-xl px-4 text-sm font-semibold text-[#F6FAFD] placeholder:text-[#B3CFE5]/50 outline-none focus:border-[#4A7FA7] transition-all"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-[10px] font-black uppercase tracking-wider text-[#B3CFE5]">Description</label>
+              <input
+                type="text"
+                value={newQuestionnaire.description}
+                onChange={(e) => setNewQuestionnaire({ ...newQuestionnaire, description: e.target.value })}
+                placeholder="What does this evaluate?"
+                className="w-full h-12 bg-[#1A3D63]/60 border border-[#4A7FA7]/30 rounded-xl px-4 text-sm font-semibold text-[#F6FAFD] placeholder:text-[#B3CFE5]/50 outline-none focus:border-[#4A7FA7] transition-all"
+              />
+            </div>
+
+            <div className="flex items-center gap-3 p-4 bg-[#1A3D63]/60 border border-[#4A7FA7]/30 rounded-xl">
+              <input
+                type="checkbox"
+                id="create_active"
+                checked={newQuestionnaire.active}
+                onChange={(e) => setNewQuestionnaire({ ...newQuestionnaire, active: e.target.checked })}
+                className="w-5 h-5 rounded border-[#4A7FA7]/30 text-[#4A7FA7]"
+              />
+              <label htmlFor="create_active" className="text-sm font-bold text-[#F6FAFD] cursor-pointer">
+                Active
+              </label>
+            </div>
+
+            <div className="flex items-center gap-3 p-4 bg-[#1A3D63]/60 border border-[#4A7FA7]/30 rounded-xl">
+              <input
+                type="checkbox"
+                id="create_redflag"
+                checked={newQuestionnaire.is_redflag}
+                onChange={(e) => setNewQuestionnaire({ ...newQuestionnaire, is_redflag: e.target.checked })}
+                className="w-5 h-5 rounded border-red-500/30 text-red-500"
+              />
+              <label htmlFor="create_redflag" className="text-sm font-bold text-[#F6FAFD] cursor-pointer">
+                Red Flag Questionnaire
+              </label>
+            </div>
+          </div>
+
+          {/* Inline Editor */}
+          <InlineQuestionnaireEditor
+            sections={newQuestionnaire.sections}
+            onSave={handleSaveNewQuestionnaire}
+            onCancel={handleCancelCreate}
+          />
+        </div>
+      )}
 
       <div className="space-y-6">
         {loading ? (
@@ -384,9 +574,10 @@ function QuestionnairesPageContent() {
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
-                      handleEditQuestionnaire(q);
+                      handleEditInline(q.id);
                     }}
                     className="w-10 h-10 rounded-xl bg-[#4A7FA7]/20 hover:bg-[#4A7FA7]/30 text-[#4A7FA7] flex items-center justify-center transition-all border border-[#4A7FA7]/30"
+                    title="Edit schema"
                   >
                     <Edit className="w-4 h-4" />
                   </button>
@@ -417,10 +608,17 @@ function QuestionnairesPageContent() {
               </div>
 
               {expandedId === q.id && (
-                <div className="px-8 pb-8 space-y-8 animate-in fade-in slide-in-from-top-4 duration-500">
+                <div className="px-8 pb-8 space-y-8">
                    <div className="h-px bg-[#4A7FA7]/30" />
 
-                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                   {editingQuestionnaireId === q.id ? (
+                     <InlineQuestionnaireEditor
+                       sections={q.schema_definition?.sections || []}
+                       onSave={(sections) => handleSaveInlineEdit(q.id, sections)}
+                       onCancel={handleCancelInlineEdit}
+                     />
+                   ) : (
+                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                      {q.schema_definition?.sections?.map((section) => (
                        <div key={section.section_id} className="bg-[#1A3D63]/40 rounded-3xl p-8 space-y-6 border border-[#4A7FA7]/30">
                           <div className="flex items-center justify-between">
@@ -446,7 +644,7 @@ function QuestionnairesPageContent() {
                                   </div>
                                 </div>
 
-                                {question.options && question.options.length > 0 && (
+                                {Array.isArray(question.options) && question.options.length > 0 && (
                                   <div className="pl-9 space-y-1.5">
                                     <div className="text-[9px] font-black uppercase tracking-wider text-[#B3CFE5] mb-2">Options ({question.options.length}):</div>
                                     <div className="flex flex-wrap gap-1.5">
@@ -467,6 +665,7 @@ function QuestionnairesPageContent() {
                        </div>
                      ))}
                    </div>
+                   )}
                 </div>
               )}
             </div>

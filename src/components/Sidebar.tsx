@@ -12,6 +12,7 @@ import {
   FileSearch,
   FileCode,
   ShieldAlert,
+  Settings,
   ChevronLeft,
   Menu,
   X
@@ -20,7 +21,8 @@ import { cn } from "../lib/utils";
 import { LanguageSwitcher } from "./LanguageSwitcher";
 
 const NAV_ITEMS = [
-  { name: "summary", href: "/", icon: LayoutDashboard },
+  { name: "admin", href: "/admin", icon: Settings },
+  { name: "analysis", href: "/", icon: LayoutDashboard },
   { name: "callAnalytics", href: "/analytics", icon: BarChart3 },
   { name: "redFlags", href: "/red-flags", icon: ShieldAlert },
   { name: "campaigns", href: "/campaigns", icon: Layers },

@@ -28,6 +28,7 @@ import {
   AlertTriangle
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { formatLLMCost, formatTokens } from "@/lib/formatters";
 import { ResultsPanel } from "@/components/ResultsPanel";
 import { CallListItemSkeleton, DetailViewSkeleton } from "@/components/Skeleton";
 import { CallFilters, CallFilterParams } from "@/components/CallFilters";
@@ -369,17 +370,32 @@ function AnalyticsPageContent() {
                         {call.smart_summary}
                       </p>
                     )}
-                    <div className="flex items-center gap-5">
+                    <div className="flex flex-wrap items-center gap-3 mt-1">
                       <span className="text-[10px] font-bold text-[#B3CFE5] uppercase tracking-widest">
                         ID: {call.call_id.split('-')[0]}
                       </span>
-                      <span className="w-1.5 h-1.5 rounded-full bg-[#4A7FA7]/30" />
-                      <span className="flex items-center gap-2 text-[11px] font-black text-[#B3CFE5] uppercase tracking-widest">
-                        <Calendar className="w-3.5 h-3.5" /> {new Date(call.created_at).toLocaleDateString()}
+                      <span className="w-1 h-1 rounded-full bg-[#4A7FA7]/30" />
+                      <span className="flex items-center gap-1.5 text-[10px] font-black text-[#B3CFE5] uppercase tracking-widest">
+                        <Calendar className="w-3 h-3" /> {new Date(call.created_at).toLocaleDateString()}
                       </span>
-                      <span className="w-1.5 h-1.5 rounded-full bg-[#4A7FA7]/30" />
-                      <span className="text-[11px] font-bold text-[#B3CFE5] uppercase tracking-widest px-2 py-0.5 bg-[#1A3D63]/40 rounded-md">
-                        Sentiment: {call.sentiment?.label || 'N/A'}
+                      <span className="w-1 h-1 rounded-full bg-[#4A7FA7]/30" />
+                      <span className="text-[10px] font-bold text-[#B3CFE5] uppercase tracking-widest px-2 py-0.5 bg-[#1A3D63]/40 rounded-md">
+                        {call.sentiment?.label || 'N/A'}
+                      </span>
+                      <span className="w-1 h-1 rounded-full bg-[#4A7FA7]/30" />
+                      <span className="flex items-center gap-1.5 px-2 py-0.5 bg-[#4A7FA7]/10 border border-[#4A7FA7]/20 rounded-md">
+                        <Zap className="w-3 h-3 text-[#4A7FA7]" />
+                        <span className="text-[10px] font-black text-[#B3CFE5]/60 uppercase tracking-widest">LLM Cost:</span>
+                        <span className="text-[10px] font-black text-[#F6FAFD] uppercase tracking-widest">
+                          {formatLLMCost(call.total_llm_cost_usd)}
+                        </span>
+                      </span>
+                      <span className="flex items-center gap-1.5 px-2 py-0.5 bg-[#4A7FA7]/10 border border-[#4A7FA7]/20 rounded-md">
+                        <Database className="w-3 h-3 text-[#4A7FA7]" />
+                        <span className="text-[10px] font-black text-[#B3CFE5]/60 uppercase tracking-widest">Tokens:</span>
+                        <span className="text-[10px] font-black text-[#F6FAFD] uppercase tracking-widest">
+                          {formatTokens(call.total_llm_tokens)}
+                        </span>
                       </span>
                     </div>
                   </div>
@@ -390,7 +406,7 @@ function AnalyticsPageContent() {
                       onClick={() => viewDetail(call.call_id)}
                       className="text-right hidden md:block cursor-pointer"
                     >
-                      <p className="text-[11px] font-black text-[#B3CFE5] uppercase tracking-widest mb-1 leading-none">Silence Index</p>
+                      <p className="text-[11px] font-black text-[#B3CFE5] uppercase tracking-widest mb-1 leading-none">Silence</p>
                       <p className="text-[15px] font-[850] text-[#F6FAFD] tracking-tight">{((call.silence_ratio || 0) * 100).toFixed(0)}%</p>
                     </div>
                     <button

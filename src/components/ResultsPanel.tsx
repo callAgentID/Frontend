@@ -31,6 +31,7 @@ import {
   History
 } from "lucide-react";
 import { cn } from "../lib/utils";
+import { formatLLMCost, formatTokens } from "../lib/formatters";
 import { useState, useEffect } from "react";
 import { createPortal } from 'react-dom';
 
@@ -39,14 +40,14 @@ interface ResultData {
   status: string;
   review_status: string;
   overall_score: number;
-  score_version?: number; // 🆕 Scoring version (2 = new 0-100 scale)
-  smart_summary?: string | null; // 🆕 AI-generated summary
-  call_success?: boolean | null; // 🆕 Business outcome (renamed from analysis_success)
-  call_success_reason?: string | null; // 🆕 Business insight (renamed from analysis_success_reason)
-  user_meta_tags?: string[] | null; // 🆕 User-provided tags
-  ai_meta_tags?: string[] | null; // 🆕 AI-generated tags
-  final_meta_tags?: string[] | null; // 🆕 Merged unique tags
-  custom_questions?: Array<{ text: string; weight: number }> | null; // 🆕 Custom questions
+  score_version?: number;
+  smart_summary?: string | null;
+  call_success?: boolean | null;
+  call_success_reason?: string | null;
+  user_meta_tags?: string[] | null;
+  ai_meta_tags?: string[] | null;
+  final_meta_tags?: string[] | null;
+  custom_questions?: Array<{ text: string; weight: number }> | null;
   campaign_name?: string | null;
   questionnaire_name?: string | null;
   script_name?: string | null;
@@ -60,6 +61,17 @@ interface ResultData {
     corrected_evidence: any;
     corrected_reasoning: string;
   }>;
+  llm_usage_summary?: {
+    total_tokens: number;
+    total_cost_usd: number;
+    breakdown_by_stage: Array<{
+      stage: string;
+      model: string;
+      provider: string;
+      tokens: number;
+      cost_usd: number;
+    }>;
+  };
   transcript: {
     utterances: Array<{
       speaker_id: string;
@@ -1057,6 +1069,73 @@ export function ResultsPanel({ data, isHydrating = false }: { data: ResultData, 
               </div>
             </div>
           </div>
+
+          {/* LLM Cost Breakdown Card - Always show if llm_usage_summary exists */}
+          {data.llm_usage_summary && (() => { const llm = data.llm_usage_summary!; return (
+            <div className="rounded-[3rem] bg-gradient-to-br from-[#1A3D63] to-[#0A1931] p-10 shadow-2xl shadow-[#0A1931]/60 text-white overflow-hidden relative group border border-[#4A7FA7]/30">
+              <div className="absolute top-0 right-0 p-10 opacity-5 group-hover:scale-110 transition-transform">
+                <Zap className="w-32 h-32" />
+              </div>
+              <div className="relative space-y-8">
+                <div>
+                  <h4 className="text-2xl font-[850] text-[#F6FAFD] leading-tight mb-2">LLM Cost Breakdown</h4>
+                  <p className="text-sm font-semibold text-[#B3CFE5]">Token usage and cost per pipeline stage</p>
+                </div>
+
+                {/* Total Summary */}
+                <div className="space-y-4">
+                  <div className="p-6 rounded-2xl bg-[#0A1931]/60 border border-[#4A7FA7]/30">
+                    <p className="text-xs font-black uppercase tracking-widest text-[#B3CFE5] mb-2">Total Cost</p>
+                    <p className="text-3xl font-[900] text-[#F6FAFD]">{formatLLMCost(llm.total_cost_usd || 0)}</p>
+                  </div>
+                  <div className="p-6 rounded-2xl bg-[#0A1931]/60 border border-[#4A7FA7]/30">
+                    <p className="text-xs font-black uppercase tracking-widest text-[#B3CFE5] mb-2">Total Tokens</p>
+                    <p className="text-3xl font-[900] text-[#F6FAFD]">{formatTokens(llm.total_tokens || 0)}</p>
+                  </div>
+                </div>
+
+                {/* Stage Breakdown */}
+                {llm.breakdown_by_stage && llm.breakdown_by_stage.length > 0 && (
+                  <div className="space-y-3">
+                    <h5 className="text-xs font-black uppercase tracking-widest text-[#B3CFE5]">By Stage</h5>
+                    {llm.breakdown_by_stage.map((stage, index) => (
+                    <div key={index} className="p-4 rounded-2xl bg-[#1A3D63]/40 border border-[#4A7FA7]/20 space-y-2">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-extrabold text-[#F6FAFD] capitalize mb-1">
+                            {stage.stage.replace(/_/g, ' ')}
+                          </p>
+                          <p className="text-xs font-semibold text-[#B3CFE5]">
+                            {stage.model} • {stage.provider}
+                          </p>
+                        </div>
+                        <div className="text-right shrink-0">
+                          <p className="text-sm font-black text-[#F6FAFD]">{formatLLMCost(stage.cost_usd)}</p>
+                          <p className="text-xs font-semibold text-[#B3CFE5]">{formatTokens(stage.tokens)}</p>
+                        </div>
+                      </div>
+
+                      {/* Progress bar showing cost proportion */}
+                      {llm.total_cost_usd > 0 && (
+                        <>
+                          <div className="relative h-2 bg-[#0A1931]/60 rounded-full overflow-hidden">
+                            <div
+                              className="absolute inset-y-0 left-0 bg-gradient-to-r from-[#4A7FA7] to-[#1A3D63] rounded-full transition-all"
+                              style={{ width: `${(stage.cost_usd / llm.total_cost_usd) * 100}%` }}
+                            />
+                          </div>
+                          <p className="text-[9px] font-bold text-[#B3CFE5]">
+                            {((stage.cost_usd / llm.total_cost_usd) * 100).toFixed(1)}% of total cost
+                          </p>
+                        </>
+                      )}
+                    </div>
+                  ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          ); })()}
 
           {/* Script Framework Reference */}
           <div className="p-10 rounded-[3rem] border border-[#4A7FA7]/30 bg-[#1A3D63]/60 shadow-xl shadow-[#0A1931]/30 space-y-8">
