@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { useTranslations } from 'next-intl';
 import {
   FileAudio,
@@ -24,7 +24,6 @@ import {
   HelpCircle
 } from "lucide-react";
 import { cn } from "../lib/utils";
-import { useEffect } from "react";
 
 type InputMode = "audio" | "transcript";
 
@@ -69,39 +68,27 @@ export function InputSection({
   const [metaTags, setMetaTags] = useState<string[]>([]);
   const [customQuestions, setCustomQuestions] = useState<Array<{ text: string; weight: number }>>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const pollIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // UI Governance: Handle click-outside for all selectors
+  // Clear polling on unmount
+  useEffect(() => {
+    return () => {
+      if (pollIntervalRef.current) clearInterval(pollIntervalRef.current);
+    };
+  }, []);
+
+  // Persistent click-outside listener — registered once, avoids add/remove thrashing
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as HTMLElement;
-
-      const redFlagContainer = document.getElementById('red-flag-dropdown');
-      const otherContainer = document.getElementById('questionnaire-dropdown');
-      const campaignContainer = document.getElementById('campaign-dropdown');
-      const profileContainer = document.getElementById('profile-dropdown');
-
-      if (redFlagContainer && !redFlagContainer.contains(target)) {
-        setIsRedFlagOpen(false);
-      }
-      if (otherContainer && !otherContainer.contains(target)) {
-        setIsOtherOpen(false);
-      }
-      if (campaignContainer && !campaignContainer.contains(target)) {
-        setIsCampaignOpen(false);
-      }
-      if (profileContainer && !profileContainer.contains(target)) {
-        setIsProfileOpen(false);
-      }
+      if (!document.getElementById('red-flag-dropdown')?.contains(target)) setIsRedFlagOpen(false);
+      if (!document.getElementById('questionnaire-dropdown')?.contains(target)) setIsOtherOpen(false);
+      if (!document.getElementById('campaign-dropdown')?.contains(target)) setIsCampaignOpen(false);
+      if (!document.getElementById('profile-dropdown')?.contains(target)) setIsProfileOpen(false);
     };
-
-    if (isRedFlagOpen || isOtherOpen || isCampaignOpen || isProfileOpen) {
-      document.addEventListener("mousedown", handleClickOutside);
-    }
-
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [isRedFlagOpen, isOtherOpen, isCampaignOpen, isProfileOpen]);
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   // Fetch all strategic contexts for selectors
   useEffect(() => {
@@ -236,10 +223,16 @@ export function InputSection({
       }
     };
 
-    const interval = setInterval(async () => {
+    // Clear any existing interval before starting a new one
+    if (pollIntervalRef.current) clearInterval(pollIntervalRef.current);
+
+    pollIntervalRef.current = setInterval(async () => {
       const isDone = await poll();
-      if (isDone) clearInterval(interval);
-    }, 30000); // Decelerated 30s polling for steady hydration
+      if (isDone && pollIntervalRef.current) {
+        clearInterval(pollIntervalRef.current);
+        pollIntervalRef.current = null;
+      }
+    }, 30000);
   };
 
   const handleUploadSubmit = async () => {

@@ -448,7 +448,7 @@ interface KPICardProps {
 
 function KPICard({ icon: Icon, label, value, subtext, color }: KPICardProps) {
   return (
-    <div className="p-6 bg-[#1A3D63]/60 glow rounded-2xl border border-[#4A7FA7]/30 space-y-4 group hover:scale-105 transition-transform">
+    <div className="p-6 bg-[#1A3D63]/60 glow rounded-2xl border border-[#4A7FA7]/30 space-y-4 group hover:scale-105 [transition:transform_150ms_ease] [will-change:transform]">
       <div className={cn("w-12 h-12 rounded-xl bg-gradient-to-r flex items-center justify-center shadow-lg", color)}>
         <Icon className="w-6 h-6 text-white" />
       </div>

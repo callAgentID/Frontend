@@ -59,7 +59,8 @@ export function Sidebar() {
 
       {/* Sidebar */}
       <aside className={cn(
-        "h-screen flex-shrink-0 flex flex-col border-r border-[#4A7FA7]/20 glass-blur apple-blur transition-all duration-300 top-0 left-0 bg-[#0A1931]/95",
+        "h-screen flex-shrink-0 flex flex-col border-r border-[#4A7FA7]/20 glass-blur apple-blur top-0 left-0 bg-[#0A1931]/95",
+        "[transition:width_300ms_ease,transform_300ms_ease]",
         "fixed lg:relative z-[50]",
         isCollapsed ? "w-[80px]" : "w-[280px]",
         isMobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
@@ -101,8 +102,8 @@ export function Sidebar() {
           </button>
 
           {/* Navigation */}
-          <div className="flex-1 overflow-y-auto overflow-x-visible">
-            <div className="px-1">
+          <div className="flex-1 overflow-y-auto overflow-x-hidden">
+            <div className="px-2 py-1">
               {!isCollapsed && (
                 <h2 className="px-3 text-[11px] font-bold uppercase tracking-widest text-[#B3CFE5]/60 mb-4">{t('navigation')}</h2>
               )}
@@ -117,10 +118,10 @@ export function Sidebar() {
                       href={item.href}
                       onClick={() => setIsMobileOpen(false)}
                       className={cn(
-                        "flex items-center rounded-2xl text-[14px] font-medium transition-all group",
+                        "flex items-center rounded-4xl text-[14px] font-medium transition-all group",
                         isCollapsed ? "justify-center p-2.5" : "gap-3.5 px-4 py-2.5",
                         isActive
-                          ? "bg-gradient-to-r from-[#4A7FA7] to-[#1A3D63] text-[#F6FAFD] glow border border-[#4A7FA7]/40"
+                          ? "bg-gradient-to-r from-[#4A7FA7] to-[#1A3D63] text-[#F6FAFD] shadow-[inset_0_1px_0_rgba(255,255,255,0.1)] border border-[#4A7FA7]/40 mx-2"
                           : "text-[#B3CFE5] hover:bg-[#1A3D63]/40 border border-transparent hover:border-[#4A7FA7]/20"
                       )}
                       title={t(item.name as any)}

@@ -756,16 +756,21 @@ export function ResultsPanel({ data, isHydrating = false }: { data: ResultData, 
                                       player.play();
                                       setPlayingSegment(segmentId);
 
-                                      // Stop at end_ms
+                                      // Stop at end_ms — track rAF id so it can be cancelled on unmount
+                                      let rafId: number;
                                       const checkTime = () => {
                                         if (player.currentTime >= endTime) {
                                           player.pause();
                                           setPlayingSegment(null);
-                                        } else if (playingSegment === segmentId) {
-                                          requestAnimationFrame(checkTime);
+                                        } else {
+                                          rafId = requestAnimationFrame(checkTime);
                                         }
                                       };
-                                      requestAnimationFrame(checkTime);
+                                      rafId = requestAnimationFrame(checkTime);
+                                      // Cancel rAF when the player ends or is paused externally
+                                      const cancel = () => cancelAnimationFrame(rafId);
+                                      player.addEventListener('pause', cancel, { once: true });
+                                      player.addEventListener('ended', cancel, { once: true });
                                     }
                                   }}
                                   className={cn(
