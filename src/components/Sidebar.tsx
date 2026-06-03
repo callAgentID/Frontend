@@ -118,10 +118,10 @@ export function Sidebar() {
                       href={item.href}
                       onClick={() => setIsMobileOpen(false)}
                       className={cn(
-                        "flex items-center rounded-4xl text-[14px] font-medium transition-all group",
+                        "flex items-center rounded-full text-[14px] font-medium transition-all group",
                         isCollapsed ? "justify-center p-2.5" : "gap-3.5 px-4 py-2.5",
                         isActive
-                          ? "bg-gradient-to-r from-[#4A7FA7] to-[#1A3D63] text-[#F6FAFD] shadow-[inset_0_1px_0_rgba(255,255,255,0.1)] border border-[#4A7FA7]/40 mx-2"
+                          ? "bg-gradient-to-r from-[#4A7FA7] to-[#4A7FA7] text-[#F6FAFD] border border-[#4A7FA7]/40 rounded-full"
                           : "text-[#B3CFE5] hover:bg-[#1A3D63]/40 border border-transparent hover:border-[#4A7FA7]/20"
                       )}
                       title={t(item.name as any)}
