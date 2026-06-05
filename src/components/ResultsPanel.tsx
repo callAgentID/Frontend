@@ -32,6 +32,16 @@ import {
 } from "lucide-react";
 import { cn } from "../lib/utils";
 import { formatLLMCost, formatTokens } from "../lib/formatters";
+import { Bar } from "react-chartjs-2";
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Tooltip as ChartTooltip,
+  Legend as ChartLegend
+} from "chart.js";
+ChartJS.register(CategoryScale, LinearScale, BarElement, ChartTooltip, ChartLegend);
 import { useState, useEffect } from "react";
 import { createPortal } from 'react-dom';
 
@@ -1075,72 +1085,8 @@ export function ResultsPanel({ data, isHydrating = false }: { data: ResultData, 
             </div>
           </div>
 
-          {/* LLM Cost Breakdown Card - Always show if llm_usage_summary exists */}
-          {data.llm_usage_summary && (() => { const llm = data.llm_usage_summary!; return (
-            <div className="rounded-[3rem] bg-gradient-to-br from-[#1A3D63] to-[#0A1931] p-10 shadow-2xl shadow-[#0A1931]/60 text-white overflow-hidden relative group border border-[#4A7FA7]/30">
-              <div className="absolute top-0 right-0 p-10 opacity-5 group-hover:scale-110 transition-transform">
-                <Zap className="w-32 h-32" />
-              </div>
-              <div className="relative space-y-8">
-                <div>
-                  <h4 className="text-2xl font-[850] text-[#F6FAFD] leading-tight mb-2">LLM Cost Breakdown</h4>
-                  <p className="text-sm font-semibold text-[#B3CFE5]">Token usage and cost per pipeline stage</p>
-                </div>
-
-                {/* Total Summary */}
-                <div className="space-y-4">
-                  <div className="p-6 rounded-2xl bg-[#0A1931]/60 border border-[#4A7FA7]/30">
-                    <p className="text-xs font-black uppercase tracking-widest text-[#B3CFE5] mb-2">Total Cost</p>
-                    <p className="text-3xl font-[900] text-[#F6FAFD]">{formatLLMCost(llm.total_cost_usd || 0)}</p>
-                  </div>
-                  <div className="p-6 rounded-2xl bg-[#0A1931]/60 border border-[#4A7FA7]/30">
-                    <p className="text-xs font-black uppercase tracking-widest text-[#B3CFE5] mb-2">Total Tokens</p>
-                    <p className="text-3xl font-[900] text-[#F6FAFD]">{formatTokens(llm.total_tokens || 0)}</p>
-                  </div>
-                </div>
-
-                {/* Stage Breakdown */}
-                {llm.breakdown_by_stage && llm.breakdown_by_stage.length > 0 && (
-                  <div className="space-y-3">
-                    <h5 className="text-xs font-black uppercase tracking-widest text-[#B3CFE5]">By Stage</h5>
-                    {llm.breakdown_by_stage.map((stage, index) => (
-                    <div key={index} className="p-4 rounded-2xl bg-[#1A3D63]/40 border border-[#4A7FA7]/20 space-y-2">
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-extrabold text-[#F6FAFD] capitalize mb-1">
-                            {stage.stage.replace(/_/g, ' ')}
-                          </p>
-                          <p className="text-xs font-semibold text-[#B3CFE5]">
-                            {stage.model} • {stage.provider}
-                          </p>
-                        </div>
-                        <div className="text-right shrink-0">
-                          <p className="text-sm font-black text-[#F6FAFD]">{formatLLMCost(stage.cost_usd)}</p>
-                          <p className="text-xs font-semibold text-[#B3CFE5]">{formatTokens(stage.tokens)}</p>
-                        </div>
-                      </div>
-
-                      {/* Progress bar showing cost proportion */}
-                      {llm.total_cost_usd > 0 && (
-                        <>
-                          <div className="relative h-2 bg-[#0A1931]/60 rounded-full overflow-hidden">
-                            <div
-                              className="absolute inset-y-0 left-0 bg-gradient-to-r from-[#4A7FA7] to-[#1A3D63] rounded-full transition-all"
-                              style={{ width: `${(stage.cost_usd / llm.total_cost_usd) * 100}%` }}
-                            />
-                          </div>
-                          <p className="text-[9px] font-bold text-[#B3CFE5]">
-                            {((stage.cost_usd / llm.total_cost_usd) * 100).toFixed(1)}% of total cost
-                          </p>
-                        </>
-                      )}
-                    </div>
-                  ))}
-                  </div>
-                )}
-              </div>
-            </div>
-          ); })()}
+          {/* LLM Cost Breakdown Card */}
+          {data.llm_usage_summary && <LLMCostBreakdown llm={data.llm_usage_summary} />}
 
           {/* Script Framework Reference */}
           <div className="p-10 rounded-[3rem] border border-[#4A7FA7]/30 bg-[#1A3D63]/60 shadow-xl shadow-[#0A1931]/30 space-y-8">
@@ -1623,6 +1569,177 @@ function MetricCard({ label, value, icon: Icon, color, isPending = false }: { la
         "text-[18px] font-[850] text-[#F6FAFD] tracking-tight truncate",
         isPending && "text-[#B3CFE5]/40"
       )}>{value}</h5>
+    </div>
+  );
+}
+
+// ─── LLM Cost Breakdown ──────────────────────────────────
+
+const STAGE_COLORS = [
+  "#63B3ED", "#9A75EA", "#48C78E", "#FFB74D",
+  "#FC6E6E", "#38D3CB", "#FF914D", "#EC6FAA",
+];
+
+function LLMCostBreakdown({ llm }: {
+  llm: {
+    total_tokens: number;
+    total_cost_usd: number;
+    breakdown_by_stage: Array<{ stage: string; model: string; provider: string; tokens: number; cost_usd: number }>;
+  }
+}) {
+  // Group by model
+  const byModel: Record<string, { tokens: number; cost_usd: number; stages: typeof llm.breakdown_by_stage }> = {};
+  (llm.breakdown_by_stage || []).forEach(s => {
+    const key = s.model || s.provider || "unknown";
+    if (!byModel[key]) byModel[key] = { tokens: 0, cost_usd: 0, stages: [] };
+    byModel[key].tokens += s.tokens;
+    byModel[key].cost_usd += s.cost_usd;
+    byModel[key].stages.push(s);
+  });
+
+  const modelKeys = Object.keys(byModel);
+  const totalCost = llm.total_cost_usd || 0;
+  const monthlyCost = totalCost * 30;
+  const yearlyCost = totalCost * 365;
+
+  const barData = {
+    labels: modelKeys.map(k => k.length > 14 ? k.slice(0, 14) + "…" : k),
+    datasets: [{
+      label: "Cost (USD)",
+      data: modelKeys.map(k => byModel[k].cost_usd),
+      backgroundColor: modelKeys.map((_, i) => STAGE_COLORS[i % STAGE_COLORS.length] + "CC"),
+      borderColor: modelKeys.map((_, i) => STAGE_COLORS[i % STAGE_COLORS.length]),
+      borderWidth: 2,
+      borderRadius: 6,
+    }]
+  };
+
+  return (
+    <div className="rounded-[2rem] bg-[#0D1F35] border border-[#4A7FA7]/30 overflow-hidden shadow-2xl">
+      {/* Header */}
+      <div className="px-6 py-5 border-b border-[#4A7FA7]/20">
+        <h4 className="text-base font-black text-[#F6FAFD] tracking-tight flex items-center gap-2">
+          <Zap className="w-4 h-4 text-[#FFB74D]" />
+          Cost Breakdown & Token Usage
+        </h4>
+      </div>
+
+      <div className="p-6 grid grid-cols-1 gap-6">
+        {/* Two-column layout: token cards left, chart right */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Left — Token Usage Cards */}
+          <div className="space-y-3">
+            <p className="text-xs font-black uppercase tracking-widest text-[#B3CFE5]">Token Usage</p>
+            {modelKeys.length === 0 ? (
+              <div className="p-4 rounded-xl bg-[#1A3D63]/40 border border-[#4A7FA7]/20 text-center">
+                <p className="text-xs text-[#B3CFE5]/50 font-semibold">No stage data available</p>
+              </div>
+            ) : (
+              modelKeys.map((model, i) => {
+                const m = byModel[model];
+                const color = STAGE_COLORS[i % STAGE_COLORS.length];
+                return (
+                  <div key={model} className="rounded-xl border border-[#4A7FA7]/20 bg-[#1A3D63]/40 overflow-hidden">
+                    {/* Model header */}
+                    <div className="flex items-center justify-between px-4 py-3 border-b border-[#4A7FA7]/20">
+                      <span className="text-sm font-black text-[#F6FAFD]">{model}</span>
+                      <span className="text-sm font-black" style={{ color }}>{formatLLMCost(m.cost_usd)}</span>
+                    </div>
+                    {/* Token rows */}
+                    <div className="px-4 py-3 space-y-1.5 text-xs font-semibold">
+                      <div className="flex justify-between text-[#B3CFE5]">
+                        <span>Total Tokens:</span>
+                        <span className="text-[#F6FAFD] font-black">{formatTokens(m.tokens)}</span>
+                      </div>
+                      <div className="flex justify-between text-[#B3CFE5]">
+                        <span>Stages:</span>
+                        <span className="text-[#F6FAFD] font-black">{m.stages.length}</span>
+                      </div>
+                      <div className="flex justify-between pt-1 border-t border-[#4A7FA7]/20">
+                        <span className="text-[#B3CFE5]">Cost:</span>
+                        <span className="font-black" style={{ color }}>{formatLLMCost(m.cost_usd)}</span>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })
+            )}
+
+            {/* Total row */}
+            <div className="flex items-center justify-between px-4 py-3 rounded-xl bg-[#4A7FA7]/20 border border-[#4A7FA7]/40">
+              <span className="text-xs font-black uppercase tracking-wider text-[#B3CFE5]">Total</span>
+              <div className="text-right">
+                <p className="text-sm font-black text-[#F6FAFD]">{formatLLMCost(totalCost)}</p>
+                <p className="text-[10px] font-semibold text-[#B3CFE5]">{formatTokens(llm.total_tokens)} tokens</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Right — Bar Chart + Projections */}
+          <div className="space-y-4">
+            <p className="text-xs font-black uppercase tracking-widest text-[#B3CFE5]">Cost Breakdown Chart</p>
+            <div className="h-52 bg-[#1A3D63]/40 rounded-xl border border-[#4A7FA7]/20 p-3">
+              {modelKeys.length > 0 ? (
+                <Bar data={barData} options={{
+                  responsive: true,
+                  maintainAspectRatio: false,
+                  plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                      backgroundColor: "rgba(10,25,49,0.95)",
+                      titleColor: "#F6FAFD",
+                      bodyColor: "#B3CFE5",
+                      borderColor: "rgba(74,127,167,0.4)",
+                      borderWidth: 1,
+                      callbacks: {
+                        label: (ctx) => ` ${formatLLMCost(ctx.parsed.y)}`
+                      }
+                    }
+                  },
+                  scales: {
+                    x: { ticks: { color: "#B3CFE5", font: { size: 10 } }, grid: { color: "rgba(74,127,167,0.08)" } },
+                    y: { ticks: { color: "#B3CFE5", font: { size: 9 } }, grid: { color: "rgba(74,127,167,0.08)" } }
+                  }
+                }} />
+              ) : (
+                <div className="h-full flex items-center justify-center">
+                  <p className="text-xs text-[#B3CFE5]/50 font-semibold">No data</p>
+                </div>
+              )}
+            </div>
+
+            {/* Projections */}
+            <div className="grid grid-cols-2 gap-3">
+              <div className="p-4 rounded-xl bg-[#1A3D63]/60 border border-[#4A7FA7]/30 text-center">
+                <p className="text-[10px] font-black uppercase tracking-wider text-[#B3CFE5] mb-1">Monthly Projection</p>
+                <p className="text-lg font-[900] text-[#F6FAFD]">{formatLLMCost(monthlyCost)}</p>
+              </div>
+              <div className="p-4 rounded-xl bg-[#1A3D63]/60 border border-[#4A7FA7]/30 text-center">
+                <p className="text-[10px] font-black uppercase tracking-wider text-[#B3CFE5] mb-1">Yearly Projection</p>
+                <p className="text-lg font-[900] text-[#F6FAFD]">{formatLLMCost(yearlyCost)}</p>
+              </div>
+            </div>
+
+            {/* Stage list */}
+            {llm.breakdown_by_stage && llm.breakdown_by_stage.length > 0 && (
+              <div className="space-y-2">
+                <p className="text-[10px] font-black uppercase tracking-widest text-[#B3CFE5]">By Pipeline Stage</p>
+                {llm.breakdown_by_stage.map((stage, i) => (
+                  <div key={i} className="flex items-center justify-between px-3 py-2 rounded-lg bg-[#1A3D63]/40 border border-[#4A7FA7]/20">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <div className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: STAGE_COLORS[i % STAGE_COLORS.length] }} />
+                      <span className="text-xs font-semibold text-[#B3CFE5] capitalize truncate">
+                        {stage.stage.replace(/_/g, ' ')}
+                      </span>
+                    </div>
+                    <span className="text-xs font-black text-[#F6FAFD] shrink-0 ml-2">{formatLLMCost(stage.cost_usd)}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
