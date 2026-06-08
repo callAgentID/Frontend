@@ -3,6 +3,7 @@
 import { useState, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useTranslations } from 'next-intl';
+import { useApi } from "@/lib/useApi";
 import {
   FileCode,
   Plus,
@@ -36,6 +37,7 @@ function ScriptsPageContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const t = useTranslations('scripts');
+  const { apiFetch } = useApi();
 
   const [scripts, setScripts] = useState<Script[]>([]);
   const [campaigns, setCampaigns] = useState<any[]>([]);
@@ -68,14 +70,9 @@ function ScriptsPageContent() {
   const fetchScripts = async () => {
     setLoading(true);
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://zk1354qz0k.execute-api.eu-central-1.amazonaws.com";
       const [scriptsRes, campaignsRes] = await Promise.all([
-        fetch(`${baseUrl}/api/v1/scripts/?skip=0&limit=100`, {
-          headers: { "ngrok-skip-browser-warning": "true" }
-        }),
-        fetch(`${baseUrl}/api/v1/campaigns/`, {
-          headers: { "ngrok-skip-browser-warning": "true" }
-        })
+        apiFetch(`/api/v1/scripts/?skip=0&limit=100`),
+        apiFetch(`/api/v1/campaigns/`)
       ]);
 
       if (!scriptsRes.ok) throw new Error("Failed to fetch scripts");
@@ -102,7 +99,6 @@ function ScriptsPageContent() {
     setIsSubmitting(true);
     try {
       const formData = new FormData();
-      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://zk1354qz0k.execute-api.eu-central-1.amazonaws.com";
 
       formData.append("title", createForm.title);
       if (createForm.campaign_id) formData.append("campaign_id", createForm.campaign_id);
@@ -113,15 +109,14 @@ function ScriptsPageContent() {
       let endpoint = "";
       if (createForm.inputMode === "file" && createForm.file) {
         formData.append("file", createForm.file);
-        endpoint = `${baseUrl}/api/v1/scripts/upload`;
+        endpoint = `/api/v1/scripts/upload`;
       } else {
         formData.append("text", createForm.text);
-        endpoint = `${baseUrl}/api/v1/scripts/parse`;
+        endpoint = `/api/v1/scripts/parse`;
       }
 
-      const res = await fetch(endpoint, {
+      const res = await apiFetch(endpoint, {
         method: "POST",
-        headers: { "ngrok-skip-browser-warning": "true" },
         body: formData
       });
 
@@ -154,10 +149,8 @@ function ScriptsPageContent() {
     if (!confirm("Are you sure you want to delete this script? This action cannot be undone.")) return;
 
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://zk1354qz0k.execute-api.eu-central-1.amazonaws.com";
-      const res = await fetch(`${baseUrl}/api/v1/scripts/${scriptId}`, {
-        method: "DELETE",
-        headers: { "ngrok-skip-browser-warning": "true" }
+      const res = await apiFetch(`/api/v1/scripts/${scriptId}`, {
+        method: "DELETE"
       });
 
       if (res.ok || res.status === 204) {

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { useApi } from "@/lib/useApi";
 import {
   DollarSign,
   Zap,
@@ -166,8 +167,7 @@ export default function AdminPage() {
   const [selectedCampaigns, setSelectedCampaigns] = useState<string[]>([]);
   const [isCampaignDropdownOpen, setIsCampaignDropdownOpen] = useState(false);
 
-  const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || "https://zk1354qz0k.execute-api.eu-central-1.amazonaws.com";
-  const HEADERS = { "ngrok-skip-browser-warning": "true" };
+  const { apiFetch } = useApi();
 
   const buildParams = () => {
     const params = new URLSearchParams();
@@ -190,13 +190,13 @@ export default function AdminPage() {
 
     try {
       const [llm, volume, quality, interaction, compliance, qa, camps] = await Promise.allSettled([
-        fetch(`${BASE_URL}/api/v1/analytics/llm-costs${q}`, { headers: HEADERS }).then(r => r.json()),
-        fetch(`${BASE_URL}/api/v1/analytics/volume${campaignQs}`, { headers: HEADERS }).then(r => r.json()),
-        fetch(`${BASE_URL}/api/v1/analytics/quality${campaignQs}`, { headers: HEADERS }).then(r => r.json()),
-        fetch(`${BASE_URL}/api/v1/analytics/interaction${campaignQs}`, { headers: HEADERS }).then(r => r.json()),
-        fetch(`${BASE_URL}/api/v1/analytics/compliance${campaignQs}`, { headers: HEADERS }).then(r => r.json()),
-        fetch(`${BASE_URL}/api/v1/analytics/qa${campaignQs}`, { headers: HEADERS }).then(r => r.json()),
-        fetch(`${BASE_URL}/api/v1/campaigns/`, { headers: HEADERS }).then(r => r.json()),
+        apiFetch(`/api/v1/analytics/llm-costs${q}`).then(r => r.json()),
+        apiFetch(`/api/v1/analytics/volume${campaignQs}`).then(r => r.json()),
+        apiFetch(`/api/v1/analytics/quality${campaignQs}`).then(r => r.json()),
+        apiFetch(`/api/v1/analytics/interaction${campaignQs}`).then(r => r.json()),
+        apiFetch(`/api/v1/analytics/compliance${campaignQs}`).then(r => r.json()),
+        apiFetch(`/api/v1/analytics/qa${campaignQs}`).then(r => r.json()),
+        apiFetch(`/api/v1/campaigns/`).then(r => r.json()),
       ]);
 
       if (llm.status === "fulfilled") setLlmData(llm.value);

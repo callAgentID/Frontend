@@ -3,6 +3,7 @@
 import { useState, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useTranslations } from 'next-intl';
+import { useApi } from "@/lib/useApi";
 import {
   Layers,
   FileText,
@@ -18,13 +19,14 @@ import {
   Upload,
   ChevronRight
 } from "lucide-react";
-import { cn } from "../../lib/utils";
+import { cn } from "@/lib/utils";
 import { CampaignCardSkeleton, ScriptDetailSkeleton } from "@/components/Skeleton";
 
 function CampaignsPageContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const t = useTranslations('campaigns');
+  const { apiFetch } = useApi();
 
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -76,13 +78,10 @@ function CampaignsPageContent() {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://zk1354qz0k.execute-api.eu-central-1.amazonaws.com";
-      const headers = { "ngrok-skip-browser-warning": "true" };
-
       const [campRes, scriptRes, questRes] = await Promise.all([
-        fetch(`${baseUrl}/api/v1/campaigns/`, { headers }),
-        fetch(`${baseUrl}/api/v1/scripts/`, { headers }).catch(() => null),
-        fetch(`${baseUrl}/api/v1/questionnaires/`, { headers }).catch(() => null)
+        apiFetch(`/api/v1/campaigns/`),
+        apiFetch(`/api/v1/scripts/`).catch(() => null),
+        apiFetch(`/api/v1/questionnaires/`).catch(() => null)
       ]);
 
       const campaigns = campRes.ok ? await campRes.json() : [];
@@ -109,10 +108,8 @@ function CampaignsPageContent() {
     if (!campForm.name || !campForm.code) return;
     setIsSubmitting(true);
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://zk1354qz0k.execute-api.eu-central-1.amazonaws.com";
-      const res = await fetch(`${baseUrl}/api/v1/campaigns/`, {
+      const res = await apiFetch(`/api/v1/campaigns/`, {
         method: "POST",
-        headers: { "Content-Type": "application/json", "ngrok-skip-browser-warning": "true" },
         body: JSON.stringify({ ...campForm, active: true, config: {} })
       });
       if (res.ok) {
@@ -135,7 +132,6 @@ function CampaignsPageContent() {
     setIsSubmitting(true);
     try {
       const formData = new FormData();
-      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://zk1354qz0k.execute-api.eu-central-1.amazonaws.com";
 
       // Common fields for both endpoints
       formData.append("campaign_id", scriptForm.campaign_id);
@@ -148,16 +144,15 @@ function CampaignsPageContent() {
       if (scriptForm.inputMode === "file") {
         // File upload endpoint
         formData.append("file", scriptForm.file!);
-        endpoint = `${baseUrl}/api/v1/scripts/upload`;
+        endpoint = `/api/v1/scripts/upload`;
       } else {
         // Raw text parse endpoint
         formData.append("text", scriptForm.text);
-        endpoint = `${baseUrl}/api/v1/scripts/parse`;
+        endpoint = `/api/v1/scripts/parse`;
       }
 
-      const res = await fetch(endpoint, {
+      const res = await apiFetch(endpoint, {
         method: "POST",
-        headers: { "ngrok-skip-browser-warning": "true" },
         body: formData
       });
 
@@ -195,7 +190,6 @@ function CampaignsPageContent() {
     setIsSubmitting(true);
     try {
       const formData = new FormData();
-      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://zk1354qz0k.execute-api.eu-central-1.amazonaws.com";
 
       // Common fields for both endpoints
       formData.append("name", questForm.name);
@@ -206,16 +200,15 @@ function CampaignsPageContent() {
       if (questForm.inputMode === "file") {
         // File upload endpoint
         formData.append("file", questForm.file!);
-        endpoint = `${baseUrl}/api/v1/questionnaires/upload`;
+        endpoint = `/api/v1/questionnaires/upload`;
       } else {
         // Raw text parse endpoint
         formData.append("text", questForm.text);
-        endpoint = `${baseUrl}/api/v1/questionnaires/parse`;
+        endpoint = `/api/v1/questionnaires/parse`;
       }
 
-      const res = await fetch(endpoint, {
+      const res = await apiFetch(endpoint, {
         method: "POST",
-        headers: { "ngrok-skip-browser-warning": "true" },
         body: formData
       });
 
@@ -252,9 +245,7 @@ function CampaignsPageContent() {
     router.push(`/campaigns?scriptId=${scriptId}`, { scroll: false });
 
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://zk1354qz0k.execute-api.eu-central-1.amazonaws.com";
-      const headers = { "ngrok-skip-browser-warning": "true" };
-      const res = await fetch(`${baseUrl}/api/v1/scripts/${scriptId}`, { headers });
+      const res = await apiFetch(`/api/v1/scripts/${scriptId}`);
       if (res.ok) {
         const data = await res.json();
         setViewingScript({ loading: false, data });

@@ -35,7 +35,8 @@
     "navigation": "Navigation",
     "management": "Management",
     "admin": "Admin Dashboard",
-    "analysis": "Analysis"
+    "analysis": "Analysis",
+    "users": "Users"
   },
   "home": {
     "title": "Analyze Your Conversation",

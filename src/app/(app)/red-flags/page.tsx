@@ -3,6 +3,7 @@
 import { useState, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useTranslations } from 'next-intl';
+import { useApi } from "@/lib/useApi";
 import { createPortal } from 'react-dom';
 import {
   ShieldAlert,
@@ -75,6 +76,7 @@ function RedFlagsPageContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const t = useTranslations('redFlags');
+  const { apiFetch, BASE_URL } = useApi();
 
   const [redFlags, setRedFlags] = useState<RedFlagSummary[]>([]);
   const [stats, setStats] = useState<Stats | null>(null);
@@ -130,7 +132,6 @@ function RedFlagsPageContent() {
   const fetchRedFlags = async () => {
     setLoading(true);
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://zk1354qz0k.execute-api.eu-central-1.amazonaws.com";
       const params = new URLSearchParams({
         skip: String((currentPage - 1) * itemsPerPage),
         limit: String(itemsPerPage),
@@ -141,9 +142,7 @@ function RedFlagsPageContent() {
       if (minScore) params.append("min_score", minScore);
       if (maxScore) params.append("max_score", maxScore);
 
-      const response = await fetch(`${baseUrl}/api/v1/red-flags/?${params.toString()}`, {
-        headers: { "ngrok-skip-browser-warning": "true" }
-      });
+      const response = await apiFetch(`/api/v1/red-flags/?${params.toString()}`);
 
       if (response.ok) {
         const data = await response.json();
@@ -165,10 +164,7 @@ function RedFlagsPageContent() {
   // Fetch stats
   const fetchStats = async () => {
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://zk1354qz0k.execute-api.eu-central-1.amazonaws.com";
-      const response = await fetch(`${baseUrl}/api/v1/red-flags/stats`, {
-        headers: { "ngrok-skip-browser-warning": "true" }
-      });
+      const response = await apiFetch(`/api/v1/red-flags/stats`);
 
       if (response.ok) {
         const data = await response.json();
@@ -194,10 +190,7 @@ function RedFlagsPageContent() {
     router.push(`/red-flags?callId=${callId}`, { scroll: false });
 
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://zk1354qz0k.execute-api.eu-central-1.amazonaws.com";
-      const response = await fetch(`${baseUrl}/api/v1/red-flags/${callId}`, {
-        headers: { "ngrok-skip-browser-warning": "true" }
-      });
+      const response = await apiFetch(`/api/v1/red-flags/${callId}`);
 
       if (response.ok) {
         const data = await response.json();
@@ -233,8 +226,6 @@ function RedFlagsPageContent() {
     setIsRecalculating(true);
 
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://zk1354qz0k.execute-api.eu-central-1.amazonaws.com";
-
       // Convert pending edits Map to interventions array
       const interventions = Array.from(pendingEdits.values()).map(edit => ({
         template_id: edit.template_id,
@@ -246,13 +237,9 @@ function RedFlagsPageContent() {
       }));
 
       // Submit all interventions in a single request
-      const response = await fetch(`${baseUrl}/api/v1/calls/${selectedCallId}/interventions`, {
+      const response = await apiFetch(`/api/v1/calls/${selectedCallId}/interventions`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Accept": "application/json",
-          "ngrok-skip-browser-warning": "true",
-        },
+        headers: { "Accept": "application/json" },
         body: JSON.stringify({ interventions }),
       });
 
@@ -311,15 +298,12 @@ function RedFlagsPageContent() {
   };
 
   const pollForCompletion = async () => {
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://zk1354qz0k.execute-api.eu-central-1.amazonaws.com";
     const maxAttempts = 60; // Poll for max 5 minutes (60 * 5 seconds)
     let attempts = 0;
 
     const poll = async () => {
       try {
-        const response = await fetch(`${baseUrl}/api/v1/calls/${selectedCallId}`, {
-          headers: { "ngrok-skip-browser-warning": "true" }
-        });
+        const response = await apiFetch(`/api/v1/calls/${selectedCallId}`);
         const updatedData = await response.json();
 
         if (updatedData.status === 'ready') {
@@ -354,10 +338,8 @@ function RedFlagsPageContent() {
   // Mark as reviewed
   const markAsReviewed = async (callId: string, reviewedBy: string) => {
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://zk1354qz0k.execute-api.eu-central-1.amazonaws.com";
-      const response = await fetch(`${baseUrl}/api/v1/red-flags/${callId}/review?reviewed_by=${encodeURIComponent(reviewedBy)}`, {
-        method: "PATCH",
-        headers: { "ngrok-skip-browser-warning": "true" }
+      const response = await apiFetch(`/api/v1/red-flags/${callId}/review?reviewed_by=${encodeURIComponent(reviewedBy)}`, {
+        method: "PATCH"
       });
 
       if (response.ok) {
@@ -473,7 +455,7 @@ function RedFlagsPageContent() {
                   controls
                   preload="metadata"
                   className="w-full md:w-2/3 h-10 accent-[#4A7FA7] bg-[#1A3D63]/40 rounded-xl"
-                  src={`${process.env.NEXT_PUBLIC_BASE_URL || "https://zk1354qz0k.execute-api.eu-central-1.amazonaws.com"}/api/v1/media/calls/${detailData.call_id}/audio`}
+                  src={`${BASE_URL}/api/v1/media/calls/${detailData.call_id}/audio`}
                 >
                   Your browser does not support audio playback.
                 </audio>

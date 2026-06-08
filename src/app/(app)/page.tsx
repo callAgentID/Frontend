@@ -3,6 +3,7 @@
 import { useState, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useTranslations } from 'next-intl';
+import { useApi } from "@/lib/useApi";
 import {
   Zap,
   Play,
@@ -10,12 +11,13 @@ import {
 } from "lucide-react";
 import { InputSection } from "@/components/InputSection";
 import { ResultsPanel } from "@/components/ResultsPanel";
-import { cn } from "../lib/utils";
+import { cn } from "@/lib/utils";
 
 function HomeContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const t = useTranslations('home');
+  const { apiFetch } = useApi();
 
   const [pipelineState, setPipelineState] = useState<"input" | "processing" | "results">("input");
   const [analysisResult, setAnalysisResult] = useState<any>(null);
@@ -31,10 +33,7 @@ function HomeContent() {
   const fetchCallResult = async (callId: string) => {
     setPipelineState("processing");
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://zk1354qz0k.execute-api.eu-central-1.amazonaws.com";
-      const response = await fetch(`${baseUrl}/api/v1/calls/${callId}`, {
-        headers: { "ngrok-skip-browser-warning": "true" }
-      });
+      const response = await apiFetch(`/api/v1/calls/${callId}`);
       if (response.ok) {
         const data = await response.json();
         setAnalysisResult(data);

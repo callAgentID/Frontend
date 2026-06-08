@@ -3,6 +3,7 @@
 import { useEffect, useState, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useTranslations } from 'next-intl';
+import { useApi } from "@/lib/useApi";
 import { createPortal } from 'react-dom';
 import {
   BarChart3,
@@ -37,6 +38,7 @@ function AnalyticsPageContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const t = useTranslations('analytics');
+  const { apiFetch } = useApi();
 
   const [calls, setCalls] = useState<any[]>([]);
   const [totalCalls, setTotalCalls] = useState<number>(0);
@@ -105,11 +107,8 @@ function AnalyticsPageContent() {
     const fetchHistory = async () => {
       setIsLoading(true);
       try {
-        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://zk1354qz0k.execute-api.eu-central-1.amazonaws.com";
         const queryString = buildQueryString();
-        const response = await fetch(`${baseUrl}/api/v1/calls/?${queryString}`, {
-          headers: { "ngrok-skip-browser-warning": "true" }
-        });
+        const response = await apiFetch(`/api/v1/calls/?${queryString}`);
         const data = await response.json();
         if (Array.isArray(data)) {
           // Sort by created_at descending (newest first)
@@ -149,10 +148,7 @@ function AnalyticsPageContent() {
     router.push(`/analytics?callId=${callId}`, { scroll: false });
 
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://zk1354qz0k.execute-api.eu-central-1.amazonaws.com";
-      const response = await fetch(`${baseUrl}/api/v1/calls/${callId}`, {
-        headers: { "ngrok-skip-browser-warning": "true" }
-      });
+      const response = await apiFetch(`/api/v1/calls/${callId}`);
       const data = await response.json();
       setDetailedResult(data);
     } catch (err) {
@@ -173,13 +169,9 @@ function AnalyticsPageContent() {
   const handleDeleteCall = async (callId: string) => {
     setIsDeleting(true);
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://zk1354qz0k.execute-api.eu-central-1.amazonaws.com";
-      const response = await fetch(`${baseUrl}/api/v1/calls/${callId}`, {
+      const response = await apiFetch(`/api/v1/calls/${callId}`, {
         method: "DELETE",
-        headers: {
-          "Accept": "*/*",
-          "ngrok-skip-browser-warning": "true"
-        }
+        headers: { "Accept": "*/*" }
       });
 
       if (response.ok) {
@@ -209,10 +201,7 @@ function AnalyticsPageContent() {
       const fetchCallDetail = async () => {
         setIsDetailLoading(true);
         try {
-          const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://zk1354qz0k.execute-api.eu-central-1.amazonaws.com";
-          const response = await fetch(`${baseUrl}/api/v1/calls/${selectedCallId}`, {
-            headers: { "ngrok-skip-browser-warning": "true" }
-          });
+          const response = await apiFetch(`/api/v1/calls/${selectedCallId}`);
           const data = await response.json();
           setDetailedResult(data);
         } catch (err) {

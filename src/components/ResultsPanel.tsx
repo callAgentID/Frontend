@@ -32,6 +32,7 @@ import {
 } from "lucide-react";
 import { cn } from "../lib/utils";
 import { formatLLMCost, formatTokens } from "../lib/formatters";
+import { useApi } from "../lib/useApi";
 import { Bar } from "react-chartjs-2";
 import {
   Chart as ChartJS,
@@ -190,6 +191,7 @@ interface ResultData {
 }
 
 export function ResultsPanel({ data, isHydrating = false }: { data: ResultData, isHydrating?: boolean }) {
+  const { apiFetch, BASE_URL } = useApi();
   const [isMarkingReviewed, setIsMarkingReviewed] = useState(false);
   const [reviewStatus, setReviewStatus] = useState(data?.review_status || 'unreviewed');
   const [playingSegment, setPlayingSegment] = useState<string | null>(null);
@@ -235,13 +237,9 @@ export function ResultsPanel({ data, isHydrating = false }: { data: ResultData, 
 
     setIsMarkingReviewed(true);
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://zk1354qz0k.execute-api.eu-central-1.amazonaws.com";
-      const response = await fetch(`${baseUrl}/api/v1/results/calls/${safeData.call_id}/reviewed`, {
+      const response = await apiFetch(`/api/v1/results/calls/${safeData.call_id}/reviewed`, {
         method: "PATCH",
-        headers: {
-          "Accept": "application/json",
-          "ngrok-skip-browser-warning": "true",
-        },
+        headers: { "Accept": "application/json" },
       });
 
       if (response.ok) {
@@ -265,8 +263,6 @@ export function ResultsPanel({ data, isHydrating = false }: { data: ResultData, 
     setIsRecalculating(true);
 
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://zk1354qz0k.execute-api.eu-central-1.amazonaws.com";
-
       // Convert pending edits Map to interventions array
       const interventions = Array.from(pendingEdits.values()).map(edit => ({
         template_id: edit.template_id,
@@ -278,13 +274,9 @@ export function ResultsPanel({ data, isHydrating = false }: { data: ResultData, 
       }));
 
       // Submit all interventions in a single request
-      const response = await fetch(`${baseUrl}/api/v1/calls/${safeData.call_id}/interventions`, {
+      const response = await apiFetch(`/api/v1/calls/${safeData.call_id}/interventions`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Accept": "application/json",
-          "ngrok-skip-browser-warning": "true",
-        },
+        headers: { "Accept": "application/json" },
         body: JSON.stringify({ interventions }),
       });
 
@@ -343,15 +335,12 @@ export function ResultsPanel({ data, isHydrating = false }: { data: ResultData, 
   };
 
   const pollForCompletion = async () => {
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://zk1354qz0k.execute-api.eu-central-1.amazonaws.com";
     const maxAttempts = 60; // Poll for max 5 minutes (60 * 5 seconds)
     let attempts = 0;
 
     const poll = async () => {
       try {
-        const response = await fetch(`${baseUrl}/api/v1/calls/${safeData.call_id}`, {
-          headers: { "ngrok-skip-browser-warning": "true" }
-        });
+        const response = await apiFetch(`/api/v1/calls/${safeData.call_id}`);
         const updatedData = await response.json();
 
         if (updatedData.status === 'ready') {
@@ -557,7 +546,7 @@ export function ResultsPanel({ data, isHydrating = false }: { data: ResultData, 
             controls
             preload="metadata"
             className="w-full md:w-2/3 h-10 accent-[#4A7FA7] bg-[#1A3D63]/40 rounded-xl"
-            src={`${process.env.NEXT_PUBLIC_BASE_URL || "https://zk1354qz0k.execute-api.eu-central-1.amazonaws.com"}/api/v1/media/calls/${safeData.call_id}/audio`}
+            src={`${BASE_URL}/api/v1/media/calls/${safeData.call_id}/audio`}
           >
             Your browser does not support audio playback.
           </audio>

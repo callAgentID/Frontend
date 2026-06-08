@@ -3,6 +3,7 @@
 import { useState, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useTranslations } from 'next-intl';
+import { useApi } from "@/lib/useApi";
 import { createPortal } from 'react-dom';
 import {
   FileSearch,
@@ -48,6 +49,7 @@ function QuestionnairesPageContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const t = useTranslations('questionnaires');
+  const { apiFetch } = useApi();
 
   const [questionnaires, setQuestionnaires] = useState<Questionnaire[]>([]);
   const [loading, setLoading] = useState(true);
@@ -100,10 +102,7 @@ function QuestionnairesPageContent() {
   const fetchQuestionnaires = async () => {
     setLoading(true);
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://zk1354qz0k.execute-api.eu-central-1.amazonaws.com";
-      const res = await fetch(`${baseUrl}/api/v1/questionnaires/?skip=0&limit=100`, {
-        headers: { "ngrok-skip-browser-warning": "true" }
-      });
+      const res = await apiFetch(`/api/v1/questionnaires/?skip=0&limit=100`);
       if (!res.ok) throw new Error("Failed to fetch strategic schemas");
       const data = await res.json();
       setQuestionnaires(data);
@@ -136,17 +135,12 @@ function QuestionnairesPageContent() {
 
   const handleSaveInlineEdit = async (questionnaireId: string, sections: Section[]) => {
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://zk1354qz0k.execute-api.eu-central-1.amazonaws.com";
       const questionnaire = questionnaires.find(q => q.id === questionnaireId);
       if (!questionnaire) return;
 
-      const res = await fetch(`${baseUrl}/api/v1/questionnaires/${questionnaireId}`, {
+      const res = await apiFetch(`/api/v1/questionnaires/${questionnaireId}`, {
         method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          "accept": "application/json",
-          "ngrok-skip-browser-warning": "true"
-        },
+        headers: { "accept": "application/json" },
         body: JSON.stringify({
           schema_definition: { sections }
         })
@@ -190,15 +184,9 @@ function QuestionnairesPageContent() {
     }
 
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://zk1354qz0k.execute-api.eu-central-1.amazonaws.com";
-
-      const res = await fetch(`${baseUrl}/api/v1/questionnaires/`, {
+      const res = await apiFetch(`/api/v1/questionnaires/`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "accept": "application/json",
-          "ngrok-skip-browser-warning": "true"
-        },
+        headers: { "accept": "application/json" },
         body: JSON.stringify({
           name: newQuestionnaire.name,
           description: newQuestionnaire.description,
@@ -251,14 +239,9 @@ function QuestionnairesPageContent() {
 
     setIsSubmitting(true);
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://zk1354qz0k.execute-api.eu-central-1.amazonaws.com";
-      const res = await fetch(`${baseUrl}/api/v1/questionnaires/${editingQuestionnaire.id}`, {
+      const res = await apiFetch(`/api/v1/questionnaires/${editingQuestionnaire.id}`, {
         method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          "accept": "application/json",
-          "ngrok-skip-browser-warning": "true"
-        },
+        headers: { "accept": "application/json" },
         body: JSON.stringify({
           name: editForm.name,
           description: editForm.description,
@@ -302,7 +285,6 @@ function QuestionnairesPageContent() {
 
     setIsSubmitting(true);
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://zk1354qz0k.execute-api.eu-central-1.amazonaws.com";
       const formData = new FormData();
 
       formData.append("name", createForm.name);
@@ -313,17 +295,14 @@ function QuestionnairesPageContent() {
       let endpoint = "";
       if (createForm.inputMode === "file") {
         formData.append("file", createForm.file!);
-        endpoint = `${baseUrl}/api/v1/questionnaires/upload`;
+        endpoint = `/api/v1/questionnaires/upload`;
       } else {
         formData.append("text", createForm.text);
-        endpoint = `${baseUrl}/api/v1/questionnaires/parse`;
+        endpoint = `/api/v1/questionnaires/parse`;
       }
 
-      const res = await fetch(endpoint, {
+      const res = await apiFetch(endpoint, {
         method: "POST",
-        headers: {
-          "ngrok-skip-browser-warning": "true"
-        },
         body: formData
       });
 
@@ -360,12 +339,8 @@ function QuestionnairesPageContent() {
     }
 
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://zk1354qz0k.execute-api.eu-central-1.amazonaws.com";
-      const res = await fetch(`${baseUrl}/api/v1/questionnaires/${id}`, {
-        method: "DELETE",
-        headers: {
-          "ngrok-skip-browser-warning": "true"
-        }
+      const res = await apiFetch(`/api/v1/questionnaires/${id}`, {
+        method: "DELETE"
       });
 
       if (res.ok) {

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
+import { useApi } from "@/lib/useApi";
 import { useTranslations } from 'next-intl';
 import {
   FileAudio,
@@ -45,6 +46,7 @@ export function InputSection({
   onPartialResult?: (data: any) => void;
 }) {
   const t = useTranslations('input');
+  const { apiFetch } = useApi();
   const [mode, setMode] = useState<InputMode>("audio");
   const [audioFile, setAudioFile] = useState<File | null>(null);
   const [manualTranscript, setManualTranscript] = useState("");
@@ -94,13 +96,10 @@ export function InputSection({
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://zk1354qz0k.execute-api.eu-central-1.amazonaws.com";
-        const headers = { "ngrok-skip-browser-warning": "true" };
-
         const [campRes, profRes, questRes] = await Promise.all([
-          fetch(`${baseUrl}/api/v1/campaigns/`, { headers }),
-          fetch(`${baseUrl}/api/v1/worker/profiles`, { headers }),
-          fetch(`${baseUrl}/api/v1/questionnaires/?skip=0&limit=100`, { headers })
+          apiFetch("/api/v1/campaigns/"),
+          apiFetch("/api/v1/worker/profiles"),
+          apiFetch("/api/v1/questionnaires/?skip=0&limit=100")
         ]);
 
         const [campData, profData, questData] = await Promise.all([
@@ -156,13 +155,9 @@ export function InputSection({
 
     const poll = async () => {
       try {
-        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://zk1354qz0k.execute-api.eu-central-1.amazonaws.com";
-        const response = await fetch(`${baseUrl}/api/v1/calls/${callId}`, {
+        const response = await apiFetch(`/api/v1/calls/${callId}`, {
           method: "GET",
-          headers: {
-            "Accept": "application/json",
-            "ngrok-skip-browser-warning": "true",
-          },
+          headers: { "Accept": "application/json" },
         });
         if (!response.ok) return;
 
@@ -273,13 +268,9 @@ export function InputSection({
         formData.append("custom_questions", JSON.stringify(customQuestions));
       }
 
-      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://zk1354qz0k.execute-api.eu-central-1.amazonaws.com";
-      const response = await fetch(`${baseUrl}/api/v1/calls/`, {
+      const response = await apiFetch("/api/v1/calls/", {
         method: "POST",
-        headers: {
-          "Accept": "application/json",
-          "ngrok-skip-browser-warning": "true",
-        },
+        headers: { "Accept": "application/json" },
         body: formData,
       });
 
@@ -350,13 +341,9 @@ export function InputSection({
         formData.append("custom_questions", JSON.stringify(customQuestions));
       }
 
-      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://zk1354qz0k.execute-api.eu-central-1.amazonaws.com";
-      const response = await fetch(`${baseUrl}/api/v1/ingest/manual`, {
+      const response = await apiFetch("/api/v1/ingest/manual", {
         method: "POST",
-        headers: {
-          "Accept": "application/json",
-          "ngrok-skip-browser-warning": "true",
-        },
+        headers: { "Accept": "application/json" },
         body: formData,
       });
 

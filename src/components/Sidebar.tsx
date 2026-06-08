@@ -13,21 +13,26 @@ import {
   FileCode,
   ShieldAlert,
   Settings,
+  Users,
+  LogOut,
   ChevronLeft,
   Menu,
   X
 } from "lucide-react";
 import { cn } from "../lib/utils";
 import { LanguageSwitcher } from "./LanguageSwitcher";
+import { useClerk, useUser } from "@clerk/nextjs";
+import { useCurrentUser } from "@/lib/useCurrentUser";
 
 const NAV_ITEMS = [
-  { name: "admin", href: "/admin", icon: Settings },
-  { name: "analysis", href: "/", icon: LayoutDashboard },
-  { name: "callAnalytics", href: "/analytics", icon: BarChart3 },
-  { name: "redFlags", href: "/red-flags", icon: ShieldAlert },
-  { name: "campaigns", href: "/campaigns", icon: Layers },
-  { name: "scripts", href: "/scripts", icon: FileCode },
-  { name: "questionnaires", href: "/questionnaires", icon: FileSearch },
+  { name: "admin",          href: "/admin",          icon: Settings,       adminOnly: true },
+  { name: "users",          href: "/users",          icon: Users,          adminOnly: true },
+  { name: "analysis",       href: "/",               icon: LayoutDashboard, adminOnly: false },
+  { name: "callAnalytics",  href: "/analytics",      icon: BarChart3,       adminOnly: false },
+  { name: "redFlags",       href: "/red-flags",      icon: ShieldAlert,     adminOnly: false },
+  { name: "campaigns",      href: "/campaigns",      icon: Layers,          adminOnly: false },
+  { name: "scripts",        href: "/scripts",        icon: FileCode,        adminOnly: false },
+  { name: "questionnaires", href: "/questionnaires", icon: FileSearch,      adminOnly: false },
 ];
 
 export function Sidebar() {
@@ -35,6 +40,15 @@ export function Sidebar() {
   const t = useTranslations('nav');
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
+  const { signOut } = useClerk();
+  const { user } = useUser();
+  const { role: backendRole } = useCurrentUser();
+
+  const initials = user
+    ? (((user.firstName?.[0] ?? "") + (user.lastName?.[0] ?? "")).toUpperCase() || user.emailAddresses[0]?.emailAddress?.[0]?.toUpperCase() || "U")
+    : "U";
+  const displayName = user ? (user.fullName || user.emailAddresses[0]?.emailAddress || "User") : "User";
+  const isAdmin = backendRole === "Admin";
 
   return (
     <>
@@ -108,7 +122,7 @@ export function Sidebar() {
                 <h2 className="px-3 text-[11px] font-bold uppercase tracking-widest text-[#B3CFE5]/60 mb-4">{t('navigation')}</h2>
               )}
               <nav className="space-y-1">
-                {NAV_ITEMS.map((item) => {
+                {NAV_ITEMS.filter(item => !item.adminOnly || isAdmin).map((item) => {
                   const isActive = pathname === item.href;
                   const Icon = item.icon;
 
@@ -144,20 +158,54 @@ export function Sidebar() {
           <div className={cn("mt-auto space-y-3", isCollapsed ? "" : "px-2")}>
             {!isCollapsed && <LanguageSwitcher />}
 
-            <div className={cn(
-              "rounded-3xl bg-[#1A3D63]/40 border border-[#4A7FA7]/30 flex items-center transition-all glow",
-              isCollapsed ? "flex-col gap-2 p-2" : "gap-3 p-4"
-            )}>
-              <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#4A7FA7] to-[#1A3D63] flex items-center justify-center text-[#F6FAFD] font-bold text-xs shrink-0 shadow-lg">
-                JD
-              </div>
-              {!isCollapsed && (
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-bold text-[#F6FAFD] truncate">John Doe</p>
-                  <p className="description text-[10px] text-[#B3CFE5]/70 font-semibold mt-0.5 uppercase tracking-wider truncate">Enterprise Manager</p>
+            <Link
+              href="/users"
+              onClick={() => setIsMobileOpen(false)}
+              className={cn(
+                "rounded-3xl border flex items-center transition-all glow group/user",
+                isCollapsed ? "flex-col gap-2 p-2" : "gap-3 p-4",
+                pathname === "/users"
+                  ? "bg-[#4A7FA7]/30 border-[#4A7FA7]/50"
+                  : "bg-[#1A3D63]/40 border-[#4A7FA7]/30 hover:bg-[#1A3D63]/60 hover:border-[#4A7FA7]/50"
+              )}
+            >
+              {/* Avatar */}
+              {user?.imageUrl ? (
+                <img src={user.imageUrl} alt={displayName} className="w-9 h-9 rounded-full shrink-0 shadow-lg object-cover" />
+              ) : (
+                <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#4A7FA7] to-[#1A3D63] flex items-center justify-center text-[#F6FAFD] font-bold text-xs shrink-0 shadow-lg">
+                  {initials}
                 </div>
               )}
-            </div>
+
+              {!isCollapsed && (
+                <>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-bold text-[#F6FAFD] truncate">{displayName}</p>
+                    <p className="text-[10px] text-[#B3CFE5]/70 font-semibold mt-0.5 uppercase tracking-wider truncate">
+                      {backendRole ?? "Member"}
+                    </p>
+                  </div>
+                  <button
+                    onClick={(e) => { e.preventDefault(); signOut({ redirectUrl: "/sign-in" }); }}
+                    className="w-8 h-8 rounded-xl hover:bg-red-500/20 flex items-center justify-center transition-all text-[#B3CFE5] hover:text-red-400 shrink-0"
+                    title="Sign out"
+                  >
+                    <LogOut className="w-4 h-4" />
+                  </button>
+                </>
+              )}
+
+              {isCollapsed && (
+                <button
+                  onClick={(e) => { e.preventDefault(); signOut({ redirectUrl: "/sign-in" }); }}
+                  className="w-8 h-8 rounded-xl hover:bg-red-500/20 flex items-center justify-center transition-all text-[#B3CFE5] hover:text-red-400"
+                  title="Sign out"
+                >
+                  <LogOut className="w-3.5 h-3.5" />
+                </button>
+              )}
+            </Link>
           </div>
         </div>
       </aside>
