@@ -4,7 +4,7 @@ import { SignUp } from "@clerk/nextjs";
 
 export default function SignUpPage() {
   return (
-    <div style={{ display: 'flex', width: '100%', height: '100%', minHeight: '100vh', background: '#0A1931', color: '#ffffff' }}>
+    <div style={{ display: 'flex', width: '100%', minHeight: '100vh', background: '#0A1931', color: '#ffffff', alignItems: 'stretch' }}>
 
       {/* ── Left Panel — Branding ── */}
       <div className="hidden lg:flex flex-col justify-between w-[55%] relative overflow-hidden p-14"
@@ -79,7 +79,6 @@ export default function SignUpPage() {
         <div className="relative grid grid-cols-3 gap-6 pt-8 border-t" style={{ borderColor: 'rgba(74,127,167,0.2)' }}>
           {[
             { value: '99.4%', label: 'Transcription Accuracy' },
-            { value: '<30s', label: 'Processing Time' },
             { value: '24/7', label: 'Platform Uptime' },
           ].map(s => (
             <div key={s.label}>
@@ -91,7 +90,7 @@ export default function SignUpPage() {
       </div>
 
       {/* ── Right Panel — Sign Up Form ── */}
-      <div className="flex-1 flex flex-col items-center justify-center p-8 relative">
+      <div className="flex-1 flex flex-col items-center justify-center p-8 relative overflow-y-auto" style={{ minHeight: '100vh' }}>
 
         {/* Mobile logo */}
         <div className="lg:hidden flex items-center gap-3 mb-10">

@@ -34,9 +34,9 @@
     "preferences": "Preferences",
     "navigation": "Navigation",
     "management": "Management",
-    "Admin": "Admin Dashboard",
     "analysis": "Analysis",
-    "users": "Users"
+    "users": "Users",
+    "admin": "Admin Dashboard"
   },
   "home": {
     "title": "Analyze Your Conversation",

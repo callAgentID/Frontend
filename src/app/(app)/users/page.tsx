@@ -28,16 +28,17 @@ interface BackendUser {
   id: string;
   clerk_id: string;
   email: string;
-  name?: string;
+  first_name?: string;
+  last_name?: string;
   role: Role;
   created_at?: string;
   last_active?: string;
 }
 
 const ROLE_CONFIG: Record<string, { label: string; color: string; bg: string; border: string; icon: any }> = {
-  admin:   { label: "Admin",   color: "text-yellow-400", bg: "bg-yellow-400/15", border: "border-yellow-400/30", icon: Crown },
-  manager: { label: "Manager", color: "text-[#63B3ED]",  bg: "bg-[#63B3ED]/15",  border: "border-[#63B3ED]/30",  icon: UserCheck },
-  user:    { label: "User",    color: "text-[#B3CFE5]",  bg: "bg-[#B3CFE5]/10",  border: "border-[#B3CFE5]/20",  icon: Users },
+  admin: { label: "Admin", color: "text-yellow-400", bg: "bg-yellow-400/15", border: "border-yellow-400/30", icon: Crown },
+  manager: { label: "Manager", color: "text-[#63B3ED]", bg: "bg-[#63B3ED]/15", border: "border-[#63B3ED]/30", icon: UserCheck },
+  user: { label: "User", color: "text-[#B3CFE5]", bg: "bg-[#B3CFE5]/10", border: "border-[#B3CFE5]/20", icon: Users },
 };
 
 const getRoleConfig = (role: string) =>
@@ -106,7 +107,7 @@ export default function UsersPage() {
   };
 
   const filtered = users.filter(u =>
-  (u.name?.toLowerCase().includes(search.toLowerCase()) ||
+  (u.first_name?.toLowerCase().includes(search.toLowerCase()) ||
     u.email?.toLowerCase().includes(search.toLowerCase()) ||
     u.role?.toLowerCase().includes(search.toLowerCase()))
   );
@@ -216,20 +217,21 @@ export default function UsersPage() {
               filtered.map(user => {
                 const cfg = getRoleConfig(user.role);
                 const RoleIcon = cfg.icon;
-                const initials = user.name
-                  ? user.name.split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase()
+                const initials = user.first_name
+                  ? user.first_name.split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase()
                   : user.email?.[0]?.toUpperCase() ?? "U";
 
                 return (
+                  user.email != "" &&
                   <div key={user.id} className="grid grid-cols-12 px-6 py-4 hover:bg-[#1A3D63]/40 transition-colors items-center group">
                     {/* Name + Avatar */}
                     <div className="col-span-4 flex items-center gap-3 min-w-0">
                       <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#4A7FA7] to-[#1A3D63] flex items-center justify-center text-white font-bold text-xs shrink-0">
                         {initials}
                       </div>
-                      <div className="min-w-0">
-                        <p className="text-sm font-bold text-[#F6FAFD] truncate">{user.name || "—"}</p>
-                        <p className="text-[10px] font-mono text-[#B3CFE5]/50 truncate md:hidden">{user.email}</p>
+                      <div className="min-w-0 flex flex-row gap-1">
+                        <p className="text-sm font-bold text-[#F6FAFD] truncate">{user.first_name || "—"}</p>
+                        <p className="text-sm font-bold text-[#F6FAFD] truncate">{user.last_name || "—"}</p>
                       </div>
                     </div>
 
@@ -268,6 +270,7 @@ export default function UsersPage() {
                       </button>
                     </div>
                   </div>
+
                 );
               })
             )}
@@ -292,12 +295,12 @@ export default function UsersPage() {
             <div className="p-6 border-b border-[#4A7FA7]/20 flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#4A7FA7] to-[#1A3D63] flex items-center justify-center text-white font-bold text-xs shrink-0">
-                  {editingUser.name
-                    ? editingUser.name.split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase()
+                  {editingUser.first_name
+                    ? editingUser.first_name.split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase()
                     : editingUser.email?.[0]?.toUpperCase() ?? "U"}
                 </div>
                 <div>
-                  <p className="text-sm font-black text-[#F6FAFD]">{editingUser.name || editingUser.email}</p>
+                  <p className="text-sm font-black text-[#F6FAFD]">{editingUser.first_name || editingUser.email}</p>
                   <p className="text-[10px] text-[#B3CFE5] font-medium">{editingUser.email}</p>
                 </div>
               </div>
