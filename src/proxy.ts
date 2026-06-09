@@ -5,11 +5,14 @@ const isPublicRoute = createRouteMatcher([
   "/sign-up(.*)",
 ]);
 
-export default clerkMiddleware(async (auth, req) => {
+const handler = clerkMiddleware(async (auth, req) => {
   if (!isPublicRoute(req)) {
     await auth.protect();
   }
 });
+
+// Next.js 16: export as named `proxy` (middleware.ts is deprecated)
+export { handler as proxy };
 
 export const config = {
   matcher: [
