@@ -9,11 +9,12 @@ frontend:
     build:
       commands:
         - npm run build
+        - cp -r public .next/standalone/public
+        - cp -r .next/static .next/standalone/.next/static
   artifacts:
-    baseDirectory: .next
+    baseDirectory: .next/standalone
     files:
       - '**/*'
   cache:
     paths:
       - .next/cache/**/*
-      - node_modules/**/*
