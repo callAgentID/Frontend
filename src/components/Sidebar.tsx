@@ -25,14 +25,14 @@ import { useClerk, useUser } from "@clerk/nextjs";
 import { useCurrentUser } from "@/lib/useCurrentUser";
 
 const NAV_ITEMS = [
-  { name: "admin",          href: "/admin",          icon: Settings,       adminOnly: true },
-  { name: "users",          href: "/users",          icon: Users,          adminOnly: true },
-  { name: "analysis",       href: "/",               icon: LayoutDashboard, adminOnly: false },
-  { name: "callAnalytics",  href: "/analytics",      icon: BarChart3,       adminOnly: false },
-  { name: "redFlags",       href: "/red-flags",      icon: ShieldAlert,     adminOnly: false },
-  { name: "campaigns",      href: "/campaigns",      icon: Layers,          adminOnly: false },
-  { name: "scripts",        href: "/scripts",        icon: FileCode,        adminOnly: false },
-  { name: "questionnaires", href: "/questionnaires", icon: FileSearch,      adminOnly: false },
+  { name: "admin", href: "/admin", icon: Settings, adminOnly: true },
+  { name: "users", href: "/users", icon: Users, adminOnly: true },
+  { name: "analysis", href: "/", icon: LayoutDashboard, adminOnly: false },
+  { name: "callAnalytics", href: "/analytics", icon: BarChart3, adminOnly: false },
+  { name: "redFlags", href: "/red-flags", icon: ShieldAlert, adminOnly: false },
+  { name: "campaigns", href: "/campaigns", icon: Layers, adminOnly: false },
+  { name: "scripts", href: "/scripts", icon: FileCode, adminOnly: false },
+  { name: "questionnaires", href: "/questionnaires", icon: FileSearch, adminOnly: false },
 ];
 
 export function Sidebar() {
@@ -89,7 +89,7 @@ export function Sidebar() {
               {!isCollapsed && (
                 <div>
                   <h1 className="text-lg font-extrabold tracking-tight text-[#F6FAFD]">
-                    Conversation <span className="opacity-60 font-bold block -mt-1 text-[10px] uppercase tracking-widest leading-none text-[#B3CFE5]">Intel</span>
+                    CallBlick
                   </h1>
                 </div>
               )}

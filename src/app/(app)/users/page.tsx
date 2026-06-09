@@ -22,7 +22,7 @@ import { cn } from "@/lib/utils";
 import { useApi } from "@/lib/useApi";
 import { useCurrentUser } from "@/lib/useCurrentUser";
 
-type Role = "Admin" | "Manager" | "User";
+type Role = "admin" | "manager" | "user";
 
 interface BackendUser {
   id: string;
@@ -34,11 +34,14 @@ interface BackendUser {
   last_active?: string;
 }
 
-const ROLE_CONFIG: Record<Role, { label: string; color: string; bg: string; border: string; icon: any }> = {
-  Admin:   { label: "Admin",   color: "text-yellow-400", bg: "bg-yellow-400/15", border: "border-yellow-400/30", icon: Crown },
-  Manager: { label: "Manager", color: "text-[#63B3ED]",  bg: "bg-[#63B3ED]/15",  border: "border-[#63B3ED]/30",  icon: UserCheck },
-  User:    { label: "User",    color: "text-[#B3CFE5]",  bg: "bg-[#B3CFE5]/10",  border: "border-[#B3CFE5]/20",  icon: Users },
+const ROLE_CONFIG: Record<string, { label: string; color: string; bg: string; border: string; icon: any }> = {
+  admin:   { label: "Admin",   color: "text-yellow-400", bg: "bg-yellow-400/15", border: "border-yellow-400/30", icon: Crown },
+  manager: { label: "Manager", color: "text-[#63B3ED]",  bg: "bg-[#63B3ED]/15",  border: "border-[#63B3ED]/30",  icon: UserCheck },
+  user:    { label: "User",    color: "text-[#B3CFE5]",  bg: "bg-[#B3CFE5]/10",  border: "border-[#B3CFE5]/20",  icon: Users },
 };
+
+const getRoleConfig = (role: string) =>
+  ROLE_CONFIG[role?.toLowerCase()] ?? ROLE_CONFIG["user"];
 
 export default function UsersPage() {
   const { apiFetch } = useApi();
@@ -52,7 +55,7 @@ export default function UsersPage() {
 
   // Role edit state
   const [editingUser, setEditingUser] = useState<BackendUser | null>(null);
-  const [selectedRole, setSelectedRole] = useState<Role>("User");
+  const [selectedRole, setSelectedRole] = useState<Role>("user");
   const [isSaving, setIsSaving] = useState(false);
   const [dropdownOpenFor, setDropdownOpenFor] = useState<string | null>(null);
 
@@ -103,16 +106,16 @@ export default function UsersPage() {
   };
 
   const filtered = users.filter(u =>
-    (u.name?.toLowerCase().includes(search.toLowerCase()) ||
-     u.email?.toLowerCase().includes(search.toLowerCase()) ||
-     u.role?.toLowerCase().includes(search.toLowerCase()))
+  (u.name?.toLowerCase().includes(search.toLowerCase()) ||
+    u.email?.toLowerCase().includes(search.toLowerCase()) ||
+    u.role?.toLowerCase().includes(search.toLowerCase()))
   );
 
   // Role counts
-  const counts = { Admin: 0, Manager: 0, User: 0 };
+  const counts = { admin: 0, manager: 0, user: 0 };
   users.forEach(u => { if (u.role in counts) counts[u.role]++; });
 
-  if (!roleLoading && myRole !== "Admin") {
+  if (!roleLoading && myRole?.toLowerCase() !== "admin") {
     return (
       <div className="flex flex-col items-center justify-center h-[60vh] space-y-4">
         <div className="w-16 h-16 rounded-2xl bg-red-500/20 border border-red-500/30 flex items-center justify-center">
@@ -149,8 +152,8 @@ export default function UsersPage() {
 
       {/* Role Summary Cards */}
       <div className="grid grid-cols-3 gap-4">
-        {(["Admin", "Manager", "User"] as Role[]).map(role => {
-          const cfg = ROLE_CONFIG[role];
+        {(["admin", "manager", "user"] as Role[]).map(role => {
+          const cfg = getRoleConfig(role);
           const Icon = cfg.icon;
           return (
             <div key={role} className={cn("p-5 rounded-2xl border flex items-center gap-4", cfg.bg, cfg.border)}>
@@ -211,7 +214,7 @@ export default function UsersPage() {
               </div>
             ) : (
               filtered.map(user => {
-                const cfg = ROLE_CONFIG[user.role] || ROLE_CONFIG.User;
+                const cfg = getRoleConfig(user.role);
                 const RoleIcon = cfg.icon;
                 const initials = user.name
                   ? user.name.split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase()
@@ -310,8 +313,8 @@ export default function UsersPage() {
             <div className="p-6 space-y-4">
               <label className="text-[10px] font-black uppercase tracking-widest text-[#B3CFE5]">Assign Role</label>
               <div className="space-y-2">
-                {(["Admin", "Manager", "User"] as Role[]).map(role => {
-                  const cfg = ROLE_CONFIG[role];
+                {(["admin", "manager", "user"] as Role[]).map(role => {
+                  const cfg = getRoleConfig(role);
                   const RoleIcon = cfg.icon;
                   const isSelected = selectedRole === role;
                   return (
@@ -334,9 +337,9 @@ export default function UsersPage() {
                       <div className="flex-1">
                         <p className={cn("text-sm font-black", isSelected ? cfg.color : "text-[#F6FAFD]")}>{cfg.label}</p>
                         <p className="text-[10px] text-[#B3CFE5]/60 font-medium mt-0.5">
-                          {role === "Admin" && "Full access to all features and user management"}
-                          {role === "Manager" && "Access to analytics, campaigns and call management"}
-                          {role === "User" && "Standard access to analysis and reports"}
+                          {role === "admin" && "Full access to all features and user management"}
+                          {role === "manager" && "Access to analytics, campaigns and call management"}
+                          {role === "user" && "Standard access to analysis and reports"}
                         </p>
                       </div>
                       {isSelected && <Check className={cn("w-4 h-4 shrink-0", cfg.color)} />}

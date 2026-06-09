@@ -16,7 +16,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Conversation Intel",
+  title: "CallBlick",
   description: "Advanced intelligence for conversation analysis",
 };
 
