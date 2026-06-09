@@ -1,12 +1,20 @@
-import { currentUser } from "@clerk/nextjs/server";
+import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { Sidebar } from "@/components/Sidebar";
 import { Navbar } from "@/components/Navbar";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
-  const user = await currentUser();
+  let userId: string | null = null;
 
-  if (!user) {
+  try {
+    const session = await auth();
+    userId = session.userId;
+  } catch (e) {
+    // Clerk auth failed (network, bad key, etc.) — treat as unauthenticated
+    console.error("Auth error:", e);
+  }
+
+  if (!userId) {
     redirect("/sign-in");
   }
 
