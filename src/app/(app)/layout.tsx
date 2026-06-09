@@ -4,9 +4,10 @@ import { Sidebar } from "@/components/Sidebar";
 import { Navbar } from "@/components/Navbar";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
-  const { userId } = await auth();
-
-  if (!userId) {
+  try {
+    const { userId } = await auth();
+    if (!userId) redirect("/sign-in");
+  } catch {
     redirect("/sign-in");
   }
 
