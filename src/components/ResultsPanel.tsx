@@ -1592,7 +1592,7 @@ function LLMCostBreakdown({ llm }: {
   const yearlyCost = totalCost * 365;
 
   const barData = {
-    labels: modelKeys.map(k => k.length > 14 ? k.slice(0, 14) + "…" : k),
+    labels: modelKeys.map(k => k.length > 12 ? k.slice(0, 12) + "…" : k),
     datasets: [{
       label: "Cost (USD)",
       data: modelKeys.map(k => byModel[k].cost_usd),
@@ -1604,7 +1604,7 @@ function LLMCostBreakdown({ llm }: {
   };
 
   return (
-    <div className="rounded-[2rem] bg-[#0D1F35] border border-[#4A7FA7]/30 overflow-hidden shadow-2xl">
+    <div className="w-full rounded-[2rem] bg-[#0D1F35] border border-[#4A7FA7]/30 overflow-hidden shadow-2xl">
       {/* Header */}
       <div className="px-6 py-5 border-b border-[#4A7FA7]/20">
         <h4 className="text-base font-black text-[#F6FAFD] tracking-tight flex items-center gap-2">
@@ -1613,49 +1613,48 @@ function LLMCostBreakdown({ llm }: {
         </h4>
       </div>
 
-      <div className="p-6 grid grid-cols-1 gap-6">
-        {/* Two-column layout: token cards left, chart right */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Left — Token Usage Cards */}
-          <div className="space-y-3">
-            <p className="text-xs font-black uppercase tracking-widest text-[#B3CFE5]">Token Usage</p>
-            {modelKeys.length === 0 ? (
-              <div className="p-4 rounded-xl bg-[#1A3D63]/40 border border-[#4A7FA7]/20 text-center">
-                <p className="text-xs text-[#B3CFE5]/50 font-semibold">No stage data available</p>
-              </div>
-            ) : (
-              modelKeys.map((model, i) => {
-                const m = byModel[model];
-                const color = STAGE_COLORS[i % STAGE_COLORS.length];
-                return (
-                  <div key={model} className="rounded-xl border border-[#4A7FA7]/20 bg-[#1A3D63]/40 overflow-hidden">
-                    {/* Model header */}
-                    <div className="flex items-center justify-between px-4 py-3 border-b border-[#4A7FA7]/20">
-                      <span className="text-sm font-black text-[#F6FAFD]">{model}</span>
-                      <span className="text-sm font-black" style={{ color }}>{formatLLMCost(m.cost_usd)}</span>
+      <div className="p-4 space-y-4">
+
+        {/* ── Token Usage — full-width cards ── */}
+        <p className="text-[10px] font-black uppercase tracking-widest text-[#B3CFE5] px-1">Token Usage</p>
+
+        {modelKeys.length === 0 ? (
+          <div className="w-full p-4 rounded-xl bg-[#1A3D63]/40 border border-[#4A7FA7]/20 text-center">
+            <p className="text-xs text-[#B3CFE5]/50 font-semibold">No stage data available</p>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {modelKeys.map((model, i) => {
+              const m = byModel[model];
+              const color = STAGE_COLORS[i % STAGE_COLORS.length];
+              return (
+                <div key={model} className="w-full rounded-xl border border-[#4A7FA7]/20 bg-[#1A3D63]/40 overflow-hidden">
+                  {/* Model name row */}
+                  <div className="w-full px-4 py-2.5 bg-[#0A1931]/40 border-b border-[#4A7FA7]/20 flex items-center justify-between gap-3">
+                    <span className="text-xs font-black text-[#F6FAFD] truncate flex-1">{model}</span>
+                    <span className="text-xs font-black shrink-0" style={{ color }}>{formatLLMCost(m.cost_usd)}</span>
+                  </div>
+                  {/* Stats row — 3 cols */}
+                  <div className="w-full grid grid-cols-3 divide-x divide-[#4A7FA7]/20 text-center py-3">
+                    <div className="px-3">
+                      <p className="text-[9px] font-bold uppercase text-[#B3CFE5]/60 mb-1">Tokens</p>
+                      <p className="text-xs font-black text-[#F6FAFD]">{formatTokens(m.tokens)}</p>
                     </div>
-                    {/* Token rows */}
-                    <div className="px-4 py-3 space-y-1.5 text-xs font-semibold">
-                      <div className="flex justify-between text-[#B3CFE5]">
-                        <span>Total Tokens:</span>
-                        <span className="text-[#F6FAFD] font-black">{formatTokens(m.tokens)}</span>
-                      </div>
-                      <div className="flex justify-between text-[#B3CFE5]">
-                        <span>Stages:</span>
-                        <span className="text-[#F6FAFD] font-black">{m.stages.length}</span>
-                      </div>
-                      <div className="flex justify-between pt-1 border-t border-[#4A7FA7]/20">
-                        <span className="text-[#B3CFE5]">Cost:</span>
-                        <span className="font-black" style={{ color }}>{formatLLMCost(m.cost_usd)}</span>
-                      </div>
+                    <div className="px-3">
+                      <p className="text-[9px] font-bold uppercase text-[#B3CFE5]/60 mb-1">Stages</p>
+                      <p className="text-xs font-black text-[#F6FAFD]">{m.stages.length}</p>
+                    </div>
+                    <div className="px-3">
+                      <p className="text-[9px] font-bold uppercase text-[#B3CFE5]/60 mb-1">Cost</p>
+                      <p className="text-xs font-black" style={{ color }}>{formatLLMCost(m.cost_usd)}</p>
                     </div>
                   </div>
-                );
-              })
-            )}
+                </div>
+              );
+            })}
 
             {/* Total row */}
-            <div className="flex items-center justify-between px-4 py-3 rounded-xl bg-[#4A7FA7]/20 border border-[#4A7FA7]/40">
+            <div className="w-full flex items-center justify-between px-4 py-3 rounded-xl bg-[#4A7FA7]/20 border border-[#4A7FA7]/40">
               <span className="text-xs font-black uppercase tracking-wider text-[#B3CFE5]">Total</span>
               <div className="text-right">
                 <p className="text-sm font-black text-[#F6FAFD]">{formatLLMCost(totalCost)}</p>
@@ -1663,71 +1662,74 @@ function LLMCostBreakdown({ llm }: {
               </div>
             </div>
           </div>
+        )}
 
-          {/* Right — Bar Chart + Projections */}
-          <div className="space-y-4">
-            <p className="text-xs font-black uppercase tracking-widest text-[#B3CFE5]">Cost Breakdown Chart</p>
-            <div className="h-52 bg-[#1A3D63]/40 rounded-xl border border-[#4A7FA7]/20 p-3">
-              {modelKeys.length > 0 ? (
-                <Bar data={barData} options={{
-                  responsive: true,
-                  maintainAspectRatio: false,
-                  plugins: {
-                    legend: { display: false },
-                    tooltip: {
-                      backgroundColor: "rgba(10,25,49,0.95)",
-                      titleColor: "#F6FAFD",
-                      bodyColor: "#B3CFE5",
-                      borderColor: "rgba(74,127,167,0.4)",
-                      borderWidth: 1,
-                      callbacks: {
-                        label: (ctx) => ` ${formatLLMCost(ctx.parsed.y)}`
-                      }
-                    }
-                  },
-                  scales: {
-                    x: { ticks: { color: "#B3CFE5", font: { size: 10 } }, grid: { color: "rgba(74,127,167,0.08)" } },
-                    y: { ticks: { color: "#B3CFE5", font: { size: 9 } }, grid: { color: "rgba(74,127,167,0.08)" } }
+        {/* ── Bar Chart — full width ── */}
+        <div className="space-y-2">
+          <p className="text-[10px] font-black uppercase tracking-widest text-[#B3CFE5] px-1">Cost Breakdown Chart</p>
+          <div className="w-full h-48 bg-[#1A3D63]/40 rounded-xl border border-[#4A7FA7]/20 p-3">
+            {modelKeys.length > 0 ? (
+              <Bar data={barData} options={{
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                  legend: { display: false },
+                  tooltip: {
+                    backgroundColor: "rgba(10,25,49,0.95)",
+                    titleColor: "#F6FAFD",
+                    bodyColor: "#B3CFE5",
+                    borderColor: "rgba(74,127,167,0.4)",
+                    borderWidth: 1,
+                    callbacks: { label: (ctx) => ` ${formatLLMCost(ctx.parsed.y)}` }
                   }
-                }} />
-              ) : (
-                <div className="h-full flex items-center justify-center">
-                  <p className="text-xs text-[#B3CFE5]/50 font-semibold">No data</p>
-                </div>
-              )}
-            </div>
-
-            {/* Projections */}
-            <div className="grid grid-cols-2 gap-3">
-              <div className="p-4 rounded-xl bg-[#1A3D63]/60 border border-[#4A7FA7]/30 text-center">
-                <p className="text-[10px] font-black uppercase tracking-wider text-[#B3CFE5] mb-1">Monthly Projection</p>
-                <p className="text-lg font-[900] text-[#F6FAFD]">{formatLLMCost(monthlyCost)}</p>
-              </div>
-              <div className="p-4 rounded-xl bg-[#1A3D63]/60 border border-[#4A7FA7]/30 text-center">
-                <p className="text-[10px] font-black uppercase tracking-wider text-[#B3CFE5] mb-1">Yearly Projection</p>
-                <p className="text-lg font-[900] text-[#F6FAFD]">{formatLLMCost(yearlyCost)}</p>
-              </div>
-            </div>
-
-            {/* Stage list */}
-            {llm.breakdown_by_stage && llm.breakdown_by_stage.length > 0 && (
-              <div className="space-y-2">
-                <p className="text-[10px] font-black uppercase tracking-widest text-[#B3CFE5]">By Pipeline Stage</p>
-                {llm.breakdown_by_stage.map((stage, i) => (
-                  <div key={i} className="flex items-center justify-between px-3 py-2 rounded-lg bg-[#1A3D63]/40 border border-[#4A7FA7]/20">
-                    <div className="flex items-center gap-2 min-w-0">
-                      <div className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: STAGE_COLORS[i % STAGE_COLORS.length] }} />
-                      <span className="text-xs font-semibold text-[#B3CFE5] capitalize truncate">
-                        {stage.stage.replace(/_/g, ' ')}
-                      </span>
-                    </div>
-                    <span className="text-xs font-black text-[#F6FAFD] shrink-0 ml-2">{formatLLMCost(stage.cost_usd)}</span>
-                  </div>
-                ))}
+                },
+                scales: {
+                  x: { ticks: { color: "#B3CFE5", font: { size: 9 } }, grid: { color: "rgba(74,127,167,0.08)" } },
+                  y: { ticks: { color: "#B3CFE5", font: { size: 9 } }, grid: { color: "rgba(74,127,167,0.08)" } }
+                }
+              }} />
+            ) : (
+              <div className="h-full flex items-center justify-center">
+                <p className="text-xs text-[#B3CFE5]/50 font-semibold">No data</p>
               </div>
             )}
           </div>
         </div>
+
+        {/* ── Projections — 2 equal cols, full width ── */}
+        <div className="grid grid-cols-2 gap-3">
+          {[
+            { label: "Monthly Projection", value: monthlyCost, sub: "est. per month" },
+            { label: "Yearly Projection",  value: yearlyCost,  sub: "est. per year"  },
+          ].map(({ label, value, sub }) => (
+            <div key={label} className="w-full rounded-xl bg-[#1A3D63]/40 border border-[#4A7FA7]/25 overflow-hidden">
+              <div className="px-4 py-2 bg-[#0A1931]/40 border-b border-[#4A7FA7]/20">
+                <p className="text-[9px] font-black uppercase tracking-widest text-[#B3CFE5]">{label}</p>
+              </div>
+              <div className="px-4 py-3">
+                <p className="text-base font-[900] text-[#F6FAFD] leading-none">{formatLLMCost(value)}</p>
+                <p className="text-[9px] font-semibold text-[#B3CFE5]/60 mt-1">{sub}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* ── Pipeline stages — full width ── */}
+        {llm.breakdown_by_stage && llm.breakdown_by_stage.length > 0 && (
+          <div className="space-y-2">
+            <p className="text-[10px] font-black uppercase tracking-widest text-[#B3CFE5] px-1">By Pipeline Stage</p>
+            {llm.breakdown_by_stage.map((stage, i) => (
+              <div key={i} className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl bg-[#1A3D63]/40 border border-[#4A7FA7]/20">
+                <div className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: STAGE_COLORS[i % STAGE_COLORS.length] }} />
+                <span className="text-xs font-semibold text-[#B3CFE5] capitalize truncate flex-1">
+                  {stage.stage.replace(/_/g, ' ')}
+                </span>
+                <span className="text-xs font-black text-[#F6FAFD] shrink-0">{formatLLMCost(stage.cost_usd)}</span>
+              </div>
+            ))}
+          </div>
+        )}
+
       </div>
     </div>
   );

@@ -25,6 +25,7 @@ import {
   HelpCircle
 } from "lucide-react";
 import { cn } from "../lib/utils";
+import { BatchProgress } from "./BatchProgress";
 
 type InputMode = "audio" | "transcript";
 
@@ -49,6 +50,10 @@ export function InputSection({
   const { apiFetch } = useApi();
   const [mode, setMode] = useState<InputMode>("audio");
   const [audioFile, setAudioFile] = useState<File | null>(null);
+  const [audioFiles, setAudioFiles] = useState<File[]>([]); // multi-file batch
+  const [batchId, setBatchId] = useState<string | null>(null);
+  const [batchName, setBatchName] = useState<string>("");
+  const [batchIngestErrors, setBatchIngestErrors] = useState<Array<{ file_name: string; error: string }>>([]);
   const [manualTranscript, setManualTranscript] = useState("");
   const [manualFile, setManualFile] = useState<File | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -142,12 +147,19 @@ export function InputSection({
     setIsProcessing(false);
   };
 
+  const isAudioFile = (f: File) =>
+    f.type.startsWith("audio/") || f.type.startsWith("video/mpeg") ||
+    ["audio/mpeg", "audio/wav", "audio/x-m4a"].includes(f.type) || f.name.endsWith('.mpeg');
+
   const onFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file && (file.type.startsWith("audio/") || file.type.startsWith("video/mpeg") || ["audio/mpeg", "audio/wav", "audio/x-m4a"].includes(file.type) || file.name.endsWith('.mpeg'))) {
-      setAudioFile(file);
-      setGeneratedTranscript("");
-    }
+    const files = Array.from(e.target.files || []).filter(isAudioFile);
+    if (files.length === 0) return;
+    // Always store in audioFiles array; audioFile kept for single-file compatibility
+    setAudioFiles(files);
+    setAudioFile(files[0]); // keep for single-file poll path
+    setGeneratedTranscript("");
+    setBatchId(null);
+    setBatchIngestErrors([]);
   };
 
   const pollForTranscript = async (callId: string) => {
@@ -292,6 +304,60 @@ export function InputSection({
     }
   };
 
+  // ── Batch Upload Handler ──────────────────────────────────
+  const handleBatchUploadSubmit = async () => {
+    if (audioFiles.length === 0 || !selectedCampaignId) return;
+
+    setIsProcessing(true);
+    setProcessingStatus("uploading");
+    setBatchIngestErrors([]);
+
+    try {
+      const formData = new FormData();
+      audioFiles.forEach(f => formData.append("files", f));
+      formData.append("campaign_id", selectedCampaignId);
+      formData.append("processing_profile_id", selectedProfileId);
+
+      const selectedCampaign = campaigns.find(c => (c.id === selectedCampaignId || c._id === selectedCampaignId));
+      const campaignTemplateId = selectedCampaign?.questionnaire_template_id;
+      const globalIds = Array.from(new Set([...(campaignTemplateId ? [campaignTemplateId] : []), ...selectedOtherIds]));
+      const highPriorityValue = selectedRedFlagIds.length > 0
+        ? (selectedRedFlagIds.length > 1 ? JSON.stringify(selectedRedFlagIds) : selectedRedFlagIds[0])
+        : (campaignTemplateId || globalIds[0]);
+
+      if (!highPriorityValue) throw new Error("Misconfiguration: No audit frameworks selected.");
+
+      formData.append("high_priority_questionnaire_template_id", highPriorityValue);
+      formData.append("questionnaire_template_ids", JSON.stringify(globalIds));
+      formData.append("language", "en");
+      if (batchName.trim()) formData.append("name", batchName.trim());
+      if (metaTags.length > 0) formData.append("meta_tags", JSON.stringify(metaTags));
+      if (customQuestions.length > 0) formData.append("custom_questions", JSON.stringify(customQuestions));
+
+      const response = await apiFetch("/api/v1/batches/", {
+        method: "POST",
+        headers: { "Accept": "application/json" },
+        body: formData,
+      });
+
+      if (!response.ok) throw new Error("Batch ingestion failed");
+
+      const data = await response.json();
+      console.log("Batch Queued:", data);
+
+      if (data.errors?.length > 0) setBatchIngestErrors(data.errors);
+      if (data.batch_id) setBatchId(data.batch_id);
+
+      setIsProcessing(false);
+      setProcessingStatus("idle");
+    } catch (error: any) {
+      console.error("Batch API Error:", error);
+      alert(error.message || "Failed to submit batch. Please check your connection.");
+      setIsProcessing(false);
+      setProcessingStatus("idle");
+    }
+  };
+
   const [showManualSuccess, setShowManualSuccess] = useState(false);
 
   const handleTranscriptSubmit = async () => {
@@ -406,10 +472,13 @@ export function InputSection({
 
   const removeFile = () => {
     setAudioFile(null);
+    setAudioFiles([]);
     setManualFile(null);
     setManualTranscript("");
     setGeneratedTranscript("");
     setCallAnalytics(null);
+    setBatchId(null);
+    setBatchIngestErrors([]);
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
@@ -458,7 +527,8 @@ export function InputSection({
         <div className="space-y-10">
           {mode === "audio" ? (
             <div className="space-y-8">
-              {!audioFile ? (
+              {/* Drop zone */}
+              {audioFiles.length === 0 ? (
                 <div
                   onClick={() => fileInputRef.current?.click()}
                   className="group w-full aspect-video md:aspect-[3/1] border-2 border-dashed border-[#4A7FA7]/30 hover:border-[#4A7FA7] rounded-[2.5rem] flex flex-col items-center justify-center gap-6 cursor-pointer transition-all hover:bg-[#1A3D63]/30"
@@ -468,33 +538,79 @@ export function InputSection({
                   </div>
                   <div className="text-center">
                     <p className="text-lg font-extrabold text-[#F6FAFD] group-hover:translate-y-[-2px] transition-transform">{t('uploadSignalFile')}</p>
-                    <p className="text-xs font-bold text-[#B3CFE5] uppercase tracking-widest mt-1.5">{t('mp3WavInfo')}</p>
+                    <p className="text-xs font-bold text-[#B3CFE5] uppercase tracking-widest mt-1.5">
+                      {t('mp3WavInfo')} · Select multiple files for batch
+                    </p>
                   </div>
                   <input
                     type="file"
                     ref={fileInputRef}
                     onChange={onFileChange}
                     accept="audio/*,video/mpeg,.mpeg,.mp3,.wav,.m4a,.ogg,.opus"
+                    multiple
                     className="hidden"
                   />
                 </div>
               ) : (
-                <div className="flex items-center justify-between p-6 rounded-[2rem] bg-[#1A3D63]/40 border border-[#4A7FA7]/30 animate-in zoom-in-95 duration-500">
-                  <div className="flex items-center gap-5">
-                    <div className="w-14 h-14 rounded-2xl bg-[#4A7FA7] flex items-center justify-center shadow-lg shadow-[#4A7FA7]/20 glow">
-                      <FileAudio className="w-6 h-6 text-[#F6FAFD]" />
+                /* File list view — 1 or more files */
+                <div className="space-y-3 animate-in zoom-in-95 duration-500">
+                  <div className="flex items-center justify-between px-2">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-[#4A7FA7] flex items-center justify-center glow">
+                        <FileAudio className="w-5 h-5 text-[#F6FAFD]" />
+                      </div>
+                      <div>
+                        <p className="font-extrabold text-[#F6FAFD]">
+                          {audioFiles.length === 1 ? audioFiles[0].name : `${audioFiles.length} files selected`}
+                        </p>
+                        <p className="text-[10px] font-black uppercase tracking-widest text-[#B3CFE5] mt-0.5">
+                          {(audioFiles.reduce((s, f) => s + f.size, 0) / (1024 * 1024)).toFixed(2)} MB total
+                          {audioFiles.length > 1 ? ' · Batch Mode' : ' · Ready to process'}
+                        </p>
+                      </div>
                     </div>
-                    <div className="min-w-0">
-                      <p className="font-extrabold text-[#F6FAFD] truncate max-w-[200px] md:max-w-md">{audioFile.name}</p>
-                      <p className="text-[10px] font-black uppercase tracking-widest text-[#B3CFE5] mt-1">{(audioFile.size / (1024 * 1024)).toFixed(2)} MB • READY TO PROCESS</p>
-                    </div>
+                    {!isProcessing && (
+                      <button onClick={removeFile} className="p-2 hover:bg-red-500/20 text-[#B3CFE5] hover:text-red-400 rounded-xl transition-all" title="Remove all files">
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    )}
                   </div>
-                  {!isProcessing && (
-                    <button onClick={removeFile} className="p-3 hover:bg-red-50 text-[#B3CFE5] hover:text-red-500 rounded-xl transition-all" title="Remove uploaded file">
-                      <Trash2 className="w-5 h-5" />
-                    </button>
-                  )}
+                  {/* Batch name input — only for multiple files */}
+                  {audioFiles.length > 1 && <input
+                    type="text"
+                    value={batchName}
+                    onChange={e => setBatchName(e.target.value)}
+                    placeholder="Batch name (optional, e.g. June Campaign Calls)"
+                    className="w-full h-10 px-4 rounded-xl bg-[#1A3D63]/40 border border-[#4A7FA7]/30 text-[#F6FAFD] text-sm font-medium outline-none focus:border-[#4A7FA7] transition-all placeholder:text-[#B3CFE5]/40"
+                  />}
+                  {/* File list — only show for multiple files */}
+                  {audioFiles.length > 1 && <div className="max-h-52 overflow-y-auto space-y-1.5 rounded-2xl bg-[#0A1931]/40 p-3 border border-[#4A7FA7]/20">
+                    {audioFiles.map((f, i) => (
+                      <div key={i} className="flex items-center gap-2 px-3 py-2 rounded-xl bg-[#1A3D63]/40 border border-[#4A7FA7]/20 group hover:border-[#4A7FA7]/40 transition-all">
+                        <FileAudio className="w-3.5 h-3.5 text-[#4A7FA7] shrink-0" />
+                        <span className="text-xs font-medium text-[#F6FAFD] truncate flex-1">{f.name}</span>
+                        <span className="text-[10px] text-[#B3CFE5] shrink-0 mr-1">{(f.size / (1024 * 1024)).toFixed(1)} MB</span>
+                        <button
+                          onClick={() => setAudioFiles(audioFiles.filter((_, idx) => idx !== i))}
+                          className="w-5 h-5 rounded-md hover:bg-red-500/30 flex items-center justify-center text-[#B3CFE5]/50 hover:text-red-400 transition-all opacity-0 group-hover:opacity-100 shrink-0"
+                          title={`Remove ${f.name}`}
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>}
                 </div>
+              )}
+
+              {/* Batch progress tracker */}
+              {batchId && (
+                <BatchProgress
+                  batchId={batchId}
+                  batchName={batchName || undefined}
+                  initialErrors={batchIngestErrors}
+                  onClose={() => { setBatchId(null); setBatchIngestErrors([]); }}
+                />
               )}
             </div>
           ) : (
@@ -525,7 +641,7 @@ export function InputSection({
           )}
 
           {/* SHARED STRATEGIC CONTEXT GRID */}
-          {(audioFile || manualTranscript.trim() || manualFile) && !isProcessing && (
+          {(audioFiles.length > 0 || manualTranscript.trim() || manualFile) && !isProcessing && !batchId && (
             <div className="space-y-8 pt-10 border-t border-[#4A7FA7]/20 animate-in slide-in-from-top-8 duration-700">
               <div className="flex items-center justify-between px-1">
                 <h4 className="text-sm font-extrabold uppercase tracking-widest text-[#F6FAFD] flex items-center gap-2">
@@ -901,7 +1017,10 @@ export function InputSection({
               </div>
 
               <button
-                onClick={mode === "audio" ? handleUploadSubmit : handleTranscriptSubmit}
+                onClick={mode === "audio"
+                  ? (audioFiles.length > 1 ? handleBatchUploadSubmit : handleUploadSubmit)
+                  : handleTranscriptSubmit}
+
                 disabled={isProcessing || !selectedCampaignId || !selectedProfileId}
                 className="w-full h-16 bg-gradient-to-r from-[#4A7FA7] to-[#1A3D63] hover:from-[#4A7FA7]/90 hover:to-[#1A3D63]/90 disabled:bg-[#1A3D63]/50 text-[#F6FAFD] rounded-[1.25rem] font-bold text-sm uppercase tracking-widest transition-all apple-shadow active:scale-[0.98] flex items-center justify-center gap-3 mt-4 glow"
                 title="Submit for AI analysis"

@@ -17,7 +17,8 @@ import {
   LogOut,
   ChevronLeft,
   Menu,
-  X
+  X,
+  Package
 } from "lucide-react";
 import { cn } from "../lib/utils";
 import { LanguageSwitcher } from "./LanguageSwitcher";
@@ -29,6 +30,7 @@ const NAV_ITEMS = [
   { name: "users", href: "/users", icon: Users, adminOnly: true },
   { name: "analysis", href: "/", icon: LayoutDashboard, adminOnly: false },
   { name: "callAnalytics", href: "/analytics", icon: BarChart3, adminOnly: false },
+  { name: "batches", href: "/batches", icon: Package, adminOnly: false },
   { name: "redFlags", href: "/red-flags", icon: ShieldAlert, adminOnly: false },
   { name: "campaigns", href: "/campaigns", icon: Layers, adminOnly: false },
   { name: "scripts", href: "/scripts", icon: FileCode, adminOnly: false },
