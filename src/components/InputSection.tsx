@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { useApi } from "@/lib/useApi";
 import { useTranslations } from 'next-intl';
 import {
@@ -76,6 +76,44 @@ export function InputSection({
   const [customQuestions, setCustomQuestions] = useState<Array<{ text: string; weight: number }>>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const pollIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Memoized splits — computed once when questionnaires change, not on every render
+  const redFlagQuestionnaires   = useMemo(() => questionnaires.filter(q => q.is_redflag === true),  [questionnaires]);
+  const standardQuestionnaires  = useMemo(() => questionnaires.filter(q => q.is_redflag === false), [questionnaires]);
+
+  // Stable callbacks — never recreated unless deps change
+  const toggleRedFlagOpen  = useCallback(() => setIsRedFlagOpen(v => !v),  []);
+  const toggleOtherOpen    = useCallback(() => setIsOtherOpen(v => !v),    []);
+  const toggleCampaignOpen = useCallback(() => setIsCampaignOpen(v => !v), []);
+  const toggleProfileOpen  = useCallback(() => setIsProfileOpen(v => !v),  []);
+
+  const selectRedFlag = useCallback((qId: string) => {
+    // Radio — toggle off if same, replace if different
+    // Red flag is SEPARATE from selectedOtherIds — never added to questionnaire list
+    setSelectedRedFlagId(prev => {
+      const next = prev === qId ? "" : qId;
+      setSelectedRedFlagIds(next ? [next] : []);
+      return next;
+    });
+    setIsRedFlagOpen(false);
+  }, []);
+
+  const toggleOtherId = useCallback((qId: string, checked: boolean) => {
+    setSelectedOtherIds(prev => checked ? [...prev, qId] : prev.filter(id => id !== qId));
+  }, []);
+
+  const selectCampaign = useCallback((cId: string) => {
+    setSelectedCampaignId(cId);
+    setIsCampaignOpen(false);
+  }, []);
+
+  const selectProfile = useCallback((pId: string) => {
+    setSelectedProfileId(pId);
+    setIsProfileOpen(false);
+  }, []);
+
+  const removeMetaTag  = useCallback((i: number) => setMetaTags(prev => prev.filter((_, idx) => idx !== i)), []);
+  const removeCustomQ  = useCallback((i: number) => setCustomQuestions(prev => prev.filter((_, idx) => idx !== i)), []);
 
   // Clear polling on unmount
   useEffect(() => {
@@ -268,8 +306,10 @@ export function InputSection({
 
       if (!highPriorityValue) throw new Error("Misconfiguration: No audit frameworks selected.");
 
+      // high_priority must also be included in questionnaire_template_ids array
+      const allIds = Array.from(new Set([highPriorityValue, ...globalIds]));
       formData.append("high_priority_questionnaire_template_id", highPriorityValue);
-      formData.append("questionnaire_template_ids", JSON.stringify(globalIds));
+      formData.append("questionnaire_template_ids", JSON.stringify(allIds));
       formData.append("language", "en");
 
       // New optional fields
@@ -327,8 +367,10 @@ export function InputSection({
 
       if (!highPriorityValue) throw new Error("Misconfiguration: No audit frameworks selected.");
 
+      // high_priority must also be included in questionnaire_template_ids array
+      const allIds = Array.from(new Set([highPriorityValue, ...globalIds]));
       formData.append("high_priority_questionnaire_template_id", highPriorityValue);
-      formData.append("questionnaire_template_ids", JSON.stringify(globalIds));
+      formData.append("questionnaire_template_ids", JSON.stringify(allIds));
       formData.append("language", "en");
       if (batchName.trim()) formData.append("name", batchName.trim());
       if (metaTags.length > 0) formData.append("meta_tags", JSON.stringify(metaTags));
@@ -395,8 +437,10 @@ export function InputSection({
 
       if (!highPriorityValue) throw new Error("Misconfiguration: No audit frameworks selected.");
 
+      // high_priority must also be included in questionnaire_template_ids array
+      const allIds = Array.from(new Set([highPriorityValue, ...globalIds]));
       formData.append("high_priority_questionnaire_template_id", highPriorityValue);
-      formData.append("questionnaire_template_ids", JSON.stringify(globalIds));
+      formData.append("questionnaire_template_ids", JSON.stringify(allIds));
       formData.append("language", "en");
 
       // New optional fields
@@ -483,7 +527,7 @@ export function InputSection({
   };
 
   return (
-    <section className="max-w-4xl mx-auto w-full space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-1000">
+    <section className="max-w-4xl mx-auto w-full space-y-8 animate-in fade-in duration-150 duration-150">
       {/* Header & Subtext */}
       <div className="flex flex-col gap-2 items-center text-center px-4">
         <h3 className="text-3xl font-[850] text-[#F6FAFD] tracking-tight">{t('signalInput')}</h3>
@@ -492,11 +536,11 @@ export function InputSection({
 
       {/* Mode Toggle Tabs */}
       <div className="flex justify-center">
-        <div className="flex p-1.5 bg-[#1A3D63]/30 rounded-2xl border border-[#4A7FA7]/20 w-full max-w-[400px]">
+        <div className="flex p-1.5 bg-[#1A3D63]/30 rounded-2xl border border-blue-400/10 w-full max-w-[400px]">
           <button
             onClick={() => handleModeChange("audio")}
             className={cn(
-              "flex-1 flex items-center justify-center gap-2.5 py-3 rounded-xl text-sm font-extrabold transition-all",
+              "flex-1 flex items-center justify-center gap-2.5 py-3 rounded-xl text-sm font-extrabold transition-colors",
               mode === "audio"
                 ? "bg-gradient-to-r from-[#4A7FA7] to-[#1A3D63] text-[#F6FAFD] apple-shadow glow"
                 : "text-[#B3CFE5] hover:text-[#F6FAFD]"
@@ -509,7 +553,7 @@ export function InputSection({
           <button
             onClick={() => handleModeChange("transcript")}
             className={cn(
-              "flex-1 flex items-center justify-center gap-2.5 py-3 rounded-xl text-sm font-extrabold transition-all",
+              "flex-1 flex items-center justify-center gap-2.5 py-3 rounded-xl text-sm font-extrabold transition-colors",
               mode === "transcript"
                 ? "bg-gradient-to-r from-[#4A7FA7] to-[#1A3D63] text-[#F6FAFD] apple-shadow glow"
                 : "text-[#B3CFE5] hover:text-[#F6FAFD]"
@@ -523,7 +567,7 @@ export function InputSection({
       </div>
 
       {/* Input Content Area */}
-      <div className="glass-blur apple-blur bg-[#1A3D63]/40 p-8 md:p-12 rounded-[40px] apple-shadow border border-[#4A7FA7]/30">
+      <div className="glass-blur apple-blur bg-blue-950/18 p-8 md:p-12 rounded-[40px] apple-shadow border border-blue-400/15">
         <div className="space-y-10">
           {mode === "audio" ? (
             <div className="space-y-8">
@@ -531,9 +575,9 @@ export function InputSection({
               {audioFiles.length === 0 ? (
                 <div
                   onClick={() => fileInputRef.current?.click()}
-                  className="group w-full aspect-video md:aspect-[3/1] border-2 border-dashed border-[#4A7FA7]/30 hover:border-[#4A7FA7] rounded-[2.5rem] flex flex-col items-center justify-center gap-6 cursor-pointer transition-all hover:bg-[#1A3D63]/30"
+                  className="group w-full aspect-video md:aspect-[3/1] border-2 border-dashed border-blue-400/15 hover:border-[#4A7FA7] rounded-[2.5rem] flex flex-col items-center justify-center gap-6 cursor-pointer transition-colors hover:bg-[#1A3D63]/30"
                 >
-                  <div className="w-16 h-16 rounded-[2rem] bg-[#1A3D63]/40 group-hover:bg-[#4A7FA7] group-hover:scale-110 transition-all flex items-center justify-center glow">
+                  <div className="w-16 h-16 rounded-[2rem] bg-blue-950/18 group-hover:bg-[#4A7FA7] group-hover:scale-110 transition-colors flex items-center justify-center glow">
                     <Upload className="w-7 h-7 text-[#B3CFE5] group-hover:text-[#F6FAFD] transition-colors" />
                   </div>
                   <div className="text-center">
@@ -553,7 +597,7 @@ export function InputSection({
                 </div>
               ) : (
                 /* File list view — 1 or more files */
-                <div className="space-y-3 animate-in zoom-in-95 duration-500">
+                <div className="space-y-3 animate-in fade-in duration-150 duration-150">
                   <div className="flex items-center justify-between px-2">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-xl bg-[#4A7FA7] flex items-center justify-center glow">
@@ -570,7 +614,7 @@ export function InputSection({
                       </div>
                     </div>
                     {!isProcessing && (
-                      <button onClick={removeFile} className="p-2 hover:bg-red-500/20 text-[#B3CFE5] hover:text-red-400 rounded-xl transition-all" title="Remove all files">
+                      <button onClick={removeFile} className="p-2 hover:bg-red-500/20 text-[#B3CFE5] hover:text-red-400 rounded-xl transition-colors" title="Remove all files">
                         <Trash2 className="w-4 h-4" />
                       </button>
                     )}
@@ -581,18 +625,18 @@ export function InputSection({
                     value={batchName}
                     onChange={e => setBatchName(e.target.value)}
                     placeholder="Batch name (optional, e.g. June Campaign Calls)"
-                    className="w-full h-10 px-4 rounded-xl bg-[#1A3D63]/40 border border-[#4A7FA7]/30 text-[#F6FAFD] text-sm font-medium outline-none focus:border-[#4A7FA7] transition-all placeholder:text-[#B3CFE5]/40"
+                    className="w-full h-10 px-4 rounded-xl glass text-[#F6FAFD] text-sm font-medium outline-none focus:border-[#4A7FA7] transition-colors placeholder:text-[#B3CFE5]/40"
                   />}
                   {/* File list — only show for multiple files */}
-                  {audioFiles.length > 1 && <div className="max-h-52 overflow-y-auto space-y-1.5 rounded-2xl bg-[#0A1931]/40 p-3 border border-[#4A7FA7]/20">
+                  {audioFiles.length > 1 && <div className="max-h-52 overflow-y-auto space-y-1.5 rounded-2xl bg-black/18 p-3 border border-blue-400/10">
                     {audioFiles.map((f, i) => (
-                      <div key={i} className="flex items-center gap-2 px-3 py-2 rounded-xl bg-[#1A3D63]/40 border border-[#4A7FA7]/20 group hover:border-[#4A7FA7]/40 transition-all">
+                      <div key={i} className="flex items-center gap-2 px-3 py-2 rounded-xl glass group hover:border-blue-400/22 transition-colors">
                         <FileAudio className="w-3.5 h-3.5 text-[#4A7FA7] shrink-0" />
                         <span className="text-xs font-medium text-[#F6FAFD] truncate flex-1">{f.name}</span>
                         <span className="text-[10px] text-[#B3CFE5] shrink-0 mr-1">{(f.size / (1024 * 1024)).toFixed(1)} MB</span>
                         <button
                           onClick={() => setAudioFiles(audioFiles.filter((_, idx) => idx !== i))}
-                          className="w-5 h-5 rounded-md hover:bg-red-500/30 flex items-center justify-center text-[#B3CFE5]/50 hover:text-red-400 transition-all opacity-0 group-hover:opacity-100 shrink-0"
+                          className="w-5 h-5 rounded-md hover:bg-red-500/30 flex items-center justify-center text-[#B3CFE5]/50 hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100 shrink-0"
                           title={`Remove ${f.name}`}
                         >
                           <X className="w-3 h-3" />
@@ -614,13 +658,13 @@ export function InputSection({
               )}
             </div>
           ) : (
-            <div className="space-y-8 animate-in fade-in zoom-in-95 duration-500">
+            <div className="space-y-8 animate-in fade-in duration-150 duration-150">
               <div className="flex flex-col gap-4">
                 <div className="flex items-center justify-between">
                   <h4 className="text-sm font-extrabold uppercase tracking-widest text-[#F6FAFD] flex items-center gap-2">
                     <FileText className="w-4 h-4" /> {t('bypassedInput')}
                   </h4>
-                  <label className="flex items-center gap-2 px-3 py-1.5 bg-[#1A3D63]/40 hover:bg-[#4A7FA7] text-[#B3CFE5] hover:text-[#F6FAFD] text-[10px] font-black uppercase tracking-widest rounded-xl transition-all cursor-pointer" title="Upload transcript document file (TXT, PDF, DOCX)">
+                  <label className="flex items-center gap-2 px-3 py-1.5 bg-blue-950/18 hover:bg-[#4A7FA7] text-[#B3CFE5] hover:text-[#F6FAFD] text-[10px] font-black uppercase tracking-widest rounded-xl transition-colors cursor-pointer" title="Upload transcript document file (TXT, PDF, DOCX)">
                     <FileUp className="w-3.5 h-3.5" /> {manualFile ? manualFile.name : t('uploadDocument')}
                     <input
                       type="file"
@@ -634,7 +678,7 @@ export function InputSection({
                   value={manualTranscript}
                   onChange={(e) => setManualTranscript(e.target.value)}
                   placeholder={t('transcriptPlaceholderImmediate')}
-                  className="w-full h-48 p-8 rounded-[2.5rem] bg-[#1A3D63]/40 border border-transparent focus:border-[#4A7FA7]/30 focus:bg-[#1A3D63]/50 focus:apple-shadow transition-all text-base font-medium leading-relaxed resize-none text-[#F6FAFD] outline-none placeholder:text-[#B3CFE5]"
+                  className="w-full h-48 p-8 rounded-[2.5rem] bg-blue-950/18 border border-transparent focus:border-blue-400/15 focus:bg-[#1A3D63]/50 focus:apple-shadow transition-colors text-base font-medium leading-relaxed resize-none text-[#F6FAFD] outline-none placeholder:text-[#B3CFE5]"
                 />
               </div>
             </div>
@@ -642,7 +686,7 @@ export function InputSection({
 
           {/* SHARED STRATEGIC CONTEXT GRID */}
           {(audioFiles.length > 0 || manualTranscript.trim() || manualFile) && !isProcessing && !batchId && (
-            <div className="space-y-8 pt-10 border-t border-[#4A7FA7]/20 animate-in slide-in-from-top-8 duration-700">
+            <div className="space-y-8 pt-10 border-t border-blue-400/10 animate-in slide-in-from-top-8 duration-150">
               <div className="flex items-center justify-between px-1">
                 <h4 className="text-sm font-extrabold uppercase tracking-widest text-[#F6FAFD] flex items-center gap-2">
                   <Target className="w-4 h-4" /> Strategic Context
@@ -652,14 +696,14 @@ export function InputSection({
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pb-6 border-b border-[#4A7FA7]/20">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pb-6 border-b border-blue-400/10">
                 {/* Red Flag Single-Select */}
                 <div id="red-flag-dropdown" className="relative group/select">
                   <label className="text-[10px] font-black uppercase tracking-[0.2em] text-red-400/80 mb-2 block px-1">Risk / High Priority</label>
                   <div
-                    onClick={() => setIsRedFlagOpen(!isRedFlagOpen)}
+                    onClick={toggleRedFlagOpen}
                     className={cn(
-                      "w-full h-16 bg-red-500/10 border border-transparent rounded-2xl px-14 flex items-center cursor-pointer transition-all hover:bg-red-500/15",
+                      "w-full h-16 bg-red-500/10 border border-transparent rounded-2xl px-14 flex items-center cursor-pointer transition-colors hover:bg-red-500/15",
                       isRedFlagOpen && "border-red-500/30 bg-[#502D55]/50 shadow-lg"
                     )}
                   >
@@ -671,35 +715,38 @@ export function InputSection({
                   <ChevronRight className={cn("absolute right-5 top-[65%] -translate-y-1/2 w-5 h-5 text-[#F8F4E9] transition-transform", isRedFlagOpen ? "-rotate-90 text-red-400" : "rotate-90")} />
 
                   {isRedFlagOpen && (
-                    <div className="absolute top-[105%] left-0 right-0 bg-[#502D55]/95 border border-red-500/30 rounded-2xl shadow-2xl p-4 z-[60] space-y-1.5 animate-in fade-in slide-in-from-top-2 duration-200 lg:max-h-[300px] overflow-y-auto">
-                      {questionnaires.filter(q => q.is_redflag === true).map(q => {
+                    <div className="absolute top-[105%] left-0 right-0 bg-[#502D55]/95 border border-red-500/30 rounded-2xl p-4 z-[60] space-y-1.5 animate-in fade-in duration-150 lg:max-h-[300px] overflow-y-auto">
+                      {/* None / Deselect option */}
+                      {selectedRedFlagId && (
+                        <div
+                          onClick={() => selectRedFlag(selectedRedFlagId)}
+                          className="flex items-center gap-3 p-3 rounded-xl transition-colors cursor-pointer hover:bg-red-500/10 text-[#F8F4E9]/50 border border-dashed border-red-500/20 mb-1"
+                        >
+                          <X className="w-4 h-4 text-red-400/60 shrink-0" />
+                          <span className="text-xs font-bold">Clear selection</span>
+                        </div>
+                      )}
+                      {redFlagQuestionnaires.map(q => {
                         const qId = q.id || q._id;
                         const isSelected = selectedRedFlagId === qId;
                         return (
                           <div
                             key={`rf-${qId}`}
-                            onClick={() => {
-                              setSelectedRedFlagId(qId);
-                              setSelectedRedFlagIds([qId]);
-                              // Add red flag to questionnaire IDs if not already there
-                              if (!selectedOtherIds.includes(qId)) {
-                                setSelectedOtherIds([...selectedOtherIds, qId]);
-                              }
-                              setIsRedFlagOpen(false);
-                            }}
+                            onClick={() => selectRedFlag(qId)}
                             className={cn(
-                              "flex items-center gap-3 p-3 rounded-xl transition-all cursor-pointer",
+                              "flex items-center gap-3 p-3 rounded-xl transition-colors cursor-pointer",
                               isSelected ? "bg-red-500/30 text-[#F8F4E9]" : "hover:bg-red-500/20 text-[#F8F4E9]"
                             )}
                           >
-                            <div className={cn("w-4 h-4 rounded-full border-2 flex items-center justify-center", isSelected ? "border-red-400 bg-red-500" : "border-red-400")}>
+                            {/* Radio circle */}
+                            <div className={cn("w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0", isSelected ? "border-red-400 bg-red-500" : "border-red-400/60")}>
                               {isSelected && <div className="w-2 h-2 rounded-full bg-white" />}
                             </div>
                             <span className="text-sm font-bold">{q.name}</span>
                           </div>
                         );
                       })}
-                      {questionnaires.filter(q => q.is_redflag === true).length === 0 && (
+                      {redFlagQuestionnaires.length === 0 && (
                         <div className="text-center py-4 text-[#935073]/50 text-xs">
                           No red flag questionnaires available
                         </div>
@@ -712,9 +759,9 @@ export function InputSection({
                 <div id="questionnaire-dropdown" className="relative group/select">
                   <label className="text-[10px] font-black uppercase tracking-[0.2em] text-[#F8F4E9]/80 mb-2 block px-1">Questionaire</label>
                   <div
-                    onClick={() => setIsOtherOpen(!isOtherOpen)}
+                    onClick={toggleOtherOpen}
                     className={cn(
-                      "w-full h-16 bg-[#2A4A5E]/60 border border-transparent rounded-2xl px-14 flex items-center cursor-pointer transition-all hover:bg-[#2A4A5E]/80",
+                      "w-full h-16 bg-[#2A4A5E]/60 border border-transparent rounded-2xl px-14 flex items-center cursor-pointer transition-colors hover:bg-[#2A4A5E]/80",
                       isOtherOpen && "border-[#5A8FB4]/40 bg-[#2A4A5E]/70 shadow-lg"
                     )}
                   >
@@ -726,29 +773,23 @@ export function InputSection({
                   <ChevronRight className={cn("absolute right-5 top-[65%] -translate-y-1/2 w-5 h-5 text-[#F8F4E9] transition-transform", isOtherOpen && "-rotate-90")} />
 
                   {isOtherOpen && (
-                    <div className="absolute top-[105%] left-0 right-0 bg-[#2A4A5E]/95 border border-[#5A8FB4]/40 rounded-2xl shadow-2xl p-4 z-50 space-y-1.5 animate-in fade-in slide-in-from-top-2 duration-200 lg:max-h-[300px] overflow-y-auto">
-                      {questionnaires.filter(q => q.is_redflag === false).map(q => {
+                    <div className="absolute top-[105%] left-0 right-0 bg-[#2A4A5E]/95 border border-[#5A8FB4]/40 rounded-2xl shadow-2xl p-4 z-50 space-y-1.5 animate-in fade-in duration-150 duration-150 lg:max-h-[300px] overflow-y-auto">
+                      {standardQuestionnaires.map(q => {
                         const qId = q.id || q._id;
                         const isChecked = selectedOtherIds.includes(qId);
                         return (
-                          <label key={`oa-${qId}`} className="flex items-center gap-3 p-3 rounded-xl transition-all cursor-pointer hover:bg-[#5A8FB4]/20">
+                          <label key={`oa-${qId}`} className="flex items-center gap-3 p-3 rounded-xl transition-colors cursor-pointer hover:bg-[#5A8FB4]/20">
                             <input
                               type="checkbox"
                               checked={isChecked}
-                              onChange={(e) => {
-                                if (e.target.checked) {
-                                  setSelectedOtherIds([...selectedOtherIds, qId]);
-                                } else {
-                                  setSelectedOtherIds(selectedOtherIds.filter(id => id !== qId));
-                                }
-                              }}
+                              onChange={(e) => toggleOtherId(qId, e.target.checked)}
                               className="w-4 h-4 rounded-md border-[#5A8FB4] text-[#5A8FB4] focus:ring-[#5A8FB4]"
                             />
                             <span className="text-sm font-bold text-[#F8F4E9]">{q.name}</span>
                           </label>
                         );
                       })}
-                      {questionnaires.filter(q => q.is_redflag === false).length === 0 && (
+                      {standardQuestionnaires.length === 0 && (
                         <div className="text-center py-4 text-[#5A8FB4]/50 text-xs">
                           No questionnaires available
                         </div>
@@ -763,9 +804,9 @@ export function InputSection({
                 <div id="campaign-dropdown" className="relative group/select">
                   <label className="text-[10px] font-black uppercase tracking-[0.2em] text-[#F8F4E9]/80 mb-2 block px-1">Campaign Name</label>
                   <div
-                    onClick={() => setIsCampaignOpen(!isCampaignOpen)}
+                    onClick={toggleCampaignOpen}
                     className={cn(
-                      "w-full h-16 bg-[#2A4A5E]/60 border border-transparent rounded-2xl px-14 flex items-center cursor-pointer transition-all hover:bg-[#2A4A5E]/80",
+                      "w-full h-16 bg-[#2A4A5E]/60 border border-transparent rounded-2xl px-14 flex items-center cursor-pointer transition-colors hover:bg-[#2A4A5E]/80",
                       isCampaignOpen && "border-[#5A8FB4]/40 bg-[#2A4A5E]/70 shadow-lg"
                     )}
                   >
@@ -777,19 +818,16 @@ export function InputSection({
                   <ChevronRight className={cn("absolute right-5 top-[65%] -translate-y-1/2 w-5 h-5 text-[#F8F4E9] transition-transform", isCampaignOpen && "-rotate-90")} />
 
                   {isCampaignOpen && (
-                    <div className="absolute top-[105%] left-0 right-0 bg-[#2A4A5E]/95 border border-[#5A8FB4]/40 rounded-2xl shadow-2xl p-4 z-50 space-y-1.5 animate-in fade-in slide-in-from-top-2 duration-200 lg:max-h-[300px] overflow-y-auto">
+                    <div className="absolute top-[105%] left-0 right-0 bg-[#2A4A5E]/95 border border-[#5A8FB4]/40 rounded-2xl shadow-2xl p-4 z-50 space-y-1.5 animate-in fade-in duration-150 duration-150 lg:max-h-[300px] overflow-y-auto">
                       {campaigns.map(c => {
                         const cId = c.id || c._id;
                         const isSelected = selectedCampaignId === cId;
                         return (
                           <div
                             key={cId}
-                            onClick={() => {
-                              setSelectedCampaignId(cId);
-                              setIsCampaignOpen(false);
-                            }}
+                            onClick={() => selectCampaign(cId)}
                             className={cn(
-                              "flex items-center gap-3 p-3 rounded-xl transition-all cursor-pointer",
+                              "flex items-center gap-3 p-3 rounded-xl transition-colors cursor-pointer",
                               isSelected ? "bg-[#5A8FB4]/30 text-[#F8F4E9]" : "hover:bg-[#5A8FB4]/20 text-[#F8F4E9]"
                             )}
                           >
@@ -813,9 +851,9 @@ export function InputSection({
                 <div id="profile-dropdown" className="relative group/select">
                   <label className="text-[10px] font-black uppercase tracking-[0.2em] text-[#F8F4E9]/80 mb-2 block px-1">Intelligence Profile</label>
                   <div
-                    onClick={() => setIsProfileOpen(!isProfileOpen)}
+                    onClick={toggleProfileOpen}
                     className={cn(
-                      "w-full h-16 bg-[#2A4A5E]/60 border border-transparent rounded-2xl px-14 flex items-center cursor-pointer transition-all hover:bg-[#2A4A5E]/80",
+                      "w-full h-16 bg-[#2A4A5E]/60 border border-transparent rounded-2xl px-14 flex items-center cursor-pointer transition-colors hover:bg-[#2A4A5E]/80",
                       isProfileOpen && "border-[#5A8FB4]/40 bg-[#2A4A5E]/70 shadow-lg"
                     )}
                   >
@@ -827,19 +865,16 @@ export function InputSection({
                   <ChevronRight className={cn("absolute right-5 top-[65%] -translate-y-1/2 w-5 h-5 text-[#F8F4E9] transition-transform", isProfileOpen && "-rotate-90")} />
 
                   {isProfileOpen && (
-                    <div className="absolute top-[105%] left-0 right-0 bg-[#2A4A5E]/95 border border-[#5A8FB4]/40 rounded-2xl shadow-2xl p-4 z-50 space-y-1.5 animate-in fade-in slide-in-from-top-2 duration-200 lg:max-h-[300px] overflow-y-auto">
+                    <div className="absolute top-[105%] left-0 right-0 bg-[#2A4A5E]/95 border border-[#5A8FB4]/40 rounded-2xl shadow-2xl p-4 z-50 space-y-1.5 animate-in fade-in duration-150 duration-150 lg:max-h-[300px] overflow-y-auto">
                       {profiles.map(p => {
                         const pId = p.id || p._id;
                         const isSelected = selectedProfileId === pId;
                         return (
                           <div
                             key={pId}
-                            onClick={() => {
-                              setSelectedProfileId(pId);
-                              setIsProfileOpen(false);
-                            }}
+                            onClick={() => selectProfile(pId)}
                             className={cn(
-                              "flex items-center gap-3 p-3 rounded-xl transition-all cursor-pointer",
+                              "flex items-center gap-3 p-3 rounded-xl transition-colors cursor-pointer",
                               isSelected ? "bg-[#5A8FB4]/30 text-[#F8F4E9]" : "hover:bg-[#5A8FB4]/20 text-[#F8F4E9]"
                             )}
                           >
@@ -861,7 +896,7 @@ export function InputSection({
               </div>
 
               {/* Meta Tags Input (Optional) */}
-              <div className="space-y-4 pt-6 border-t border-[#4A7FA7]/20">
+              <div className="space-y-4 pt-6 border-t border-blue-400/10">
                 <div className="flex items-center justify-between px-1">
                   <label className="text-[10px] font-black uppercase tracking-[0.2em] text-[#B3CFE5] flex items-center gap-2">
                     <Tag className="w-3.5 h-3.5" /> {t('metaTags')}
@@ -877,7 +912,7 @@ export function InputSection({
                   <input
                     type="text"
                     placeholder={t('metaTagsPlaceholder')}
-                    className="w-full h-12 px-4 rounded-xl bg-[#1A3D63]/40 border border-transparent focus:border-[#4A7FA7]/30 focus:bg-[#1A3D63]/50 text-[#F6FAFD] font-medium transition-all outline-none placeholder:text-[#B3CFE5]"
+                    className="w-full h-12 px-4 rounded-xl bg-blue-950/18 border border-transparent focus:border-blue-400/15 focus:bg-[#1A3D63]/50 text-[#F6FAFD] font-medium transition-colors outline-none placeholder:text-[#B3CFE5]"
                     onKeyDown={(e) => {
                       if (e.key === 'Enter') {
                         e.preventDefault();
@@ -919,17 +954,17 @@ export function InputSection({
 
                   {/* Display Added Tags */}
                   {metaTags.length > 0 && (
-                    <div className="flex flex-wrap gap-2 p-3 rounded-xl bg-[#1A3D63]/40 border border-[#4A7FA7]/20">
+                    <div className="flex flex-wrap gap-2 p-3 rounded-xl glass">
                       {metaTags.map((tag, idx) => (
                         <span
                           key={idx}
-                          className="flex items-center gap-2 px-3 py-1.5 bg-blue-500/20 text-blue-300 border border-blue-400/30 rounded-lg text-xs font-bold group hover:bg-blue-500/30 transition-all"
+                          className="flex items-center gap-2 px-3 py-1.5 bg-blue-500/20 text-blue-300 border border-blue-400/30 rounded-lg text-xs font-bold group hover:bg-blue-500/30 transition-colors"
                         >
                           #{tag}
                           <button
                             type="button"
-                            onClick={() => setMetaTags(metaTags.filter((_, i) => i !== idx))}
-                            className="w-4 h-4 rounded-full hover:bg-blue-400/40 flex items-center justify-center transition-all"
+                            onClick={() => removeMetaTag(idx)}
+                            className="w-4 h-4 rounded-full hover:bg-blue-400/40 flex items-center justify-center transition-colors"
                             title="Remove tag"
                           >
                             <X className="w-3 h-3" />
@@ -942,7 +977,7 @@ export function InputSection({
               </div>
 
               {/* Custom Questions Input (Optional) */}
-              <div className="space-y-4 pt-6 border-t border-[#4A7FA7]/20">
+              <div className="space-y-4 pt-6 border-t border-blue-400/10">
                 <div className="flex items-center justify-between px-1">
                   <label className="text-[10px] font-black uppercase tracking-[0.2em] text-[#B3CFE5] flex items-center gap-2">
                     <HelpCircle className="w-3.5 h-3.5" /> Custom Questions (Optional)
@@ -958,7 +993,7 @@ export function InputSection({
                   <input
                     type="text"
                     placeholder="Enter your question and press Enter..."
-                    className="w-full h-12 px-4 rounded-xl bg-[#1A3D63]/40 border border-transparent focus:border-[#4A7FA7]/30 focus:bg-[#1A3D63]/50 text-[#F6FAFD] font-medium transition-all outline-none placeholder:text-[#B3CFE5]"
+                    className="w-full h-12 px-4 rounded-xl bg-blue-950/18 border border-transparent focus:border-blue-400/15 focus:bg-[#1A3D63]/50 text-[#F6FAFD] font-medium transition-colors outline-none placeholder:text-[#B3CFE5]"
                     onKeyDown={(e) => {
                       if (e.key === 'Enter') {
                         e.preventDefault();
@@ -975,11 +1010,11 @@ export function InputSection({
 
                   {/* Display Added Questions */}
                   {customQuestions.length > 0 && (
-                    <div className="space-y-2 p-3 rounded-xl bg-[#1A3D63]/40 border border-[#4A7FA7]/20">
+                    <div className="space-y-2 p-3 rounded-xl glass">
                       {customQuestions.map((q, idx) => (
                         <div
                           key={idx}
-                          className="flex items-center justify-between gap-3 px-4 py-3 bg-[#1A3D63]/50 border border-[#4A7FA7]/20 rounded-lg group hover:border-[#4A7FA7]/40 transition-all"
+                          className="flex items-center justify-between gap-3 px-4 py-3 bg-[#1A3D63]/50 border border-blue-400/10 rounded-lg group hover:border-blue-400/22 transition-colors"
                         >
                           <div className="flex-1 min-w-0">
                             <p className="text-sm font-medium text-[#F6FAFD] truncate">{q.text}</p>
@@ -998,12 +1033,12 @@ export function InputSection({
                                 updated[idx].weight = parseInt(e.target.value) || 0;
                                 setCustomQuestions(updated);
                               }}
-                              className="w-18 h-8 px-2 rounded-lg bg-[#1A3D63]/60 border border-[#4A7FA7]/20 text-[#F6FAFD] font-bold text-xs text-center outline-none focus:border-[#4A7FA7]/40 transition-all"
+                              className="w-18 h-8 px-2 rounded-lg bg-blue-950/25 border border-blue-400/10 text-[#F6FAFD] font-bold text-xs text-center outline-none focus:border-blue-400/22 transition-colors"
                             />
                             <button
                               type="button"
-                              onClick={() => setCustomQuestions(customQuestions.filter((_, i) => i !== idx))}
-                              className="w-7 h-7 rounded-lg hover:bg-red-500/20 text-[#B3CFE5] hover:text-red-400 flex items-center justify-center transition-all"
+                              onClick={() => removeCustomQ(idx)}
+                              className="w-7 h-7 rounded-lg hover:bg-red-500/20 text-[#B3CFE5] hover:text-red-400 flex items-center justify-center transition-colors"
                               title="Remove custom question"
                             >
                               <X className="w-3.5 h-3.5" />
@@ -1022,7 +1057,7 @@ export function InputSection({
                   : handleTranscriptSubmit}
 
                 disabled={isProcessing || !selectedCampaignId || !selectedProfileId}
-                className="w-full h-16 bg-gradient-to-r from-[#4A7FA7] to-[#1A3D63] hover:from-[#4A7FA7]/90 hover:to-[#1A3D63]/90 disabled:bg-[#1A3D63]/50 text-[#F6FAFD] rounded-[1.25rem] font-bold text-sm uppercase tracking-widest transition-all apple-shadow active:scale-[0.98] flex items-center justify-center gap-3 mt-4 glow"
+                className="w-full h-16 bg-gradient-to-r from-[#4A7FA7] to-[#1A3D63] hover:from-[#4A7FA7]/90 hover:to-[#1A3D63]/90 disabled:bg-[#1A3D63]/50 text-[#F6FAFD] rounded-[1.25rem] font-bold text-sm uppercase tracking-widest transition-colors apple-shadow active:scale-[0.98] flex items-center justify-center gap-3 mt-4 glow"
                 title="Submit for AI analysis"
               >
                 <ArrowRight className="w-5 h-5 opacity-50" />
@@ -1033,10 +1068,10 @@ export function InputSection({
 
           {/* PROCESSING VIEW */}
           {isProcessing && (
-            <div className="p-12 rounded-[2.5rem] bg-[#1A3D63]/40 border border-[#4A7FA7]/30 animate-in zoom-in-95 duration-500">
+            <div className="p-12 rounded-[2.5rem] glass animate-in fade-in duration-150 duration-150">
               <div className="flex flex-col items-center gap-8">
                 <div className="relative">
-                  <div className="w-20 h-20 rounded-[2.5rem] border-4 border-[#4A7FA7]/20 border-t-[#4A7FA7] animate-spin glow" />
+                  <div className="w-20 h-20 rounded-[2.5rem] border-4 border-blue-400/10 border-t-[#4A7FA7] animate-spin glow" />
                   <div className="absolute inset-0 flex items-center justify-center">
                     <Zap className="w-6 h-6 text-[#4A7FA7] fill-current animate-pulse delay-700" />
                   </div>
@@ -1060,11 +1095,11 @@ export function InputSection({
 
                     return (
                       <div key={key} className={cn(
-                        "flex items-center gap-4 p-4 rounded-2xl border transition-all duration-500",
-                        isActive ? "bg-[#1A3D63]/50 border-[#4A7FA7]/30 apple-shadow scale-[1.02]" : "bg-transparent border-transparent opacity-30"
+                        "flex items-center gap-4 p-4 rounded-2xl border transition-colors duration-150",
+                        isActive ? "bg-[#1A3D63]/50 border-blue-400/15 apple-shadow scale-[1.02]" : "bg-transparent border-transparent opacity-30"
                       )}>
                         <div className={cn(
-                          "w-9 h-9 rounded-xl flex items-center justify-center transition-all",
+                          "w-9 h-9 rounded-xl flex items-center justify-center transition-colors",
                           isActive ? "bg-[#4A7FA7] text-[#F6FAFD] shadow-lg shadow-[#4A7FA7]/20 glow" : isDone ? "bg-green-500 text-[#F6FAFD]" : "bg-[#4A7FA7]/20 text-[#B3CFE5]"
                         )}>
                           {isDone ? <CheckCircle2 className="w-4 h-4" /> : isActive ? <Loader2 className="w-4 h-4 animate-spin" /> : <div className="w-1.5 h-1.5 rounded-full bg-current" />}
@@ -1083,18 +1118,18 @@ export function InputSection({
 
           {/* SHARED RESULTS AREA */}
           {generatedTranscript && !isProcessing && (
-            <div className="space-y-6 pt-10 border-t border-[#4A7FA7]/30 animate-in slide-in-from-top-4 duration-700">
+            <div className="space-y-6 pt-10 border-t border-blue-400/15 animate-in slide-in-from-top-4 duration-150">
               <div className="flex items-center justify-between">
                 <h4 className="text-sm font-extrabold uppercase tracking-widest text-[#B3CFE5]">Intelligence Extraction</h4>
                 <div className="flex items-center gap-2">
-                  <button onClick={downloadTranscript} className="flex items-center gap-1.5 px-3 py-1 bg-[#1A3D63]/40 hover:bg-[#4A7FA7] text-[#B3CFE5] hover:text-[#F6FAFD] text-[10px] font-black uppercase tracking-widest rounded-lg transition-all" title="Download transcript as text file"><Download className="w-3 h-3" /> Download</button>
+                  <button onClick={downloadTranscript} className="flex items-center gap-1.5 px-3 py-1 bg-blue-950/18 hover:bg-[#4A7FA7] text-[#B3CFE5] hover:text-[#F6FAFD] text-[10px] font-black uppercase tracking-widest rounded-lg transition-colors" title="Download transcript as text file"><Download className="w-3 h-3" /> Download</button>
                   <span className="text-[10px] uppercase font-black text-green-400 bg-green-500/20 px-2 py-1 rounded-full border border-green-400/30">Signal Locked</span>
                 </div>
               </div>
               <textarea
                 value={generatedTranscript}
                 readOnly
-                className="w-full min-h-[160px] p-8 rounded-[2rem] bg-[#1A3D63]/40 border border-[#4A7FA7]/30 text-[#B3CFE5] text-base leading-relaxed italic font-medium apple-shadow outline-none"
+                className="w-full min-h-[160px] p-8 rounded-[2rem] glass text-[#B3CFE5] text-base leading-relaxed italic font-medium apple-shadow outline-none"
               />
               {callAnalytics && (
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -1104,7 +1139,7 @@ export function InputSection({
                     { l: "Turns", v: String(callAnalytics.turn_count || 0) },
                     { l: "Diarization", v: `${callAnalytics.speakers?.length || 0} IDs` }
                   ].map((m) => (
-                    <div key={m.l} className="flex flex-col items-center justify-center p-4 rounded-2xl bg-[#1A3D63]/40 border border-[#4A7FA7]/20">
+                    <div key={m.l} className="flex flex-col items-center justify-center p-4 rounded-2xl glass">
                       <span className="text-[10px] font-black uppercase tracking-widest text-[#B3CFE5]">{m.l}</span>
                       <span className="text-xl font-[850] text-[#F6FAFD] tracking-tight">{m.v}</span>
                     </div>

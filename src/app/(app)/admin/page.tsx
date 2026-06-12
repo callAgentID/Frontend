@@ -108,20 +108,21 @@ interface QAAnalytics {
 
 // ─── Chart theme ──────────────────────────────────────────
 
+// Silver shades — graduated from bright silver to deep blue-silver
 const CHART_COLORS = [
-  "rgba(99, 179, 237, 0.85)",   // sky blue
-  "rgba(154, 117, 234, 0.85)",  // purple
-  "rgba(72, 199, 142, 0.85)",   // green
-  "rgba(255, 183, 77, 0.85)",   // amber
-  "rgba(252, 110, 110, 0.85)",  // red/coral
-  "rgba(56, 211, 203, 0.85)",   // teal
-  "rgba(255, 145, 77, 0.85)",   // orange
-  "rgba(236, 111, 170, 0.85)",  // pink
-  "rgba(130, 217, 103, 0.85)",  // lime
-  "rgba(100, 150, 255, 0.85)",  // indigo
+  "rgba(220, 230, 245, 0.90)",  // bright silver
+  "rgba(190, 205, 228, 0.88)",  // silver-blue 1
+  "rgba(160, 180, 215, 0.88)",  // silver-blue 2
+  "rgba(135, 158, 200, 0.86)",  // medium silver-blue
+  "rgba(110, 138, 188, 0.86)",  // deeper silver-blue
+  "rgba(88,  118, 175, 0.85)",  // blue-silver
+  "rgba(68,   98, 160, 0.85)",  // dark silver-blue
+  "rgba(50,   80, 148, 0.84)",  // deep blue-silver
+  "rgba(205, 218, 238, 0.88)",  // pale silver
+  "rgba(175, 193, 222, 0.86)",  // mid-pale silver
 ];
 
-const CHART_BORDERS = CHART_COLORS.map(c => c.replace("0.85", "1"));
+const CHART_BORDERS = CHART_COLORS.map(c => c.replace(/0\.\d+\)$/, "1)"));
 
 const baseChartOptions = {
   responsive: true,
@@ -221,11 +222,11 @@ export default function AdminPage() {
     datasets: [{
       label: "Calls",
       data: volumeData.volume_over_time.map(v => v.count),
-      borderColor: "rgba(99,179,237,1)",
-      backgroundColor: "rgba(99,179,237,0.15)",
+      borderColor: "rgba(190,205,228,1)",
+      backgroundColor: "rgba(190,205,228,0.12)",
       fill: true,
       tension: 0.4,
-      pointBackgroundColor: "rgba(99,179,237,1)",
+      pointBackgroundColor: "rgba(220,230,245,1)",
       pointBorderColor: "#fff",
       pointRadius: 5,
       pointHoverRadius: 8,
@@ -269,43 +270,29 @@ export default function AdminPage() {
     }]
   } : null;
 
-  // Red flag score distribution — Doughnut
+  // Red flag score distribution — Doughnut (blue shades)
   const redFlagDoughnutData = complianceData ? {
     labels: Object.keys(complianceData.red_flag_score_distribution),
     datasets: [{
       data: Object.values(complianceData.red_flag_score_distribution),
       backgroundColor: [
-        "rgba(72,199,142,0.85)",   // green — high score good
-        "rgba(255,183,77,0.85)",   // amber — medium
-        "rgba(252,110,110,0.85)",  // red   — low score bad
+        "rgba(220, 230, 245, 0.90)",  // bright silver
+        "rgba(160, 180, 215, 0.88)",  // mid silver
+        "rgba(88,  118, 175, 0.85)",  // dark silver-blue
       ],
-      borderColor: ["rgba(72,199,142,1)", "rgba(255,183,77,1)", "rgba(252,110,110,1)"],
+      borderColor: ["rgba(220,230,245,1)", "rgba(160,180,215,1)", "rgba(88,118,175,1)"],
       borderWidth: 2,
     }]
   } : null;
 
-  // Common violations — Bar chart (gradient red shades per bar)
+  // Common violations — Bar chart (blue shades)
   const violationsBarData = complianceData ? {
     labels: Object.keys(complianceData.common_violations),
     datasets: [{
       label: "Violations",
       data: Object.values(complianceData.common_violations),
-      backgroundColor: [
-        "rgba(252,110,110,0.8)",
-        "rgba(255,145,77,0.8)",
-        "rgba(255,183,77,0.8)",
-        "rgba(236,111,170,0.8)",
-        "rgba(154,117,234,0.8)",
-        "rgba(252,110,110,0.8)",
-      ],
-      borderColor: [
-        "rgba(252,110,110,1)",
-        "rgba(255,145,77,1)",
-        "rgba(255,183,77,1)",
-        "rgba(236,111,170,1)",
-        "rgba(154,117,234,1)",
-        "rgba(252,110,110,1)",
-      ],
+      backgroundColor: CHART_COLORS,
+      borderColor: CHART_BORDERS,
       borderWidth: 2,
       borderRadius: 6,
     }]
@@ -335,18 +322,18 @@ export default function AdminPage() {
         qaData.escalation_rate * 100,
         complianceData ? (1 - complianceData.red_flag_occurrence_rate) * 100 : 0,
       ],
-      backgroundColor: "rgba(154,117,234,0.25)",
-      borderColor: "rgba(154,117,234,1)",
+      backgroundColor: "rgba(190,205,228,0.10)",
+      borderColor: "rgba(190,205,228,0.90)",
       pointBackgroundColor: [
-        "rgba(72,199,142,1)",
-        "rgba(99,179,237,1)",
-        "rgba(255,183,77,1)",
-        "rgba(255,145,77,1)",
-        "rgba(252,110,110,1)",
-        "rgba(56,211,203,1)",
+        "rgba(220, 230, 245, 1)",
+        "rgba(190, 205, 228, 1)",
+        "rgba(160, 180, 215, 1)",
+        "rgba(135, 158, 200, 1)",
+        "rgba(110, 138, 188, 1)",
+        "rgba(88,  118, 175, 1)",
       ],
-      pointBorderColor: "#F6FAFD",
-      pointRadius: 6,
+      pointBorderColor: "rgba(4,12,30,0.9)",
+      pointRadius: 5,
       borderWidth: 2,
     }]
   } : null;
@@ -364,14 +351,14 @@ export default function AdminPage() {
           </div>
           <p className="text-[#B3CFE5] text-sm font-medium pl-1">Platform-wide intelligence across all campaigns</p>
         </div>
-        <button onClick={fetchAll} disabled={isLoading} className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-[#4A7FA7] to-[#1A3D63] glow text-white rounded-xl font-bold text-xs uppercase tracking-widest hover:opacity-90 disabled:opacity-50 transition-all shrink-0">
+        <button onClick={fetchAll} disabled={isLoading} className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-[#4A7FA7] to-[#1A3D63] glow text-white rounded-xl font-bold text-xs uppercase tracking-widest hover:opacity-90 disabled:opacity-50 transition-colors shrink-0">
           {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
           Refresh
         </button>
       </div>
 
       {/* Filters */}
-      <div className="p-5 bg-[#1A3D63]/60 rounded-2xl border border-[#4A7FA7]/30 space-y-4">
+      <div className="p-5 bg-blue-950/30 rounded-2xl border border-blue-400/18 space-y-4">
         <div className="flex items-center gap-2 mb-2">
           <Filter className="w-4 h-4 text-[#4A7FA7]" />
           <h3 className="text-sm font-black uppercase tracking-wider text-[#F6FAFD]">Filters</h3>
@@ -380,17 +367,17 @@ export default function AdminPage() {
           <div className="space-y-1.5">
             <label className="text-[10px] font-black uppercase tracking-wider text-[#B3CFE5]">Start Date</label>
             <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)}
-              className="w-full h-10 bg-[#0A1931]/60 border border-[#4A7FA7]/30 rounded-xl px-3 text-sm font-semibold text-[#F6FAFD] outline-none focus:border-[#4A7FA7] transition-all" />
+              className="w-full h-10 bg-black/25 border border-blue-400/18 rounded-xl px-3 text-sm font-semibold text-[#F6FAFD] outline-none focus:border-[#4A7FA7] transition-colors" />
           </div>
           <div className="space-y-1.5">
             <label className="text-[10px] font-black uppercase tracking-wider text-[#B3CFE5]">End Date</label>
             <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)}
-              className="w-full h-10 bg-[#0A1931]/60 border border-[#4A7FA7]/30 rounded-xl px-3 text-sm font-semibold text-[#F6FAFD] outline-none focus:border-[#4A7FA7] transition-all" />
+              className="w-full h-10 bg-black/25 border border-blue-400/18 rounded-xl px-3 text-sm font-semibold text-[#F6FAFD] outline-none focus:border-[#4A7FA7] transition-colors" />
           </div>
           <div className="space-y-1.5 relative">
             <label className="text-[10px] font-black uppercase tracking-wider text-[#B3CFE5]">Campaign</label>
             <button type="button" onClick={() => setIsCampaignDropdownOpen(!isCampaignDropdownOpen)}
-              className="w-full h-10 bg-[#0A1931]/60 border border-[#4A7FA7]/30 rounded-xl px-3 text-sm font-semibold text-[#F6FAFD] outline-none focus:border-[#4A7FA7] transition-all flex items-center justify-between">
+              className="w-full h-10 bg-black/25 border border-blue-400/18 rounded-xl px-3 text-sm font-semibold text-[#F6FAFD] outline-none focus:border-[#4A7FA7] transition-colors flex items-center justify-between">
               <span className={selectedCampaigns.length === 0 ? "text-[#B3CFE5]/50 text-sm" : "text-sm"}>
                 {selectedCampaigns.length === 0 ? "All campaigns" : `${selectedCampaigns.length} selected`}
               </span>
@@ -399,7 +386,7 @@ export default function AdminPage() {
             {isCampaignDropdownOpen && (
               <>
                 <div className="fixed inset-0 z-10" onClick={() => setIsCampaignDropdownOpen(false)} />
-                <div className="absolute top-full left-0 right-0 mt-1 bg-[#1A3D63]/98 backdrop-blur-md border border-[#4A7FA7]/30 rounded-xl shadow-2xl z-20 max-h-52 overflow-y-auto">
+                <div className="absolute top-full left-0 right-0 mt-1 bg-[#1A3D63]/98 border border-blue-400/18 rounded-xl shadow-2xl z-20 max-h-52 overflow-y-auto">
                   {campaigns.map(c => {
                     const id = c.id || c._id;
                     const checked = selectedCampaigns.includes(id);
@@ -419,7 +406,7 @@ export default function AdminPage() {
                 {selectedCampaigns.map(id => {
                   const c = campaigns.find(c => (c.id || c._id) === id);
                   return c ? (
-                    <span key={id} className="inline-flex items-center gap-1.5 px-2 py-0.5 bg-[#4A7FA7]/20 text-[#B3CFE5] border border-[#4A7FA7]/30 rounded-lg text-xs font-semibold">
+                    <span key={id} className="inline-flex items-center gap-1.5 px-2 py-0.5 bg-[#4A7FA7]/20 text-[#B3CFE5] border border-blue-400/18 rounded-lg text-xs font-semibold">
                       {c.name}
                       <button onClick={() => setSelectedCampaigns(selectedCampaigns.filter(x => x !== id))}><X className="w-3 h-3" /></button>
                     </span>
@@ -430,9 +417,9 @@ export default function AdminPage() {
           </div>
         </div>
         <div className="flex gap-3 pt-1">
-          <button onClick={fetchAll} disabled={isLoading} className="px-5 py-2 bg-gradient-to-r from-[#4A7FA7] to-[#1A3D63] text-white rounded-xl font-bold text-xs uppercase tracking-wider hover:opacity-90 disabled:opacity-50 transition-all">Apply</button>
+          <button onClick={fetchAll} disabled={isLoading} className="px-5 py-2 bg-gradient-to-r from-[#4A7FA7] to-[#1A3D63] text-white rounded-xl font-bold text-xs uppercase tracking-wider hover:opacity-90 disabled:opacity-50 transition-colors">Apply</button>
           <button onClick={() => { setStartDate(""); setEndDate(""); setSelectedCampaigns([]); setTimeout(fetchAll, 50); }}
-            className="px-5 py-2 bg-[#1A3D63]/60 text-[#B3CFE5] hover:text-[#F6FAFD] rounded-xl font-bold text-xs uppercase tracking-wider transition-all">Reset</button>
+            className="px-5 py-2 bg-blue-950/30 text-[#B3CFE5] hover:text-[#F6FAFD] rounded-xl font-bold text-xs uppercase tracking-wider transition-colors">Reset</button>
         </div>
       </div>
 
@@ -489,8 +476,8 @@ export default function AdminPage() {
                     scales: {
                       r: {
                         ticks: { color: "#B3CFE5", font: { size: 9 }, backdropColor: "transparent" },
-                        grid: { color: "rgba(154,117,234,0.2)" },
-                        angleLines: { color: "rgba(154,117,234,0.3)" },
+                        grid: { color: "rgba(44,143,255,0.15)" },
+                        angleLines: { color: "rgba(44,143,255,0.25)" },
                         pointLabels: { color: "#F6FAFD", font: { size: 10, weight: "bold" as const } },
                         min: 0, max: 100,
                       }
@@ -560,7 +547,7 @@ export default function AdminPage() {
                   {Object.entries(interactionData.intent_distribution)
                     .sort((a, b) => b[1] - a[1])
                     .map(([intent, count], i) => (
-                      <div key={i} className="flex items-start gap-3 p-3 rounded-xl bg-[#0A1931]/60 border border-[#4A7FA7]/20">
+                      <div key={i} className="flex items-start gap-3 p-3 rounded-xl bg-black/25 border border-blue-400/12">
                         <span className="text-xs font-black text-[#4A7FA7] shrink-0 w-5 text-right">{count}</span>
                         <p className="text-xs font-medium text-[#B3CFE5] leading-relaxed line-clamp-2">{intent}</p>
                       </div>
@@ -575,7 +562,7 @@ export default function AdminPage() {
                 <div className="overflow-x-auto">
                   <table className="w-full text-xs">
                     <thead>
-                      <tr className="border-b border-[#4A7FA7]/30">
+                      <tr className="border-b border-blue-400/18">
                         <th className="text-left py-2 px-2 font-black uppercase tracking-wider text-[#B3CFE5]">Campaign</th>
                         <th className="text-right py-2 px-2 font-black uppercase tracking-wider text-[#B3CFE5]">Cost</th>
                         <th className="text-right py-2 px-2 font-black uppercase tracking-wider text-[#B3CFE5]">Tokens</th>
@@ -583,7 +570,7 @@ export default function AdminPage() {
                     </thead>
                     <tbody className="divide-y divide-[#4A7FA7]/10">
                       {llmData.breakdown_by_campaign.sort((a, b) => b.total_cost_usd - a.total_cost_usd).map(c => (
-                        <tr key={c.campaign_id} className="hover:bg-[#1A3D63]/40 transition-colors">
+                        <tr key={c.campaign_id} className="hover:bg-blue-950/20 transition-colors">
                           <td className="py-2.5 px-2 font-semibold text-[#F6FAFD] truncate max-w-[150px]">{c.campaign_name}</td>
                           <td className="py-2.5 px-2 text-right font-black text-[#F6FAFD]">{formatLLMCost(c.total_cost_usd)}</td>
                           <td className="py-2.5 px-2 text-right font-semibold text-[#B3CFE5]">{formatTokens(c.total_tokens)}</td>
@@ -615,7 +602,7 @@ export default function AdminPage() {
 
 function KPICard({ icon: Icon, label, value, sub, color }: { icon: any; label: string; value: string; sub: string; color: string }) {
   return (
-    <div className="p-5 bg-[#1A3D63]/60 glow rounded-2xl border border-[#4A7FA7]/30 space-y-3 hover:scale-[1.02] transition-transform">
+    <div className="p-5 glass-card rounded-2xl border border-blue-400/18 space-y-3 hover:scale-[1.02] transition-transform">
       <div className={cn("w-10 h-10 rounded-xl bg-gradient-to-r flex items-center justify-center shadow-lg shrink-0", color)}>
         <Icon className="w-5 h-5 text-white" />
       </div>
@@ -630,7 +617,7 @@ function KPICard({ icon: Icon, label, value, sub, color }: { icon: any; label: s
 
 function ChartCard({ title, icon: Icon, children }: { title: string; icon: any; children: React.ReactNode }) {
   return (
-    <div className="p-6 bg-[#1A3D63]/60 glow rounded-2xl border border-[#4A7FA7]/30 space-y-4">
+    <div className="p-6 glass-card rounded-2xl border border-blue-400/18 space-y-4">
       <div className="flex items-center gap-2">
         <Icon className="w-4 h-4 text-[#4A7FA7] shrink-0" />
         <h3 className="text-sm font-black uppercase tracking-wider text-[#F6FAFD]">{title}</h3>
@@ -642,7 +629,7 @@ function ChartCard({ title, icon: Icon, children }: { title: string; icon: any; 
 
 function StatCard({ label, value }: { label: string; value: string }) {
   return (
-    <div className="p-4 bg-[#1A3D63]/60 rounded-2xl border border-[#4A7FA7]/30 text-center">
+    <div className="p-4 bg-blue-950/30 rounded-2xl border border-blue-400/18 text-center">
       <p className="text-[9px] font-black uppercase tracking-widest text-[#B3CFE5] mb-2">{label}</p>
       <p className="text-xl font-[900] text-[#F6FAFD]">{value}</p>
     </div>

@@ -5,177 +5,223 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTranslations } from 'next-intl';
 import {
-  LayoutDashboard,
-  BarChart3,
-  Command,
-  Layers,
-  FileSearch,
-  FileCode,
-  ShieldAlert,
-  Settings,
-  Users,
-  LogOut,
-  ChevronLeft,
-  Menu,
-  X,
-  Package
+  LayoutDashboard, BarChart3, Layers, FileSearch, FileCode,
+  ShieldAlert, Settings, Users, LogOut, ChevronLeft, Menu, X, Package, Command
 } from "lucide-react";
 import { cn } from "../lib/utils";
 import { LanguageSwitcher } from "./LanguageSwitcher";
 import { useClerk, useUser } from "@clerk/nextjs";
 import { useCurrentUser } from "@/lib/useCurrentUser";
 
-const NAV_ITEMS = [
-  { name: "admin", href: "/admin", icon: Settings, adminOnly: true },
-  { name: "users", href: "/users", icon: Users, adminOnly: true },
-  { name: "analysis", href: "/", icon: LayoutDashboard, adminOnly: false },
-  { name: "callAnalytics", href: "/analytics", icon: BarChart3, adminOnly: false },
-  { name: "batches", href: "/batches", icon: Package, adminOnly: false },
-  { name: "redFlags", href: "/red-flags", icon: ShieldAlert, adminOnly: false },
-  { name: "campaigns", href: "/campaigns", icon: Layers, adminOnly: false },
-  { name: "scripts", href: "/scripts", icon: FileCode, adminOnly: false },
-  { name: "questionnaires", href: "/questionnaires", icon: FileSearch, adminOnly: false },
+// Static styles defined outside component — never recreated on render
+const SIDEBAR_STYLE = {
+  background: 'rgba(4, 12, 30, 0.88)', // more opaque = cheaper blur needed
+  backdropFilter: 'blur(8px)',          // was 20px — 8px is ~4x cheaper
+  WebkitBackdropFilter: 'blur(8px)',
+  borderColor: 'rgba(255, 255, 255, 0.06)',
+  borderRightWidth: '1px',
+  contain: 'layout style',             // isolate layout from rest of page
+} as const;
+
+const NAV_ACTIVE_STYLE = {
+  background: 'rgba(44, 143, 255, 0.16)',
+  border: '1px solid rgba(44, 143, 255, 0.28)',
+  color: '#E8F3FF',
+} as const;
+
+const NAV_INACTIVE_STYLE = {
+  border: '1px solid transparent',
+  color: 'var(--text-secondary)',
+} as const;
+
+type NavRole = "all" | "admin" | "admin_manager";
+
+const NAV_ITEMS: { name: string; href: string; icon: any; roles: NavRole }[] = [
+  { name: "admin",          href: "/admin",          icon: Settings,        roles: "admin_manager" },
+  { name: "users",          href: "/users",          icon: Users,           roles: "admin"         },
+  { name: "analysis",       href: "/",               icon: LayoutDashboard, roles: "all"           },
+  { name: "callAnalytics",  href: "/analytics",      icon: BarChart3,       roles: "all"           },
+  { name: "batches",        href: "/batches",        icon: Package,         roles: "all"           },
+  { name: "redFlags",       href: "/red-flags",      icon: ShieldAlert,     roles: "all"           },
+  { name: "campaigns",      href: "/campaigns",      icon: Layers,          roles: "all"           },
+  { name: "scripts",        href: "/scripts",        icon: FileCode,        roles: "all"           },
+  { name: "questionnaires", href: "/questionnaires", icon: FileSearch,      roles: "all"           },
 ];
 
 export function Sidebar() {
-  const pathname = usePathname();
-  const t = useTranslations('nav');
+  const pathname  = usePathname();
+  const t         = useTranslations('nav');
   const [isCollapsed, setIsCollapsed] = useState(false);
+
+  const toggleCollapse = () => {
+    setIsCollapsed(v => {
+      const next = !v;
+      document.body.classList.toggle('sidebar-collapsed', next);
+      return next;
+    });
+  };
   const [isMobileOpen, setIsMobileOpen] = useState(false);
-  const { signOut } = useClerk();
-  const { user } = useUser();
+  const { signOut }           = useClerk();
+  const { user }              = useUser();
   const { role: backendRole } = useCurrentUser();
 
-  const initials = user
-    ? (((user.firstName?.[0] ?? "") + (user.lastName?.[0] ?? "")).toUpperCase() || user.emailAddresses[0]?.emailAddress?.[0]?.toUpperCase() || "U")
+  const initials    = user
+    ? (((user.firstName?.[0] ?? "") + (user.lastName?.[0] ?? "")).toUpperCase()
+        || user.emailAddresses[0]?.emailAddress?.[0]?.toUpperCase() || "U")
     : "U";
-  const displayName = user ? (user.fullName || user.emailAddresses[0]?.emailAddress || "User") : "User";
-  const isAdmin = backendRole === "Admin";
+  const displayName = user
+    ? (user.fullName || user.emailAddresses[0]?.emailAddress || "User")
+    : "User";
+  const role = backendRole?.toLowerCase() ?? "user"; // "admin" | "manager" | "user"
+
+  const canSee = (itemRoles: NavRole) => {
+    if (itemRoles === "all") return true;
+    if (itemRoles === "admin") return role === "admin";
+    if (itemRoles === "admin_manager") return role === "admin" || role === "manager";
+    return false;
+  };
 
   return (
     <>
-      {/* Mobile Menu Button - Only show when sidebar is closed */}
+      {/* Mobile hamburger */}
       {!isMobileOpen && (
         <button
           onClick={() => setIsMobileOpen(true)}
-          className="fixed top-5 left-4 z-[60] lg:hidden p-2 rounded-xl bg-[#1A3D63]/95 backdrop-blur-md border border-[#4A7FA7]/30 shadow-xl hover:bg-[#4A7FA7]/90 transition-all"
+          className="fixed top-4 left-4 z-[60] lg:hidden w-10 h-10 rounded-2xl glass
+            flex items-center justify-center text-[var(--text-primary)]"
           title="Open Menu"
         >
-          <Menu className="w-5 h-5 text-[#F6FAFD]" />
+          <Menu className="w-5 h-5" />
         </button>
       )}
 
-      {/* Mobile Overlay */}
+      {/* Mobile overlay */}
       {isMobileOpen && (
         <div
-          className="fixed inset-0 bg-black/70 z-[45] lg:hidden backdrop-blur-sm"
+          className="fixed inset-0 bg-black/60 z-[45] lg:hidden"
           onClick={() => setIsMobileOpen(false)}
         />
       )}
 
-      {/* Sidebar */}
-      <aside className={cn(
-        "h-screen flex-shrink-0 flex flex-col border-r border-[#4A7FA7]/20 glass-blur apple-blur top-0 left-0 bg-[#0A1931]/95",
-        "[transition:width_300ms_ease,transform_300ms_ease]",
-        "fixed lg:relative z-[50]",
-        isCollapsed ? "w-[80px]" : "w-[280px]",
-        isMobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
-      )}>
-        <div className={cn("flex flex-col h-full", isCollapsed ? "px-3 py-6" : "p-6")}>
-          {/* Header with Close/Collapse */}
-          <div className="flex items-center justify-between mb-10 mt-2">
-            <div className={cn("flex items-center gap-3", isCollapsed ? "justify-center w-full" : "px-2")}>
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#4A7FA7] to-[#1A3D63] flex items-center justify-center shadow-lg glow">
-                <Command className="text-[#F6FAFD] w-5 h-5" />
+      {/* ── Sidebar — floating pill ───────── */}
+      <aside
+        className={cn(
+          "flex flex-col overflow-hidden",
+          /* Float with margin on all sides */
+          "fixed z-[50]",
+          "top-3 bottom-3 left-3",
+          "[transition:width_200ms_ease,transform_200ms_ease]",
+          isCollapsed ? "w-[68px]" : "w-[240px]",
+          isMobileOpen ? "translate-x-0" : "-translate-x-[calc(100%+12px)] lg:translate-x-0"
+        )}
+        style={{
+          ...SIDEBAR_STYLE,
+          borderRadius: 20,
+          border: '1px solid rgba(255,255,255,0.07)',
+        }}
+      >
+        {/* Top glint */}
+        <div className="absolute top-0 inset-x-0 h-px rounded-t-[20px] bg-white/[0.09] pointer-events-none" />
+
+        <div className={cn("flex flex-col h-full", isCollapsed ? "px-3 py-5" : "px-4 py-5")}>
+
+          {/* Logo */}
+          <div className="flex items-center justify-between mb-5">
+            <div className={cn("flex items-center gap-3 overflow-hidden min-w-0", isCollapsed && "justify-center w-full")}>
+              <div className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0"
+                style={{ background: 'linear-gradient(135deg, var(--accent), #1060B8)' }}>
+                <Command className="w-4 h-4 text-white" />
               </div>
               {!isCollapsed && (
-                <div>
-                  <h1 className="text-lg font-extrabold tracking-tight text-[#F6FAFD]">
-                    CallBlick
-                  </h1>
-                </div>
+                <span className="text-[15px] font-bold tracking-tight truncate text-[var(--text-primary)]">
+                  CallBlick
+                </span>
               )}
             </div>
-
-            {/* Mobile Close Button */}
             <button
               onClick={() => setIsMobileOpen(false)}
-              className="lg:hidden p-2 hover:bg-[#1A3D63]/40 rounded-xl transition-colors"
+              className="lg:hidden w-8 h-8 rounded-xl flex items-center justify-center text-[var(--text-tertiary)]"
             >
-              <X className="w-5 h-5 text-[#B3CFE5]" />
+              <X className="w-4 h-4" />
             </button>
           </div>
 
-          {/* Desktop Collapse Button */}
+          {/* Collapse btn */}
           <button
-            onClick={() => setIsCollapsed(!isCollapsed)}
+            onClick={toggleCollapse}
             className={cn(
-              "hidden lg:flex items-center justify-center w-8 h-8 rounded-xl bg-[#1A3D63]/40 hover:bg-[#4A7FA7] hover:text-[#F6FAFD] text-[#B3CFE5] transition-all mb-6 shrink-0 border border-[#4A7FA7]/20",
+              "hidden lg:flex w-7 h-7 rounded-xl items-center justify-center mb-4 shrink-0",
+              "bg-white/[0.05] border border-white/[0.08] text-[var(--text-tertiary)]",
+              "hover:bg-white/[0.09] hover:text-[var(--text-secondary)]",
               isCollapsed ? "mx-auto" : "ml-auto"
             )}
           >
-            <ChevronLeft className={cn("w-5 h-5 transition-transform", isCollapsed && "rotate-180")} />
+            <ChevronLeft className={cn("w-4 h-4 transition-transform duration-200", isCollapsed && "rotate-180")} />
           </button>
 
-          {/* Navigation */}
-          <div className="flex-1 overflow-y-auto overflow-x-hidden">
-            <div className="px-2 py-1">
-              {!isCollapsed && (
-                <h2 className="px-3 text-[11px] font-bold uppercase tracking-widest text-[#B3CFE5]/60 mb-4">{t('navigation')}</h2>
-              )}
-              <nav className="space-y-1">
-                {NAV_ITEMS.filter(item => !item.adminOnly || isAdmin).map((item) => {
-                  const isActive = pathname === item.href;
-                  const Icon = item.icon;
+          {/* Nav label */}
+          {!isCollapsed && (
+            <p className="px-2 mb-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--text-tertiary)]">
+              {t('navigation')}
+            </p>
+          )}
 
-                  return (
-                    <Link
-                      key={item.href}
-                      href={item.href}
-                      onClick={() => setIsMobileOpen(false)}
-                      className={cn(
-                        "flex items-center rounded-full text-[14px] font-medium transition-all group",
-                        isCollapsed ? "justify-center p-2.5" : "gap-3.5 px-4 py-2.5",
-                        isActive
-                          ? "bg-gradient-to-r from-[#4A7FA7] to-[#4A7FA7] text-[#F6FAFD] border border-[#4A7FA7]/40 rounded-full"
-                          : "text-[#B3CFE5] hover:bg-[#1A3D63]/40 border border-transparent hover:border-[#4A7FA7]/20"
-                      )}
-                      title={t(item.name as any)}
-                    >
-                      <Icon
-                        className={cn(
-                          "w-[18px] h-[18px] opacity-70 shrink-0",
-                          isActive ? "text-[#F6FAFD]" : "text-[#B3CFE5]/70"
-                        )}
-                      />
-                      {!isCollapsed && t(item.name as any)}
-                    </Link>
-                  );
-                })}
-              </nav>
-            </div>
-          </div>
+          {/* Nav items — CSS handles hover, no inline handlers */}
+          <nav className="flex-1 overflow-y-auto overflow-x-hidden space-y-0.5 sidebar-nav">
+            {NAV_ITEMS.filter(item => canSee(item.roles)).map((item) => {
+              const isActive = pathname === item.href;
+              const Icon     = item.icon;
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  onClick={() => setIsMobileOpen(false)}
+                  title={isCollapsed ? t(item.name as any) : undefined}
+                  className={cn(
+                    "sidebar-nav-item flex items-center rounded-2xl text-[13px] font-medium relative overflow-hidden",
+                    isCollapsed ? "justify-center p-2.5" : "gap-3 px-3 py-2.5",
+                    isActive ? "sidebar-nav-active" : "sidebar-nav-inactive"
+                  )}
+                  style={isActive ? NAV_ACTIVE_STYLE : NAV_INACTIVE_STYLE}
+                >
+                  {isActive && (
+                    <span className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-r-full bg-[var(--accent)]" />
+                  )}
+                  <Icon
+                    className="w-[16px] h-[16px] shrink-0"
+                    style={{ opacity: isActive ? 1 : 0.5, color: isActive ? 'var(--accent)' : 'inherit' }}
+                  />
+                  {!isCollapsed && <span className="truncate">{t(item.name as any)}</span>}
+                </Link>
+              );
+            })}
+          </nav>
 
-          {/* Language Switcher & User Section */}
-          <div className={cn("mt-auto space-y-3", isCollapsed ? "" : "px-2")}>
+          {/* Bottom */}
+          <div className="mt-4 space-y-2">
             {!isCollapsed && <LanguageSwitcher />}
 
             <Link
               href="/users"
               onClick={() => setIsMobileOpen(false)}
               className={cn(
-                "rounded-3xl border flex items-center transition-all glow group/user",
-                isCollapsed ? "flex-col gap-2 p-2" : "gap-3 p-4",
-                pathname === "/users"
-                  ? "bg-[#4A7FA7]/30 border-[#4A7FA7]/50"
-                  : "bg-[#1A3D63]/40 border-[#4A7FA7]/30 hover:bg-[#1A3D63]/60 hover:border-[#4A7FA7]/50"
+                "flex items-center rounded-2xl overflow-hidden border border-white/[0.07]",
+                "bg-white/[0.04] hover:bg-white/[0.07]",
+                isCollapsed ? "justify-center p-2.5" : "gap-3 px-3 py-3",
+                pathname === "/users" && "bg-blue-500/15 border-blue-400/25"
               )}
             >
-              {/* Avatar */}
               {user?.imageUrl ? (
-                <img src={user.imageUrl} alt={displayName} className="w-9 h-9 rounded-full shrink-0 shadow-lg object-cover" />
+                <img
+                  src={user.imageUrl} alt={displayName}
+                  width={32} height={32}
+                  className="rounded-full shrink-0 object-cover ring-1 ring-white/10"
+                />
               ) : (
-                <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#4A7FA7] to-[#1A3D63] flex items-center justify-center text-[#F6FAFD] font-bold text-xs shrink-0 shadow-lg">
+                <div
+                  className="w-8 h-8 rounded-full shrink-0 flex items-center justify-center text-xs font-bold text-white"
+                  style={{ background: 'linear-gradient(135deg, var(--accent), #1060B8)' }}
+                >
                   {initials}
                 </div>
               )}
@@ -183,17 +229,17 @@ export function Sidebar() {
               {!isCollapsed && (
                 <>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-bold text-[#F6FAFD] truncate">{displayName}</p>
-                    <p className="text-[10px] text-[#B3CFE5]/70 font-semibold mt-0.5 uppercase tracking-wider truncate">
+                    <p className="text-[13px] font-medium truncate leading-tight text-[var(--text-primary)]">{displayName}</p>
+                    <p className="text-[10px] uppercase tracking-wider truncate mt-0.5 text-[var(--text-tertiary)]">
                       {backendRole ?? "Member"}
                     </p>
                   </div>
                   <button
                     onClick={(e) => { e.preventDefault(); signOut({ redirectUrl: "/sign-in" }); }}
-                    className="w-8 h-8 rounded-xl hover:bg-red-500/20 flex items-center justify-center transition-all text-[#B3CFE5] hover:text-red-400 shrink-0"
+                    className="w-7 h-7 rounded-xl flex items-center justify-center shrink-0 text-[var(--text-tertiary)] hover:text-red-400"
                     title="Sign out"
                   >
-                    <LogOut className="w-4 h-4" />
+                    <LogOut className="w-3.5 h-3.5" />
                   </button>
                 </>
               )}
@@ -201,7 +247,7 @@ export function Sidebar() {
               {isCollapsed && (
                 <button
                   onClick={(e) => { e.preventDefault(); signOut({ redirectUrl: "/sign-in" }); }}
-                  className="w-8 h-8 rounded-xl hover:bg-red-500/20 flex items-center justify-center transition-all text-[#B3CFE5] hover:text-red-400"
+                  className="w-7 h-7 rounded-xl flex items-center justify-center text-[var(--text-tertiary)] hover:text-red-400"
                   title="Sign out"
                 >
                   <LogOut className="w-3.5 h-3.5" />
@@ -211,6 +257,15 @@ export function Sidebar() {
           </div>
         </div>
       </aside>
+
+      {/* CSS hover styles for nav items — avoids inline JS handlers */}
+      <style>{`
+        .sidebar-nav-inactive:hover {
+          background: rgba(44,143,255,0.08) !important;
+          border-color: rgba(44,143,255,0.14) !important;
+          color: var(--text-primary) !important;
+        }
+      `}</style>
     </>
   );
 }

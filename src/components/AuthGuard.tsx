@@ -17,7 +17,7 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
   // While Clerk is loading, show nothing
   if (!isLoaded) {
     return (
-      <div className="flex h-screen w-full items-center justify-center" style={{ background: '#0A1931' }}>
+      <div className="flex h-screen w-full items-center justify-center" >
         <div className="w-10 h-10 rounded-2xl border-4 border-[#1A3D63]/40 border-t-[#4A7FA7] animate-spin" />
       </div>
     );

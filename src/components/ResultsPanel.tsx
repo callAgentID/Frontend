@@ -28,7 +28,8 @@ import {
   Edit,
   Save,
   X as XIcon,
-  History
+  History,
+  Search
 } from "lucide-react";
 import { cn } from "../lib/utils";
 import { formatLLMCost, formatTokens } from "../lib/formatters";
@@ -208,6 +209,7 @@ export function ResultsPanel({ data, isHydrating = false }: { data: ResultData, 
   const [isRecalculating, setIsRecalculating] = useState(false);
   const [editingQuestionId, setEditingQuestionId] = useState<string | null>(null);
   const [viewHistoryFor, setViewHistoryFor] = useState<{ template_id: string; question_id: string } | null>(null);
+  const [transcriptSearch, setTranscriptSearch] = useState("");
 
   if (!data && !isHydrating) return null;
 
@@ -370,13 +372,13 @@ export function ResultsPanel({ data, isHydrating = false }: { data: ResultData, 
   };
 
   return (
-    <div className="w-full space-y-16 animate-in fade-in slide-in-from-bottom-8 duration-1000 pb-20 mt-10 px-4 sm:px-6">
+    <div className="w-full space-y-16 animate-in fade-in duration-150 duration-150 pb-20 mt-10 px-4 sm:px-6">
       {/* Header Pipeline State */}
-      <div className="flex flex-col md:flex-row gap-8 items-start justify-between border-b border-[#4A7FA7]/20 pb-12">
+      <div className="flex flex-col md:flex-row gap-8 items-start justify-between border-b border-blue-400/10 pb-12">
         <div className="flex-1">
           <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-4 px-1">
             <span className={cn(
-              "px-2 sm:px-3 py-1 text-[8px] sm:text-[10px] uppercase font-[900] tracking-widest rounded-lg transition-all duration-700 whitespace-nowrap",
+              "px-2 sm:px-3 py-1 text-[8px] sm:text-[10px] uppercase font-[900] tracking-widest rounded-lg transition-colors duration-150 whitespace-nowrap",
               isHydrating ? "bg-[#1A3D63]/20 text-[#B3CFE5]/40 animate-pulse" : "bg-gradient-to-r from-[#4A7FA7] to-[#1A3D63] text-[#F6FAFD] shadow-lg shadow-[#4A7FA7]/20"
             )}>
               {isHydrating ? 'Hydrating Signal...' : 'Audit Ready'}
@@ -407,7 +409,7 @@ export function ResultsPanel({ data, isHydrating = false }: { data: ResultData, 
               {safeData.campaign_name && (
                 <div className="flex items-center gap-2">
                   <span className="text-[9px] font-black uppercase tracking-widest text-[#B3CFE5]">Campaign:</span>
-                  <span className="text-[10px] font-bold text-[#F6FAFD] px-2 py-0.5 bg-[#1A3D63]/60 border border-[#4A7FA7]/30 rounded-md">
+                  <span className="text-[10px] font-bold text-[#F6FAFD] px-2 py-0.5 glass-card rounded-md">
                     {safeData.campaign_name}
                   </span>
                 </div>
@@ -415,7 +417,7 @@ export function ResultsPanel({ data, isHydrating = false }: { data: ResultData, 
               {safeData.questionnaire_name && (
                 <div className="flex items-center gap-2">
                   <span className="text-[9px] font-black uppercase tracking-widest text-[#B3CFE5]">Questionnaire:</span>
-                  <span className="text-[10px] font-bold text-[#F6FAFD] px-2 py-0.5 bg-[#1A3D63]/60 border border-[#4A7FA7]/30 rounded-md">
+                  <span className="text-[10px] font-bold text-[#F6FAFD] px-2 py-0.5 glass-card rounded-md">
                     {safeData.questionnaire_name}
                   </span>
                 </div>
@@ -423,7 +425,7 @@ export function ResultsPanel({ data, isHydrating = false }: { data: ResultData, 
               {safeData.script_name && (
                 <div className="flex items-center gap-2">
                   <span className="text-[9px] font-black uppercase tracking-widest text-[#B3CFE5]">Script:</span>
-                  <span className="text-[10px] font-bold text-[#F6FAFD] px-2 py-0.5 bg-[#1A3D63]/60 border border-[#4A7FA7]/30 rounded-md">
+                  <span className="text-[10px] font-bold text-[#F6FAFD] px-2 py-0.5 glass-card rounded-md">
                     {safeData.script_name}
                   </span>
                 </div>
@@ -436,7 +438,7 @@ export function ResultsPanel({ data, isHydrating = false }: { data: ResultData, 
               <button
                 onClick={handleMarkAsReviewed}
                 disabled={isMarkingReviewed}
-                className="flex items-center gap-2 px-5 py-2.5 bg-blue-500 hover:bg-blue-600 disabled:bg-blue-300 text-white rounded-xl font-bold text-xs uppercase tracking-widest transition-all shadow-lg shadow-blue-500/20 active:scale-95"
+                className="flex items-center gap-2 px-5 py-2.5 bg-blue-500 hover:bg-blue-600 disabled:bg-blue-300 text-white rounded-xl font-bold text-xs uppercase tracking-widest transition-colors shadow-lg shadow-blue-500/20 active:scale-95"
                 title="Mark this call as reviewed"
               >
                 {isMarkingReviewed ? (
@@ -457,8 +459,8 @@ export function ResultsPanel({ data, isHydrating = false }: { data: ResultData, 
             Neural Analysis
           </h2>
           <div className={cn(
-            "p-5 rounded-2xl border transition-all duration-700",
-            isHydrating ? "bg-[#1A3D63]/20 border-[#4A7FA7]/10 animate-pulse" : "bg-[#1A3D63]/40 border-[#4A7FA7]/30"
+            "p-5 rounded-2xl border transition-colors duration-150",
+            isHydrating ? "bg-[#1A3D63]/20 border-[#4A7FA7]/10 animate-pulse" : "bg-blue-950/20 border-blue-400/15"
           )}>
             <p className="text-[#B3CFE5] text-sm font-medium leading-relaxed italic">
               <Sparkles className={cn("w-4 h-4 inline-block mr-2 text-yellow-500 fill-current", isHydrating && "animate-spin")} />
@@ -470,7 +472,7 @@ export function ResultsPanel({ data, isHydrating = false }: { data: ResultData, 
               <h5 className="text-xs font-black uppercase tracking-widest text-[#B3CFE5] mb-3 px-1">
                 Call Success/Failure Summary
               </h5>
-              <div className="p-5 rounded-2xl border bg-[#1A3D63]/40 border-[#4A7FA7]/30">
+              <div className="p-5 rounded-2xl border bg-blue-950/20 border-blue-400/15">
                 <p className="text-sm font-bold leading-relaxed text-[#F6FAFD]">
                   {safeData.call_success_reason}
                 </p>
@@ -489,7 +491,7 @@ export function ResultsPanel({ data, isHydrating = false }: { data: ResultData, 
                       "px-2 sm:px-2.5 py-0.5 sm:py-1 text-[8px] sm:text-[10px] font-black uppercase tracking-widest rounded-md border whitespace-nowrap",
                       isUserTag && !isAiTag ? "bg-blue-50 text-blue-700 border-blue-200" :
                         isAiTag && !isUserTag ? "bg-purple-50 text-purple-700 border-purple-200" :
-                          "bg-[#1A3D63]/30 text-[#B3CFE5] border-[#4A7FA7]/20"
+                          "bg-[#1A3D63]/30 text-[#B3CFE5] border-blue-400/10"
                     )}
                   >
                     #{tag}
@@ -534,7 +536,7 @@ export function ResultsPanel({ data, isHydrating = false }: { data: ResultData, 
 
       {/* High-Fidelity Audio Player Integration - Only show if audio is available */}
       {!isHydrating && safeData.call_id !== 'pending...' && hasAudio && (
-        <div className="p-8 rounded-[2.5rem] bg-gradient-to-br from-[#1A3D63] to-[#0A1931] text-white apple-shadow-lg border border-[#4A7FA7]/30 flex flex-col md:flex-row items-center gap-8 animate-in fade-in zoom-in-95 duration-700">
+        <div className="p-8 rounded-[2.5rem] glass-card text-white apple-shadow-lg border border-blue-400/15 flex flex-col md:flex-row items-center gap-8 animate-in fade-in duration-150 duration-150">
           <div className="flex-1 space-y-2">
             <h4 className="text-lg font-black uppercase tracking-widest text-[#B3CFE5]/50 flex items-center gap-2">
               <Play className="w-4 h-4 fill-current" /> Call Audio Signal
@@ -545,7 +547,7 @@ export function ResultsPanel({ data, isHydrating = false }: { data: ResultData, 
             id="call-audio-player"
             controls
             preload="metadata"
-            className="w-full md:w-2/3 h-10 accent-[#4A7FA7] bg-[#1A3D63]/40 rounded-xl"
+            className="w-full md:w-2/3 h-10 accent-[#4A7FA7] bg-blue-950/20 rounded-xl"
             src={`${BASE_URL}/api/v1/media/calls/${safeData.call_id}/audio`}
           >
             Your browser does not support audio playback.
@@ -606,7 +608,7 @@ export function ResultsPanel({ data, isHydrating = false }: { data: ResultData, 
                           : null);
 
                       return (
-                        <div key={idx} className="group bg-[#1A3D63]/60 rounded-[2.5rem] border border-[#4A7FA7]/30 shadow-2xl shadow-[#0A1931]/50 overflow-hidden hover:border-[#4A7FA7]/50 transition-all">
+                        <div key={idx} className="group bg-blue-950/25 rounded-[2.5rem] border border-blue-400/15 shadow-sm shadow-[#0A1931]/50 overflow-hidden hover:border-[#4A7FA7]/50 transition-colors">
                           <div className="p-10 space-y-6">
                             <div className="flex justify-between items-start gap-8">
                               <div className="flex-1 space-y-4">
@@ -632,7 +634,7 @@ export function ResultsPanel({ data, isHydrating = false }: { data: ResultData, 
                                       )}
                                       <button
                                         onClick={() => setEditingQuestionId(`${templateResult.template_id}_${answer.question_id}`)}
-                                        className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg border border-blue-200 transition-all opacity-0 group-hover:opacity-100"
+                                        className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg border border-blue-200 transition-colors opacity-0 group-hover:opacity-100"
                                         title="Edit this answer and provide human correction"
                                       >
                                         <Edit className="w-3 h-3" />
@@ -706,7 +708,7 @@ export function ResultsPanel({ data, isHydrating = false }: { data: ResultData, 
                                     {interventions.length > 1 && (
                                       <button
                                         onClick={() => setViewHistoryFor({ template_id: templateResult.template_id, question_id: answer.question_id })}
-                                        className="flex items-center gap-1 px-2 py-1 text-[10px] font-bold text-green-700 hover:text-green-900 hover:bg-green-100 rounded-md transition-all"
+                                        className="flex items-center gap-1 px-2 py-1 text-[10px] font-bold text-green-700 hover:text-green-900 hover:bg-green-100 rounded-md transition-colors"
                                         title="View full edit history for this question"
                                       >
                                         <History className="w-3 h-3" />
@@ -773,9 +775,9 @@ export function ResultsPanel({ data, isHydrating = false }: { data: ResultData, 
                                     }
                                   }}
                                   className={cn(
-                                    "p-6 rounded-2xl bg-[#1A3D63]/40 border border-[#4A7FA7]/20 transition-all relative group/evidence",
-                                    hasAudio && "group-hover:border-[#4A7FA7] cursor-pointer hover:bg-[#1A3D63]/60",
-                                    isPlaying && "border-[#4A7FA7] bg-[#1A3D63]/60"
+                                    "p-6 rounded-2xl glass transition-colors relative group/evidence",
+                                    hasAudio && "group-hover:border-[#4A7FA7] cursor-pointer hover:bg-blue-950/25",
+                                    isPlaying && "border-[#4A7FA7] bg-blue-950/25"
                                   )}
                                 >
                                   <div className="flex items-center justify-between mb-3">
@@ -847,7 +849,7 @@ export function ResultsPanel({ data, isHydrating = false }: { data: ResultData, 
                   return (
                     <div
                       key={speaker.speaker_id}
-                      className="p-6 rounded-[2rem] bg-[#1A3D63]/60 border border-[#4A7FA7]/30 shadow-xl space-y-4"
+                      className="p-6 rounded-[2rem] glass-card shadow-xl space-y-4"
                     >
                       <div className="flex items-center gap-3">
                         <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#4A7FA7] to-[#1A3D63] flex items-center justify-center font-black text-[#F6FAFD] text-lg">
@@ -864,12 +866,12 @@ export function ResultsPanel({ data, isHydrating = false }: { data: ResultData, 
                       </div>
 
                     <div className="space-y-2">
-                      <div className="flex items-center justify-between p-3 rounded-xl bg-[#0A1931]/60 border border-[#4A7FA7]/20">
+                      <div className="flex items-center justify-between p-3 rounded-xl bg-black/25 border border-blue-400/10">
                         <span className="text-[10px] font-black uppercase tracking-widest text-[#B3CFE5]">Turn Count</span>
                         <span className="text-lg font-[850] text-[#F6FAFD]">{speaker.turn_count}</span>
                       </div>
 
-                      <div className="flex items-center justify-between p-3 rounded-xl bg-[#0A1931]/60 border border-[#4A7FA7]/20">
+                      <div className="flex items-center justify-between p-3 rounded-xl bg-black/25 border border-blue-400/10">
                         <span className="text-[10px] font-black uppercase tracking-widest text-[#B3CFE5]">Avg Sentiment</span>
                         <div className="flex items-center gap-2">
                           {speaker.avg_sentiment_label && (
@@ -892,7 +894,7 @@ export function ResultsPanel({ data, isHydrating = false }: { data: ResultData, 
                       </div>
 
                       {speaker.talk_time_ms !== undefined && speaker.talk_time_ms !== null && (
-                        <div className="flex items-center justify-between p-3 rounded-xl bg-[#0A1931]/60 border border-[#4A7FA7]/20">
+                        <div className="flex items-center justify-between p-3 rounded-xl bg-black/25 border border-blue-400/10">
                           <span className="text-[10px] font-black uppercase tracking-widest text-[#B3CFE5]">Talk Time</span>
                           <span className="text-lg font-[850] text-[#F6FAFD]">{(speaker.talk_time_ms / 1000).toFixed(1)}s</span>
                         </div>
@@ -914,35 +916,35 @@ export function ResultsPanel({ data, isHydrating = false }: { data: ResultData, 
             </div>
 
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
-              <div className="p-5 rounded-[1.5rem] bg-[#1A3D63]/60 border border-[#4A7FA7]/30 shadow-lg">
+              <div className="p-5 rounded-[1.5rem] glass-card shadow-lg">
                 <p className="text-[9px] font-black uppercase tracking-widest text-[#B3CFE5] mb-2">Total Silence</p>
                 <p className="text-2xl font-[850] text-[#F6FAFD]">
                   {((safeData.transcript?.metrics?.total_silence_ms || 0) / 1000).toFixed(1)}s
                 </p>
               </div>
 
-              <div className="p-5 rounded-[1.5rem] bg-[#1A3D63]/60 border border-[#4A7FA7]/30 shadow-lg">
+              <div className="p-5 rounded-[1.5rem] glass-card shadow-lg">
                 <p className="text-[9px] font-black uppercase tracking-widest text-[#B3CFE5] mb-2">Silence Ratio</p>
                 <p className="text-2xl font-[850] text-[#F6FAFD]">
                   {((safeData.transcript?.metrics?.silence_ratio || 0) * 100).toFixed(1)}%
                 </p>
               </div>
 
-              <div className="p-5 rounded-[1.5rem] bg-[#1A3D63]/60 border border-[#4A7FA7]/30 shadow-lg">
+              <div className="p-5 rounded-[1.5rem] glass-card shadow-lg">
                 <p className="text-[9px] font-black uppercase tracking-widest text-[#B3CFE5] mb-2">Turn Count</p>
                 <p className="text-2xl font-[850] text-[#F6FAFD]">
                   {safeData.transcript?.metrics?.turn_count || 0}
                 </p>
               </div>
 
-              <div className="p-5 rounded-[1.5rem] bg-[#1A3D63]/60 border border-[#4A7FA7]/30 shadow-lg">
+              <div className="p-5 rounded-[1.5rem] glass-card shadow-lg">
                 <p className="text-[9px] font-black uppercase tracking-widest text-[#B3CFE5] mb-2">Initial Silence</p>
                 <p className="text-2xl font-[850] text-[#F6FAFD]">
                   {((safeData.transcript?.metrics?.initial_silence_ms || 0) / 1000).toFixed(1)}s
                 </p>
               </div>
 
-              <div className="p-5 rounded-[1.5rem] bg-[#1A3D63]/60 border border-[#4A7FA7]/30 shadow-lg">
+              <div className="p-5 rounded-[1.5rem] glass-card shadow-lg">
                 <p className="text-[9px] font-black uppercase tracking-widest text-[#B3CFE5] mb-2">End Silence</p>
                 <p className="text-2xl font-[850] text-[#F6FAFD]">
                   {((safeData.transcript?.metrics?.end_silence_ms || 0) / 1000).toFixed(1)}s
@@ -952,14 +954,45 @@ export function ResultsPanel({ data, isHydrating = false }: { data: ResultData, 
           </section>
 
           {/* New Conversational Transcript */}
-          <section className="space-y-8">
-            <div className="flex items-center justify-between px-1">
-              <h4 className="text-xl font-[850] text-[#F6FAFD] tracking-tight flex items-center gap-3">
+          <section className="space-y-6">
+            {/* Header row */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-1">
+              <h4 className="text-xl font-[850] text-[#F6FAFD] tracking-tight flex items-center gap-3 shrink-0">
                 <ScrollText className="w-5 h-5 text-[#4A7FA7]" /> Transcription
               </h4>
-              <div className="flex items-center gap-5 text-[11px] font-[900] text-[#B3CFE5] uppercase tracking-widest">
-                <div className="flex items-center gap-1.5"><Users className="w-4 h-4" /> {safeData.transcript?.metrics?.turn_count || 0} Turns</div>
-                <div className="flex items-center gap-1.5"><Clock className="w-4 h-4" /> {((safeData.transcript?.utterances?.slice(-1)[0]?.end_ms || 0) / 1000).toFixed(0)}s</div>
+              <div className="flex items-center gap-3 flex-1 justify-end">
+                {/* Search bar */}
+                <div className="relative flex-1 max-w-xs">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[#B3CFE5]/50 pointer-events-none" />
+                  <input
+                    type="text"
+                    value={transcriptSearch}
+                    onChange={e => setTranscriptSearch(e.target.value)}
+                    placeholder="Search transcript..."
+                    className="w-full h-9 pl-9 pr-8 rounded-xl bg-blue-950/30 border border-blue-400/15 text-xs font-medium text-[#F6FAFD] placeholder:text-[#B3CFE5]/40 outline-none focus:border-blue-400/35 transition-colors"
+                  />
+                  {transcriptSearch && (
+                    <button
+                      onClick={() => setTranscriptSearch("")}
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#B3CFE5]/50 hover:text-[#F6FAFD]"
+                    >
+                      <XIcon className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                </div>
+                {/* Stats */}
+                <div className="flex items-center gap-4 text-[11px] font-[900] text-[#B3CFE5] uppercase tracking-widest shrink-0">
+                  {transcriptSearch ? (
+                    <span className="text-[#4A7FA7]">
+                      {(safeData.transcript?.utterances || []).filter(u => u.text.toLowerCase().includes(transcriptSearch.toLowerCase())).length} matches
+                    </span>
+                  ) : (
+                    <>
+                      <div className="flex items-center gap-1.5"><Users className="w-4 h-4" /> {safeData.transcript?.metrics?.turn_count || 0} Turns</div>
+                      <div className="flex items-center gap-1.5"><Clock className="w-4 h-4" /> {((safeData.transcript?.utterances?.slice(-1)[0]?.end_ms || 0) / 1000).toFixed(0)}s</div>
+                    </>
+                  )}
+                </div>
               </div>
             </div>
 
@@ -973,7 +1006,9 @@ export function ResultsPanel({ data, isHydrating = false }: { data: ResultData, 
                     </div>
                   ))
                 ) : (
-                  (safeData.transcript?.utterances || []).map((utt, i, arr) => {
+                  (safeData.transcript?.utterances || [])
+                  .filter(utt => !transcriptSearch || utt.text.toLowerCase().includes(transcriptSearch.toLowerCase()))
+                  .map((utt, i, arr) => {
                     // Determine if this is agent or customer
                     // Try multiple detection methods:
                     // 1. Check if speaker_id is "user_1" (Agent) or "user_2" (Customer)
@@ -1003,7 +1038,7 @@ export function ResultsPanel({ data, isHydrating = false }: { data: ResultData, 
                       )}>
                         <div className={cn(
                           "w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 font-black text-sm",
-                          isAgent ? "bg-gradient-to-br from-[#4A7FA7] to-[#1A3D63] text-[#F6FAFD] shadow-lg shadow-[#4A7FA7]/20" : "bg-[#1A3D63]/60 text-[#F6FAFD]"
+                          isAgent ? "bg-gradient-to-br from-[#4A7FA7] to-[#1A3D63] text-[#F6FAFD] shadow-lg shadow-[#4A7FA7]/20" : "bg-blue-950/25 text-[#F6FAFD]"
                         )}>
                           {isAgent ? "A" : "C"}
                         </div>
@@ -1011,8 +1046,8 @@ export function ResultsPanel({ data, isHydrating = false }: { data: ResultData, 
                           <p className={cn(
                             "text-[15px] font-[650] leading-relaxed p-6 rounded-[2rem]",
                             isAgent
-                              ? "bg-[#4A7FA7]/30 border border-[#4A7FA7]/20 text-[#F6FAFD] shadow-sm"
-                              : "bg-[#1A3D63]/60 text-[#F6FAFD] shadow-xl shadow-[#0A1931]/50"
+                              ? "bg-[#4A7FA7]/30 border border-blue-400/10 text-[#F6FAFD] shadow-sm"
+                              : "bg-blue-950/25 text-[#F6FAFD] shadow-sm shadow-[#0A1931]/50"
                           )}>
                             {utt.text}
                           </p>
@@ -1060,7 +1095,7 @@ export function ResultsPanel({ data, isHydrating = false }: { data: ResultData, 
         {/* Right Column (4 cols): Metrics & Script Reference */}
         <div className="lg:col-span-4 space-y-12 md:sticky md:top-8 md:max-h-[calc(100vh-4rem)] md:overflow-y-auto md:pr-2">
           {/* Signal Dynamics Card */}
-          <div className="rounded-[3rem] bg-gradient-to-br from-[#1A3D63] to-[#0A1931] p-10 shadow-2xl shadow-[#0A1931]/60 text-white overflow-hidden relative group border border-[#4A7FA7]/30">
+          <div className="rounded-[2rem] p-8 overflow-hidden relative group glass-card">
             <div className="absolute top-0 right-0 p-10 opacity-5 group-hover:scale-110 transition-transform">
               <BarChart3 className="w-32 h-32" />
             </div>
@@ -1078,7 +1113,7 @@ export function ResultsPanel({ data, isHydrating = false }: { data: ResultData, 
           {data.llm_usage_summary && <LLMCostBreakdown llm={data.llm_usage_summary} />}
 
           {/* Script Framework Reference */}
-          <div className="p-10 rounded-[3rem] border border-[#4A7FA7]/30 bg-[#1A3D63]/60 shadow-xl shadow-[#0A1931]/30 space-y-8">
+          <div className="p-10 rounded-[3rem] border border-blue-400/15 bg-blue-950/25 shadow-sm shadow-[#0A1931]/30 space-y-8">
             <div className="flex items-center gap-3">
               <FileSearch className="w-6 h-6 text-[#4A7FA7]" />
               <h4 className="text-xl font-[850] text-[#F6FAFD] tracking-tight">Script Framework</h4>
@@ -1089,8 +1124,8 @@ export function ResultsPanel({ data, isHydrating = false }: { data: ResultData, 
               <div className="space-y-3">
                 <h5 className="text-xs font-black uppercase tracking-widest text-[#B3CFE5]">Sections</h5>
                 {data.prepared_script.sections.map((section) => (
-                  <div key={section.section_id} className="flex items-start gap-3 py-3 border-b border-[#4A7FA7]/20 last:border-0 group">
-                    <div className="w-8 h-8 rounded-xl bg-[#1A3D63]/60 flex items-center justify-center shrink-0 group-hover:bg-gradient-to-r group-hover:from-[#4A7FA7] group-hover:to-[#1A3D63] transition-all">
+                  <div key={section.section_id} className="flex items-start gap-3 py-3 border-b border-blue-400/10 last:border-0 group">
+                    <div className="w-8 h-8 rounded-xl bg-blue-950/25 flex items-center justify-center shrink-0 group-hover:bg-gradient-to-r group-hover:from-[#4A7FA7] group-hover:to-[#1A3D63] transition-colors">
                       <CircleDot className="w-4 h-4 text-[#B3CFE5] group-hover:text-[#F6FAFD] transition-colors" />
                     </div>
                     <div className="flex-1 min-w-0 space-y-1">
@@ -1105,7 +1140,7 @@ export function ResultsPanel({ data, isHydrating = false }: { data: ResultData, 
                       {section.anchors && section.anchors.length > 0 && (
                         <div className="flex flex-wrap gap-1.5 mt-2">
                           {section.anchors.map((anchor, idx) => (
-                            <span key={idx} className="text-[9px] font-semibold text-[#B3CFE5] bg-[#1A3D63]/40 px-2 py-0.5 rounded-md border border-[#4A7FA7]/20">
+                            <span key={idx} className="text-[9px] font-semibold text-[#B3CFE5] bg-blue-950/20 px-2 py-0.5 rounded-md border border-blue-400/10">
                               "{anchor}"
                             </span>
                           ))}
@@ -1123,7 +1158,7 @@ export function ResultsPanel({ data, isHydrating = false }: { data: ResultData, 
                 <h5 className="text-xs font-black uppercase tracking-widest text-[#B3CFE5]">Questions ({data.prepared_script.questions.length})</h5>
                 <div className="space-y-2 max-h-96 overflow-y-auto">
                   {data.prepared_script.questions.map((question) => (
-                    <div key={question.question_id} className="p-3 rounded-xl bg-[#1A3D63]/40 border border-[#4A7FA7]/20 space-y-2">
+                    <div key={question.question_id} className="p-3 rounded-xl glass space-y-2">
                       <div className="flex items-start justify-between gap-2">
                         <p className="text-xs font-bold text-[#F6FAFD] leading-tight">{question.question_text}</p>
                         {question.required && (
@@ -1133,7 +1168,7 @@ export function ResultsPanel({ data, isHydrating = false }: { data: ResultData, 
                         )}
                       </div>
                       <div className="flex flex-wrap items-center gap-2">
-                        <span className="text-[9px] font-bold text-[#B3CFE5] bg-[#0A1931] px-2 py-0.5 rounded-md border border-[#4A7FA7]/20">
+                        <span className="text-[9px] font-bold text-[#B3CFE5] bg-[#0A1931] px-2 py-0.5 rounded-md border border-blue-400/10">
                           {question.response_type}
                         </span>
                         {question.expected_answers && question.expected_answers.length > 0 && (
@@ -1206,7 +1241,7 @@ export function ResultsPanel({ data, isHydrating = false }: { data: ResultData, 
       {/* Floating Submit Button */}
       {pendingEdits.size > 0 && !isRecalculating && (
         <div className="fixed bottom-8 right-8 z-40 animate-in slide-in-from-bottom-4 duration-300">
-          <div className="bg-[#1A3D63]/90 backdrop-blur-sm rounded-2xl shadow-2xl border border-[#4A7FA7]/30 p-4 space-y-3">
+          <div className="bg-[#1A3D63]/90 rounded-2xl shadow-2xl border border-blue-400/15 p-4 space-y-3">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-orange-100 flex items-center justify-center">
                 <span className="text-lg font-black text-orange-700">{pendingEdits.size}</span>
@@ -1223,14 +1258,14 @@ export function ResultsPanel({ data, isHydrating = false }: { data: ResultData, 
             <div className="flex gap-2">
               <button
                 onClick={() => setPendingEdits(new Map())}
-                className="flex-1 h-10 px-4 bg-[#0A1931] hover:bg-[#0A1931]/80 text-[#B3CFE5] rounded-xl font-bold text-xs uppercase tracking-wider transition-all border border-[#4A7FA7]/20"
+                className="flex-1 h-10 px-4 bg-[#0A1931] hover:bg-black/35 text-[#B3CFE5] rounded-xl font-bold text-xs uppercase tracking-wider transition-colors border border-blue-400/10"
                 title="Clear all pending edits"
               >
                 Clear All
               </button>
               <button
                 onClick={handleSubmitAllEdits}
-                className="flex-1 h-10 px-4 bg-gradient-to-r from-[#4A7FA7] to-[#1A3D63] hover:opacity-90 text-[#F6FAFD] rounded-xl font-bold text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-lg shadow-[#4A7FA7]/20"
+                className="flex-1 h-10 px-4 bg-gradient-to-r from-[#4A7FA7] to-[#1A3D63] hover:opacity-90 text-[#F6FAFD] rounded-xl font-bold text-xs uppercase tracking-wider transition-colors flex items-center justify-center gap-2 shadow-lg shadow-[#4A7FA7]/20"
                 title="Submit all pending edits and recalculate scores"
               >
                 <Save className="w-3 h-3" />
@@ -1243,8 +1278,8 @@ export function ResultsPanel({ data, isHydrating = false }: { data: ResultData, 
 
       {/* Recalculating Overlay */}
       {isRecalculating && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-          <div className="bg-gradient-to-br from-[#1A3D63] to-[#0A1931] rounded-3xl p-8 shadow-2xl max-w-md text-center space-y-4 border border-[#4A7FA7]/30">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="glass-card rounded-3xl p-8 shadow-2xl max-w-md text-center space-y-4 border border-blue-400/15">
             <Loader2 className="w-12 h-12 text-[#4A7FA7] animate-spin mx-auto" />
             <h3 className="text-xl font-[850] text-[#F6FAFD]">Recalculating...</h3>
             <p className="text-sm font-medium text-[#B3CFE5]">
@@ -1261,9 +1296,9 @@ export function ResultsPanel({ data, isHydrating = false }: { data: ResultData, 
         ) || [];
 
         return (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
-            <div className="bg-[#1A3D63] w-full max-w-3xl max-h-[80vh] overflow-hidden rounded-3xl shadow-2xl border border-[#4A7FA7]/30 animate-in zoom-in-95 duration-200">
-              <div className="p-8 border-b border-[#4A7FA7]/20 bg-[#0A1931]/60 flex items-center justify-between">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/50 animate-in fade-in duration-150 duration-150">
+            <div className="bg-[#1A3D63] w-full max-w-3xl max-h-[80vh] overflow-hidden rounded-3xl shadow-2xl border border-blue-400/15 animate-in fade-in duration-150 duration-150">
+              <div className="p-8 border-b border-blue-400/10 bg-black/25 flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <History className="w-6 h-6 text-[#4A7FA7]" />
                   <div>
@@ -1275,7 +1310,7 @@ export function ResultsPanel({ data, isHydrating = false }: { data: ResultData, 
                 </div>
                 <button
                   onClick={() => setViewHistoryFor(null)}
-                  className="w-10 h-10 rounded-xl hover:bg-[#1A3D63]/60 flex items-center justify-center transition-all text-[#B3CFE5]"
+                  className="w-10 h-10 rounded-xl hover:bg-blue-950/25 flex items-center justify-center transition-colors text-[#B3CFE5]"
                   title="Close history modal"
                 >
                   <XIcon className="w-5 h-5" />
@@ -1324,10 +1359,10 @@ export function ResultsPanel({ data, isHydrating = false }: { data: ResultData, 
                 ))}
               </div>
 
-              <div className="p-6 border-t border-[#4A7FA7]/20 bg-[#0A1931]/60">
+              <div className="p-6 border-t border-blue-400/10 bg-black/25">
                 <button
                   onClick={() => setViewHistoryFor(null)}
-                  className="w-full h-12 bg-gradient-to-r from-[#4A7FA7] to-[#1A3D63] hover:opacity-90 text-[#F6FAFD] rounded-xl font-bold text-sm uppercase tracking-wider transition-all"
+                  className="w-full h-12 bg-gradient-to-r from-[#4A7FA7] to-[#1A3D63] hover:opacity-90 text-[#F6FAFD] rounded-xl font-bold text-sm uppercase tracking-wider transition-colors"
                   title="Close history modal"
                 >
                   Close
@@ -1428,16 +1463,16 @@ function InterventionModal({ modal, onClose, onSubmit, existingEdit, onRemove }:
   if (!mounted) return null;
 
   return createPortal(
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 md:p-6 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="bg-[#1A3D63] w-full max-w-2xl max-h-[90vh] md:max-h-[85vh] flex flex-col rounded-3xl shadow-2xl border border-[#4A7FA7]/30 overflow-hidden animate-in zoom-in-95 duration-200">
-        <div className="p-6 md:p-8 border-b border-[#4A7FA7]/20 bg-[#0A1931]/60 flex items-center justify-between flex-shrink-0">
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 md:p-6 bg-black/50 animate-in fade-in duration-150 duration-150">
+      <div className="bg-[#1A3D63] w-full max-w-2xl max-h-[90vh] md:max-h-[85vh] flex flex-col rounded-3xl shadow-2xl border border-blue-400/15 overflow-hidden animate-in fade-in duration-150 duration-150">
+        <div className="p-6 md:p-8 border-b border-blue-400/10 bg-black/25 flex items-center justify-between flex-shrink-0">
           <div className="flex-1 min-w-0 pr-4">
             <h3 className="text-xl md:text-2xl font-[850] text-[#F6FAFD] tracking-tight">Edit Answer</h3>
             <p className="text-xs md:text-sm font-semibold text-[#B3CFE5] mt-1 truncate">Manual correction for {modal.question_id}</p>
           </div>
           <button
             onClick={onClose}
-            className="w-10 h-10 rounded-xl hover:bg-[#1A3D63]/60 flex items-center justify-center transition-all text-[#B3CFE5] flex-shrink-0"
+            className="w-10 h-10 rounded-xl hover:bg-blue-950/25 flex items-center justify-center transition-colors text-[#B3CFE5] flex-shrink-0"
             title="Close edit dialog"
           >
             <XIcon className="w-5 h-5" />
@@ -1446,7 +1481,7 @@ function InterventionModal({ modal, onClose, onSubmit, existingEdit, onRemove }:
 
         <div className="p-6 md:p-8 space-y-4 md:space-y-6 overflow-y-auto flex-1">
           {/* Current Answer */}
-          <div className="p-4 rounded-xl bg-[#0A1931]/60 border border-[#4A7FA7]/20 space-y-2">
+          <div className="p-4 rounded-xl bg-black/25 border border-blue-400/10 space-y-2">
             <p className="text-xs font-black uppercase tracking-wider text-[#B3CFE5]">Current Answer</p>
             <p className="text-sm font-bold text-[#F6FAFD]">{modal.current_answer}</p>
             <p className="text-xs font-medium text-[#B3CFE5]">{modal.current_reasoning}</p>
@@ -1467,7 +1502,7 @@ function InterventionModal({ modal, onClose, onSubmit, existingEdit, onRemove }:
                 if (val.toLowerCase() === 'yes') setCorrectedScore(100);
                 else if (val.toLowerCase() === 'no') setCorrectedScore(0);
               }}
-              className="w-full h-12 px-4 bg-[#0A1931] border border-[#4A7FA7]/30 rounded-xl text-[#F6FAFD] font-semibold outline-none focus:border-[#4A7FA7] transition-all"
+              className="w-full h-12 px-4 bg-[#0A1931] border border-blue-400/15 rounded-xl text-[#F6FAFD] font-semibold outline-none focus:border-[#4A7FA7] transition-colors"
             >
               <option value="Yes">Yes</option>
               <option value="No">No</option>
@@ -1485,7 +1520,7 @@ function InterventionModal({ modal, onClose, onSubmit, existingEdit, onRemove }:
               max="100"
               value={correctedScore}
               onChange={(e) => setCorrectedScore(Number(e.target.value))}
-              className="w-full h-12 px-4 bg-[#0A1931] border border-[#4A7FA7]/30 rounded-xl text-[#F6FAFD] font-semibold outline-none focus:border-[#4A7FA7] transition-all"
+              className="w-full h-12 px-4 bg-[#0A1931] border border-blue-400/15 rounded-xl text-[#F6FAFD] font-semibold outline-none focus:border-[#4A7FA7] transition-colors"
             />
           </div>
 
@@ -1499,7 +1534,7 @@ function InterventionModal({ modal, onClose, onSubmit, existingEdit, onRemove }:
               onChange={(e) => setCorrectedReasoning(e.target.value)}
               placeholder="Explain why you're correcting this answer..."
               rows={4}
-              className="w-full px-4 py-3 bg-[#0A1931] border border-[#4A7FA7]/30 rounded-xl text-[#F6FAFD] font-medium outline-none focus:border-[#4A7FA7] transition-all resize-none"
+              className="w-full px-4 py-3 bg-[#0A1931] border border-blue-400/15 rounded-xl text-[#F6FAFD] font-medium outline-none focus:border-[#4A7FA7] transition-colors resize-none"
             />
           </div>
 
@@ -1508,7 +1543,7 @@ function InterventionModal({ modal, onClose, onSubmit, existingEdit, onRemove }:
             {existingEdit && onRemove && (
               <button
                 onClick={onRemove}
-                className="h-11 sm:h-12 px-4 bg-red-50 hover:bg-red-100 text-red-600 rounded-xl font-bold text-xs sm:text-sm uppercase tracking-wider transition-all border border-red-200"
+                className="h-11 sm:h-12 px-4 bg-red-50 hover:bg-red-100 text-red-600 rounded-xl font-bold text-xs sm:text-sm uppercase tracking-wider transition-colors border border-red-200"
                 title="Remove this pending edit"
               >
                 Remove
@@ -1516,14 +1551,14 @@ function InterventionModal({ modal, onClose, onSubmit, existingEdit, onRemove }:
             )}
             <button
               onClick={onClose}
-              className="flex-1 h-11 sm:h-12 bg-[#0A1931] hover:bg-[#0A1931]/80 text-[#B3CFE5] rounded-xl font-bold text-xs sm:text-sm uppercase tracking-wider transition-all border border-[#4A7FA7]/20"
+              className="flex-1 h-11 sm:h-12 bg-[#0A1931] hover:bg-black/35 text-[#B3CFE5] rounded-xl font-bold text-xs sm:text-sm uppercase tracking-wider transition-colors border border-blue-400/10"
               title="Cancel and close dialog"
             >
               Cancel
             </button>
             <button
               onClick={handleSubmit}
-              className="flex-1 h-11 sm:h-12 bg-gradient-to-r from-[#4A7FA7] to-[#1A3D63] hover:opacity-90 text-[#F6FAFD] rounded-xl font-bold text-xs sm:text-sm uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-lg shadow-[#4A7FA7]/20"
+              className="flex-1 h-11 sm:h-12 bg-gradient-to-r from-[#4A7FA7] to-[#1A3D63] hover:opacity-90 text-[#F6FAFD] rounded-xl font-bold text-xs sm:text-sm uppercase tracking-wider transition-colors flex items-center justify-center gap-2 shadow-lg shadow-[#4A7FA7]/20"
               title={existingEdit ? "Update this pending edit" : "Add edit to queue for batch submission"}
             >
               <Save className="w-4 h-4" />
@@ -1541,15 +1576,15 @@ function InterventionModal({ modal, onClose, onSubmit, existingEdit, onRemove }:
 function MetricCard({ label, value, icon: Icon, color, isPending = false }: { label: string, value: string, icon: any, color: 'green' | 'red' | 'neutral', isPending?: boolean }) {
   return (
     <div className={cn(
-      "p-6 rounded-[2rem] bg-[#1A3D63]/60 apple-shadow border border-[#4A7FA7]/30 group hover:scale-[1.03] transition-all",
+      "p-6 rounded-[2rem] bg-blue-950/25 apple-shadow border border-blue-400/15 group hover:scale-[1.03] transition-colors",
       isPending && "animate-pulse"
     )}>
       <div className="flex items-start justify-between mb-4">
-        <div className="p-2.5 rounded-xl bg-[#1A3D63]/40 text-[#4A7FA7]">
+        <div className="p-2.5 rounded-xl bg-blue-950/20 text-[#4A7FA7]">
           <Icon className={cn("w-5 h-5 stroke-[1.5px]", isPending && "animate-spin-slow")} />
         </div>
         <div className={cn(
-          "w-2 h-2 rounded-full transition-all duration-700",
+          "w-2 h-2 rounded-full transition-colors duration-150",
           isPending ? "bg-[#B3CFE5]/30" : color === 'green' ? 'bg-green-500 shadow-sm shadow-green-500/50' : color === 'red' ? 'bg-red-500 shadow-sm shadow-red-500/50' : 'bg-[#B3CFE5]/40'
         )} />
       </div>
@@ -1604,9 +1639,9 @@ function LLMCostBreakdown({ llm }: {
   };
 
   return (
-    <div className="w-full rounded-[2rem] bg-[#0D1F35] border border-[#4A7FA7]/30 overflow-hidden shadow-2xl">
+    <div className="w-full rounded-[2rem] bg-[#0D1F35] border border-blue-400/15 overflow-hidden shadow-2xl">
       {/* Header */}
-      <div className="px-6 py-5 border-b border-[#4A7FA7]/20">
+      <div className="px-6 py-5 border-b border-blue-400/10">
         <h4 className="text-base font-black text-[#F6FAFD] tracking-tight flex items-center gap-2">
           <Zap className="w-4 h-4 text-[#FFB74D]" />
           Cost Breakdown & Token Usage
@@ -1619,7 +1654,7 @@ function LLMCostBreakdown({ llm }: {
         <p className="text-[10px] font-black uppercase tracking-widest text-[#B3CFE5] px-1">Token Usage</p>
 
         {modelKeys.length === 0 ? (
-          <div className="w-full p-4 rounded-xl bg-[#1A3D63]/40 border border-[#4A7FA7]/20 text-center">
+          <div className="w-full p-4 rounded-xl glass text-center">
             <p className="text-xs text-[#B3CFE5]/50 font-semibold">No stage data available</p>
           </div>
         ) : (
@@ -1628,9 +1663,9 @@ function LLMCostBreakdown({ llm }: {
               const m = byModel[model];
               const color = STAGE_COLORS[i % STAGE_COLORS.length];
               return (
-                <div key={model} className="w-full rounded-xl border border-[#4A7FA7]/20 bg-[#1A3D63]/40 overflow-hidden">
+                <div key={model} className="w-full rounded-xl border border-blue-400/10 bg-blue-950/20 overflow-hidden">
                   {/* Model name row */}
-                  <div className="w-full px-4 py-2.5 bg-[#0A1931]/40 border-b border-[#4A7FA7]/20 flex items-center justify-between gap-3">
+                  <div className="w-full px-4 py-2.5 bg-black/20 border-b border-blue-400/10 flex items-center justify-between gap-3">
                     <span className="text-xs font-black text-[#F6FAFD] truncate flex-1">{model}</span>
                     <span className="text-xs font-black shrink-0" style={{ color }}>{formatLLMCost(m.cost_usd)}</span>
                   </div>
@@ -1654,7 +1689,7 @@ function LLMCostBreakdown({ llm }: {
             })}
 
             {/* Total row */}
-            <div className="w-full flex items-center justify-between px-4 py-3 rounded-xl bg-[#4A7FA7]/20 border border-[#4A7FA7]/40">
+            <div className="w-full flex items-center justify-between px-4 py-3 rounded-xl bg-[#4A7FA7]/20 border border-blue-400/22">
               <span className="text-xs font-black uppercase tracking-wider text-[#B3CFE5]">Total</span>
               <div className="text-right">
                 <p className="text-sm font-black text-[#F6FAFD]">{formatLLMCost(totalCost)}</p>
@@ -1667,7 +1702,7 @@ function LLMCostBreakdown({ llm }: {
         {/* ── Bar Chart — full width ── */}
         <div className="space-y-2">
           <p className="text-[10px] font-black uppercase tracking-widest text-[#B3CFE5] px-1">Cost Breakdown Chart</p>
-          <div className="w-full h-48 bg-[#1A3D63]/40 rounded-xl border border-[#4A7FA7]/20 p-3">
+          <div className="w-full h-48 bg-blue-950/20 rounded-xl border border-blue-400/10 p-3">
             {modelKeys.length > 0 ? (
               <Bar data={barData} options={{
                 responsive: true,
@@ -1702,8 +1737,8 @@ function LLMCostBreakdown({ llm }: {
             { label: "Monthly Projection", value: monthlyCost, sub: "est. per month" },
             { label: "Yearly Projection",  value: yearlyCost,  sub: "est. per year"  },
           ].map(({ label, value, sub }) => (
-            <div key={label} className="w-full rounded-xl bg-[#1A3D63]/40 border border-[#4A7FA7]/25 overflow-hidden">
-              <div className="px-4 py-2 bg-[#0A1931]/40 border-b border-[#4A7FA7]/20">
+            <div key={label} className="w-full rounded-xl bg-blue-950/20 border border-[#4A7FA7]/25 overflow-hidden">
+              <div className="px-4 py-2 bg-black/20 border-b border-blue-400/10">
                 <p className="text-[9px] font-black uppercase tracking-widest text-[#B3CFE5]">{label}</p>
               </div>
               <div className="px-4 py-3">
@@ -1719,7 +1754,7 @@ function LLMCostBreakdown({ llm }: {
           <div className="space-y-2">
             <p className="text-[10px] font-black uppercase tracking-widest text-[#B3CFE5] px-1">By Pipeline Stage</p>
             {llm.breakdown_by_stage.map((stage, i) => (
-              <div key={i} className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl bg-[#1A3D63]/40 border border-[#4A7FA7]/20">
+              <div key={i} className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl glass">
                 <div className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: STAGE_COLORS[i % STAGE_COLORS.length] }} />
                 <span className="text-xs font-semibold text-[#B3CFE5] capitalize truncate flex-1">
                   {stage.stage.replace(/_/g, ' ')}

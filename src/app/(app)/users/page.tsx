@@ -144,7 +144,7 @@ export default function UsersPage() {
         <button
           onClick={fetchUsers}
           disabled={isLoading}
-          className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-[#4A7FA7] to-[#1A3D63] glow text-white rounded-xl font-bold text-xs uppercase tracking-widest hover:opacity-90 disabled:opacity-50 transition-all shrink-0"
+          className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-[#4A7FA7] to-[#1A3D63] glow text-white rounded-xl font-bold text-xs uppercase tracking-widest hover:opacity-90 disabled:opacity-50 transition-colors shrink-0"
         >
           {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
           Refresh
@@ -178,7 +178,7 @@ export default function UsersPage() {
           placeholder="Search by name, email or role..."
           value={search}
           onChange={e => setSearch(e.target.value)}
-          className="w-full h-12 bg-[#1A3D63]/60 border border-[#4A7FA7]/30 rounded-xl pl-11 pr-4 text-sm font-medium text-[#F6FAFD] placeholder:text-[#B3CFE5]/50 outline-none focus:border-[#4A7FA7] transition-all"
+          className="w-full h-12 bg-blue-950/30 border border-blue-400/18 rounded-xl pl-11 pr-4 text-sm font-medium text-[#F6FAFD] placeholder:text-[#B3CFE5]/50 outline-none focus:border-[#4A7FA7] transition-colors"
         />
       </div>
 
@@ -186,7 +186,7 @@ export default function UsersPage() {
       {isLoading ? (
         <div className="space-y-3">
           {[1, 2, 3, 4, 5].map(i => (
-            <div key={i} className="h-20 bg-[#1A3D63]/40 rounded-2xl border border-[#4A7FA7]/20 animate-pulse" />
+            <div key={i} className="h-20 bg-blue-950/20 rounded-2xl border border-blue-400/12 animate-pulse" />
           ))}
         </div>
       ) : error ? (
@@ -196,9 +196,9 @@ export default function UsersPage() {
           <button onClick={fetchUsers} className="px-4 py-2 bg-red-500/20 text-red-400 rounded-xl text-xs font-bold uppercase tracking-wider">Retry</button>
         </div>
       ) : (
-        <div className="bg-[#1A3D63]/60 glow rounded-2xl border border-[#4A7FA7]/30 overflow-hidden">
+        <div className="glass-card rounded-2xl border border-blue-400/18 overflow-hidden">
           {/* Table Header */}
-          <div className="grid grid-cols-12 px-6 py-3 border-b border-[#4A7FA7]/20 bg-[#0A1931]/40">
+          <div className="grid grid-cols-12 px-6 py-3 border-b border-blue-400/12 bg-black/15">
             <span className="col-span-4 text-[10px] font-black uppercase tracking-widest text-[#B3CFE5]">User</span>
             <span className="col-span-3 text-[10px] font-black uppercase tracking-widest text-[#B3CFE5] hidden md:block">Email</span>
             <span className="col-span-2 text-[10px] font-black uppercase tracking-widest text-[#B3CFE5]">Role</span>
@@ -223,7 +223,7 @@ export default function UsersPage() {
 
                 return (
                   user.email != "" &&
-                  <div key={user.id} className="grid grid-cols-12 px-6 py-4 hover:bg-[#1A3D63]/40 transition-colors items-center group">
+                  <div key={user.id} className="grid grid-cols-12 px-6 py-4 hover:bg-blue-950/20 transition-colors items-center group">
                     {/* Name + Avatar */}
                     <div className="col-span-4 flex items-center gap-3 min-w-0">
                       <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#4A7FA7] to-[#1A3D63] flex items-center justify-center text-white font-bold text-xs shrink-0">
@@ -264,7 +264,7 @@ export default function UsersPage() {
                     <div className="col-span-1 flex justify-end">
                       <button
                         onClick={() => openEditModal(user)}
-                        className="px-3 py-1.5 bg-[#4A7FA7]/20 hover:bg-[#4A7FA7]/40 text-[#4A7FA7] hover:text-[#F6FAFD] rounded-lg text-[10px] font-black uppercase tracking-wider transition-all border border-[#4A7FA7]/30 opacity-0 group-hover:opacity-100"
+                        className="px-3 py-1.5 bg-[#4A7FA7]/20 hover:bg-[#4A7FA7]/40 text-[#4A7FA7] hover:text-[#F6FAFD] rounded-lg text-[10px] font-black uppercase tracking-wider transition-colors border border-blue-400/18 opacity-0 group-hover:opacity-100"
                       >
                         Edit
                       </button>
@@ -278,7 +278,7 @@ export default function UsersPage() {
 
           {/* Footer count */}
           {filtered.length > 0 && (
-            <div className="px-6 py-3 border-t border-[#4A7FA7]/20 bg-[#0A1931]/40">
+            <div className="px-6 py-3 border-t border-blue-400/12 bg-black/15">
               <p className="text-xs font-bold text-[#B3CFE5]">
                 Showing <span className="text-[#F6FAFD]">{filtered.length}</span> of <span className="text-[#F6FAFD]">{users.length}</span> users
               </p>
@@ -289,10 +289,10 @@ export default function UsersPage() {
 
       {/* Edit Role Modal */}
       {mounted && editingUser && createPortal(
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-6 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-[#1A3D63]/95 glow w-full max-w-md rounded-3xl shadow-2xl border border-[#4A7FA7]/30 overflow-hidden animate-in zoom-in-95 duration-200">
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-6 bg-black/60 animate-in fade-in duration-150 duration-150">
+          <div className="bg-[#1A3D63]/95 glow w-full max-w-md rounded-3xl shadow-2xl border border-blue-400/18 overflow-hidden animate-in fade-in duration-150 duration-150">
             {/* Modal Header */}
-            <div className="p-6 border-b border-[#4A7FA7]/20 flex items-center justify-between">
+            <div className="p-6 border-b border-blue-400/12 flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#4A7FA7] to-[#1A3D63] flex items-center justify-center text-white font-bold text-xs shrink-0">
                   {editingUser.first_name
@@ -306,7 +306,7 @@ export default function UsersPage() {
               </div>
               <button
                 onClick={() => setEditingUser(null)}
-                className="w-8 h-8 rounded-xl hover:bg-[#4A7FA7]/20 flex items-center justify-center text-[#B3CFE5] transition-all"
+                className="w-8 h-8 rounded-xl hover:bg-[#4A7FA7]/20 flex items-center justify-center text-[#B3CFE5] transition-colors"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -325,15 +325,15 @@ export default function UsersPage() {
                       key={role}
                       onClick={() => setSelectedRole(role)}
                       className={cn(
-                        "w-full flex items-center gap-4 p-4 rounded-xl border transition-all text-left",
+                        "w-full flex items-center gap-4 p-4 rounded-xl border transition-colors text-left",
                         isSelected
                           ? cn(cfg.bg, cfg.border, "shadow-lg")
-                          : "bg-[#0A1931]/60 border-[#4A7FA7]/20 hover:border-[#4A7FA7]/40"
+                          : "bg-black/25 border-blue-400/12 hover:border-blue-400/22"
                       )}
                     >
                       <div className={cn(
                         "w-9 h-9 rounded-xl flex items-center justify-center shrink-0 border",
-                        isSelected ? cn(cfg.bg, cfg.border) : "bg-[#1A3D63]/60 border-[#4A7FA7]/20"
+                        isSelected ? cn(cfg.bg, cfg.border) : "bg-blue-950/30 border-blue-400/12"
                       )}>
                         <RoleIcon className={cn("w-4 h-4", isSelected ? cfg.color : "text-[#B3CFE5]")} />
                       </div>
@@ -353,17 +353,17 @@ export default function UsersPage() {
             </div>
 
             {/* Actions */}
-            <div className="p-6 border-t border-[#4A7FA7]/20 flex gap-3">
+            <div className="p-6 border-t border-blue-400/12 flex gap-3">
               <button
                 onClick={() => setEditingUser(null)}
-                className="flex-1 h-11 bg-[#0A1931]/60 hover:bg-[#0A1931]/80 text-[#B3CFE5] rounded-xl font-bold text-sm uppercase tracking-wider transition-all"
+                className="flex-1 h-11 bg-black/25 hover:bg-black/35 text-[#B3CFE5] rounded-xl font-bold text-sm uppercase tracking-wider transition-colors"
               >
                 Cancel
               </button>
               <button
                 onClick={handleUpdateRole}
                 disabled={isSaving || selectedRole === editingUser.role}
-                className="flex-1 h-11 bg-gradient-to-r from-[#4A7FA7] to-[#1A3D63] text-white rounded-xl font-bold text-sm uppercase tracking-wider transition-all hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2 glow"
+                className="flex-1 h-11 bg-gradient-to-r from-[#4A7FA7] to-[#1A3D63] text-white rounded-xl font-bold text-sm uppercase tracking-wider transition-colors hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2 glow"
               >
                 {isSaving ? (
                   <><Loader2 className="w-4 h-4 animate-spin" /> Saving...</>

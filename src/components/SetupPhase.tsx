@@ -149,7 +149,7 @@ export function SetupPhase({ onComplete }: SetupPhaseProps) {
   };
 
   return (
-    <div className="max-w-4xl mx-auto py-10 animate-in fade-in slide-in-from-bottom-12 duration-1000">
+    <div className="max-w-4xl mx-auto py-10 animate-in fade-in duration-150 duration-150">
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-12">
         <SetupStep num={1} label="Campaign" active={step === 1} done={step > 1} />
         <SetupStep num={2} label="Script" active={step === 2} done={step > 2} />
@@ -157,16 +157,16 @@ export function SetupPhase({ onComplete }: SetupPhaseProps) {
         <SetupStep num={4} label="Profile" active={step === 4} done={step > 4} />
       </div>
 
-      <div className="bg-[#502D55]/60 rounded-[2.5rem] border border-[#935073]/30 p-12 shadow-2xl shadow-[#502D55]/20 relative overflow-hidden">
+      <div className="bg-[#502D55]/60 rounded-[2.5rem] border border-[#935073]/30 p-12 shadow-sm shadow-[#502D55]/20 relative overflow-hidden">
         {loading && (
-          <div className="absolute inset-0 bg-[#502D55]/60 backdrop-blur-sm z-50 flex items-center justify-center">
+          <div className="absolute inset-0 bg-[#502D55]/60 z-50 flex items-center justify-center">
             <Loader2 className="w-10 h-10 text-[#F8F4E9] animate-spin" />
           </div>
         )}
 
         {/* STEP 1: CAMPAIGN */}
         {step === 1 && (
-          <div className="space-y-8 animate-in fade-in slide-in-from-right-8 duration-500">
+          <div className="space-y-8 animate-in fade-in duration-150 duration-150">
             <div className="space-y-2">
               <h3 className="text-3xl font-[850] text-[#F8F4E9] tracking-tight">Initialize Campaign</h3>
               <p className="text-[#F8F4E9] font-medium leading-relaxed">Create the strategic container for your intelligence signals.</p>
@@ -177,7 +177,7 @@ export function SetupPhase({ onComplete }: SetupPhaseProps) {
                 <input
                   value={campaignName}
                   onChange={(e) => setCampaignName(e.target.value)}
-                  className="w-full h-16 px-6 rounded-2xl bg-[#502D55]/40 border border-transparent focus:border-[#935073]/30 focus:bg-[#502D55]/60 text-[#F8F4E9] font-bold transition-all outline-none pl-12 relative"
+                  className="w-full h-16 px-6 rounded-2xl bg-[#502D55]/40 border border-transparent focus:border-[#935073]/30 focus:bg-[#502D55]/60 text-[#F8F4E9] font-bold transition-colors outline-none pl-12 relative"
                 />
                 <Layout className="w-5 h-5 absolute mt-12 ml-4 text-[#935073]" />
               </div>
@@ -186,14 +186,14 @@ export function SetupPhase({ onComplete }: SetupPhaseProps) {
                 <input
                   value={campaignCode}
                   onChange={(e) => setCampaignCode(e.target.value)}
-                  className="w-full h-16 px-6 rounded-2xl bg-[#502D55]/40 border border-transparent focus:border-[#935073]/30 focus:bg-[#502D55]/60 text-[#F8F4E9] font-bold transition-all outline-none pl-12"
+                  className="w-full h-16 px-6 rounded-2xl bg-[#502D55]/40 border border-transparent focus:border-[#935073]/30 focus:bg-[#502D55]/60 text-[#F8F4E9] font-bold transition-colors outline-none pl-12"
                 />
                 <Globe className="w-5 h-5 absolute top-12 left-4 text-[#935073]" />
               </div>
             </div>
             <button
               onClick={handleCreateCampaign}
-              className="w-full h-16 rounded-2xl bg-gradient-to-r from-[#935073] to-[#502D55] glow text-white font-[850] shadow-xl shadow-[#935073]/20 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-3"
+              className="w-full h-16 rounded-2xl bg-gradient-to-r from-[#935073] to-[#502D55] glow text-white font-[850] shadow-sm shadow-[#935073]/20 hover:scale-[1.02] active:scale-95 transition-colors flex items-center justify-center gap-3"
             >
               Construct Framework <ArrowRight className="w-5 h-5" />
             </button>
@@ -202,7 +202,7 @@ export function SetupPhase({ onComplete }: SetupPhaseProps) {
 
         {/* STEP 2: SCRIPT */}
         {step === 2 && (
-          <div className="space-y-8 animate-in fade-in slide-in-from-right-8 duration-500">
+          <div className="space-y-8 animate-in fade-in duration-150 duration-150">
             <div className="space-y-2">
               <h3 className="text-3xl font-[850] text-[#F8F4E9] tracking-tight">Magic Script Parser</h3>
               <p className="text-[#F8F4E9] font-medium leading-relaxed">Upload your outbound script instructions (.docx) for neural alignment.</p>
@@ -224,7 +224,7 @@ export function SetupPhase({ onComplete }: SetupPhaseProps) {
             <button
               disabled={!scriptFile}
               onClick={handleUploadScript}
-              className="w-full h-16 rounded-2xl bg-gradient-to-r from-[#935073] to-[#502D55] glow disabled:bg-[#935073]/20 disabled:from-[#935073]/20 disabled:to-[#502D55]/20 text-white font-[850] shadow-xl shadow-[#935073]/20 transition-all flex items-center justify-center gap-3"
+              className="w-full h-16 rounded-2xl bg-gradient-to-r from-[#935073] to-[#502D55] glow disabled:bg-[#935073]/20 disabled:from-[#935073]/20 disabled:to-[#502D55]/20 text-white font-[850] shadow-sm shadow-[#935073]/20 transition-colors flex items-center justify-center gap-3"
             >
               Parse & Map Agent Logic <ArrowRight className="w-5 h-5" />
             </button>
@@ -233,7 +233,7 @@ export function SetupPhase({ onComplete }: SetupPhaseProps) {
 
         {/* STEP 3: AUDIT */}
         {step === 3 && (
-          <div className="space-y-8 animate-in fade-in slide-in-from-right-8 duration-500">
+          <div className="space-y-8 animate-in fade-in duration-150 duration-150">
             <div className="space-y-2">
               <h3 className="text-3xl font-[850] text-[#F8F4E9] tracking-tight">Questionnaire Blueprint</h3>
               <p className="text-[#F8F4E9] font-medium leading-relaxed">Upload the audit questions Gemini will use to evaluate your signals.</p>
@@ -254,7 +254,7 @@ export function SetupPhase({ onComplete }: SetupPhaseProps) {
             <button
               disabled={!questionnaireFile}
               onClick={handleUploadQuestionnaire}
-              className="w-full h-16 rounded-2xl bg-gradient-to-r from-[#935073] to-[#502D55] glow disabled:bg-[#935073]/20 disabled:from-[#935073]/20 disabled:to-[#502D55]/20 text-white font-[850] shadow-xl shadow-[#935073]/20 transition-all flex items-center justify-center gap-3"
+              className="w-full h-16 rounded-2xl bg-gradient-to-r from-[#935073] to-[#502D55] glow disabled:bg-[#935073]/20 disabled:from-[#935073]/20 disabled:to-[#502D55]/20 text-white font-[850] shadow-sm shadow-[#935073]/20 transition-colors flex items-center justify-center gap-3"
             >
               Build Audit Framework <ArrowRight className="w-5 h-5" />
             </button>
@@ -263,7 +263,7 @@ export function SetupPhase({ onComplete }: SetupPhaseProps) {
 
         {/* STEP 4: PROFILE */}
         {step === 4 && (
-          <div className="space-y-8 animate-in fade-in slide-in-from-right-8 duration-500">
+          <div className="space-y-8 animate-in fade-in duration-150 duration-150">
             <div className="space-y-2">
               <h3 className="text-3xl font-[850] text-[#F8F4E9] tracking-tight">Intelligence Profile</h3>
               <p className="text-[#F8F4E9] font-medium leading-relaxed">Select the AI processing profile that will power the neural engine.</p>
@@ -274,7 +274,7 @@ export function SetupPhase({ onComplete }: SetupPhaseProps) {
                   key={p.id}
                   onClick={() => setProfileId(p.id)}
                   className={cn(
-                    "flex items-center justify-between p-6 rounded-2xl border transition-all text-left group",
+                    "flex items-center justify-between p-6 rounded-2xl border transition-colors text-left group",
                     profileId === p.id
                       ? "bg-gradient-to-r from-[#935073] to-[#502D55] glow border-[#935073]/30 text-white shadow-lg"
                       : "bg-[#502D55]/40 border-transparent hover:border-[#935073]/20"
@@ -287,7 +287,7 @@ export function SetupPhase({ onComplete }: SetupPhaseProps) {
                     </p>
                   </div>
                   <div className={cn(
-                    "w-8 h-8 rounded-full border-2 flex items-center justify-center transition-all",
+                    "w-8 h-8 rounded-full border-2 flex items-center justify-center transition-colors",
                     profileId === p.id ? "border-white bg-white/20" : "border-[#935073]/20"
                   )}>
                     {profileId === p.id && <CheckCircle2 className="w-5 h-5 text-white" />}
@@ -300,7 +300,7 @@ export function SetupPhase({ onComplete }: SetupPhaseProps) {
             <button
               disabled={!profileId}
               onClick={handleFinish}
-              className="w-full h-16 rounded-2xl bg-gradient-to-r from-[#935073] to-[#502D55] glow disabled:bg-[#935073]/20 disabled:from-[#935073]/20 disabled:to-[#502D55]/20 text-white font-[850] shadow-xl shadow-[#935073]/20 transition-all flex items-center justify-center gap-3"
+              className="w-full h-16 rounded-2xl bg-gradient-to-r from-[#935073] to-[#502D55] glow disabled:bg-[#935073]/20 disabled:from-[#935073]/20 disabled:to-[#502D55]/20 text-white font-[850] shadow-sm shadow-[#935073]/20 transition-colors flex items-center justify-center gap-3"
             >
               Finalize & Launch Ingestion <ArrowRight className="w-5 h-5" />
             </button>
@@ -315,7 +315,7 @@ function SetupStep({ num, label, active, done }: { num: number; label: string; a
   return (
     <div className="flex flex-col items-center gap-3 group">
       <div className={cn(
-        "w-12 h-12 rounded-2xl flex items-center justify-center text-sm font-black transition-all border-2",
+        "w-12 h-12 rounded-2xl flex items-center justify-center text-sm font-black transition-colors border-2",
         active ? "bg-gradient-to-r from-[#935073] to-[#502D55] glow text-white border-[#935073]/30 scale-110 shadow-lg" :
           done ? "bg-[#935073]/20 text-[#F8F4E9] border-transparent" :
             "bg-transparent text-[#935073]/40 border-[#935073]/20"

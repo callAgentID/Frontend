@@ -201,9 +201,9 @@ export function InlineQuestionnaireEditor({ sections: initialSections, onSave, o
   };
 
   return (
-    <div className="space-y-6 animate-in fade-in slide-in-from-top-4 duration-500">
+    <div className="space-y-6 animate-in fade-in duration-150 duration-150">
       {/* Action Bar */}
-      <div className="sticky top-0 z-20 bg-[#0A1931]/95 backdrop-blur-md border border-[#4A7FA7]/30 rounded-2xl p-4 flex items-center justify-between shadow-xl">
+      <div className="sticky top-0 z-20 bg-black/40 border border-blue-400/15 rounded-2xl p-4 flex items-center justify-between shadow-xl">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-[#4A7FA7]/20 flex items-center justify-center">
             <Layers className="w-5 h-5 text-[#4A7FA7]" />
@@ -219,21 +219,21 @@ export function InlineQuestionnaireEditor({ sections: initialSections, onSave, o
         <div className="flex items-center gap-3">
           <button
             onClick={addSection}
-            className="flex items-center gap-2 px-4 py-2 bg-[#1A3D63]/60 hover:bg-[#1A3D63]/80 text-[#B3CFE5] hover:text-[#F6FAFD] rounded-xl font-bold text-xs uppercase tracking-wider transition-all border border-[#4A7FA7]/30"
+            className="flex items-center gap-2 px-4 py-2 bg-blue-950/25 hover:bg-[#1A3D63]/80 text-[#B3CFE5] hover:text-[#F6FAFD] rounded-xl font-bold text-xs uppercase tracking-wider transition-colors border border-blue-400/15"
           >
             <Plus className="w-4 h-4" />
             Add Section
           </button>
           <button
             onClick={onCancel}
-            className="px-4 py-2 bg-[#1A3D63]/60 hover:bg-[#1A3D63]/80 text-[#B3CFE5] rounded-xl font-bold text-xs uppercase tracking-wider transition-all"
+            className="px-4 py-2 bg-blue-950/25 hover:bg-[#1A3D63]/80 text-[#B3CFE5] rounded-xl font-bold text-xs uppercase tracking-wider transition-colors"
           >
             Cancel
           </button>
           <button
             onClick={handleSave}
             disabled={isSaving}
-            className="flex items-center gap-2 px-6 py-2 bg-gradient-to-r from-[#4A7FA7] to-[#1A3D63] text-white rounded-xl font-bold text-xs uppercase tracking-wider transition-all hover:opacity-90 disabled:opacity-50 shadow-lg shadow-[#4A7FA7]/20"
+            className="flex items-center gap-2 px-6 py-2 bg-gradient-to-r from-[#4A7FA7] to-[#1A3D63] text-white rounded-xl font-bold text-xs uppercase tracking-wider transition-colors hover:opacity-90 disabled:opacity-50 shadow-lg shadow-[#4A7FA7]/20"
           >
             {isSaving ? (
               <>
@@ -252,7 +252,7 @@ export function InlineQuestionnaireEditor({ sections: initialSections, onSave, o
 
       {/* Sections */}
       {sections.length === 0 ? (
-        <div className="p-16 text-center space-y-4 bg-[#1A3D63]/40 rounded-2xl border border-[#4A7FA7]/20">
+        <div className="p-16 text-center space-y-4 bg-blue-950/18 rounded-2xl border border-blue-400/10">
           <Layers className="w-12 h-12 text-[#4A7FA7] mx-auto opacity-50" />
           <p className="text-[#B3CFE5] font-semibold">No sections yet. Add your first section to get started.</p>
         </div>
@@ -317,9 +317,9 @@ function SectionEditor({
   onMoveQuestionDown
 }: SectionEditorProps) {
   return (
-    <div className="bg-[#1A3D63]/60 border border-[#4A7FA7]/30 rounded-3xl overflow-hidden">
+    <div className="glass-card rounded-3xl overflow-hidden">
       {/* Section Header */}
-      <div className="p-6 bg-[#1A3D63]/80 border-b border-[#4A7FA7]/20">
+      <div className="p-6 bg-[#1A3D63]/80 border-b border-blue-400/10">
         <div className="flex items-center gap-4">
           <div className="w-8 h-8 rounded-lg bg-[#4A7FA7]/20 flex items-center justify-center shrink-0">
             <Layers className="w-4 h-4 text-[#4A7FA7]" />
@@ -329,11 +329,11 @@ function SectionEditor({
             type="text"
             value={section.title}
             onChange={(e) => onUpdate({ title: e.target.value })}
-            className="flex-1 bg-transparent text-lg font-black text-[#F6FAFD] outline-none placeholder:text-[#B3CFE5]/50 border-b border-transparent hover:border-[#4A7FA7]/30 focus:border-[#4A7FA7] transition-all pb-1"
+            className="flex-1 bg-transparent text-lg font-black text-[#F6FAFD] outline-none placeholder:text-[#B3CFE5]/50 border-b border-transparent hover:border-blue-400/15 focus:border-[#4A7FA7] transition-colors pb-1"
             placeholder="Section title"
           />
 
-          <span className="text-xs font-bold text-[#B3CFE5] px-3 py-1 bg-[#0A1931]/60 rounded-lg">
+          <span className="text-xs font-bold text-[#B3CFE5] px-3 py-1 bg-black/25 rounded-lg">
             {section.questions.length} {section.questions.length === 1 ? 'question' : 'questions'}
           </span>
 
@@ -342,7 +342,7 @@ function SectionEditor({
               onClick={onMoveUp}
               disabled={sectionIndex === 0}
               className={cn(
-                "w-8 h-8 rounded-lg flex items-center justify-center transition-all",
+                "w-8 h-8 rounded-lg flex items-center justify-center transition-colors",
                 sectionIndex === 0 ? "opacity-30 cursor-not-allowed text-[#B3CFE5]" : "hover:bg-[#4A7FA7]/20 text-[#B3CFE5]"
               )}
               title="Move section up"
@@ -353,7 +353,7 @@ function SectionEditor({
               onClick={onMoveDown}
               disabled={sectionIndex === totalSections - 1}
               className={cn(
-                "w-8 h-8 rounded-lg flex items-center justify-center transition-all",
+                "w-8 h-8 rounded-lg flex items-center justify-center transition-colors",
                 sectionIndex === totalSections - 1 ? "opacity-30 cursor-not-allowed text-[#B3CFE5]" : "hover:bg-[#4A7FA7]/20 text-[#B3CFE5]"
               )}
               title="Move section down"
@@ -362,14 +362,14 @@ function SectionEditor({
             </button>
             <button
               onClick={onDuplicate}
-              className="w-8 h-8 rounded-lg hover:bg-[#4A7FA7]/20 flex items-center justify-center transition-all text-[#B3CFE5]"
+              className="w-8 h-8 rounded-lg hover:bg-[#4A7FA7]/20 flex items-center justify-center transition-colors text-[#B3CFE5]"
               title="Duplicate section"
             >
               <Copy className="w-4 h-4" />
             </button>
             <button
               onClick={onDelete}
-              className="w-8 h-8 rounded-lg hover:bg-red-500/20 flex items-center justify-center transition-all text-red-400"
+              className="w-8 h-8 rounded-lg hover:bg-red-500/20 flex items-center justify-center transition-colors text-red-400"
               title="Delete section"
             >
               <Trash2 className="w-4 h-4" />
@@ -396,7 +396,7 @@ function SectionEditor({
 
         <button
           onClick={onAddQuestion}
-          className="w-full py-4 border-2 border-dashed border-[#4A7FA7]/30 rounded-2xl hover:bg-[#1A3D63]/40 hover:border-[#4A7FA7]/50 transition-all flex items-center justify-center gap-2 text-[#B3CFE5] hover:text-[#F6FAFD] font-bold text-sm group"
+          className="w-full py-4 border-2 border-dashed border-blue-400/15 rounded-2xl hover:bg-blue-950/18 hover:border-[#4A7FA7]/50 transition-colors flex items-center justify-center gap-2 text-[#B3CFE5] hover:text-[#F6FAFD] font-bold text-sm group"
         >
           <Plus className="w-5 h-5 group-hover:scale-110 transition-transform" />
           Add Question
@@ -431,7 +431,7 @@ function QuestionEditor({
   const Icon = questionType?.icon || HelpCircle;
 
   return (
-    <div className="bg-[#0A1931]/60 border border-[#4A7FA7]/20 rounded-2xl p-4 space-y-4 group/question hover:border-[#4A7FA7]/40 transition-all">
+    <div className="bg-black/25 border border-blue-400/10 rounded-2xl p-4 space-y-4 group/question hover:border-blue-400/22 transition-colors">
       {/* Question Header */}
       <div className="flex items-start gap-4">
         <div className="w-8 h-8 rounded-lg bg-[#4A7FA7]/20 flex items-center justify-center shrink-0 mt-1">
@@ -442,7 +442,7 @@ function QuestionEditor({
           <textarea
             value={question.text}
             onChange={(e) => onUpdate({ text: e.target.value })}
-            className="w-full bg-transparent text-sm font-semibold text-[#F6FAFD] outline-none placeholder:text-[#B3CFE5]/50 border-b border-transparent hover:border-[#4A7FA7]/30 focus:border-[#4A7FA7] transition-all pb-1 resize-none min-h-[40px]"
+            className="w-full bg-transparent text-sm font-semibold text-[#F6FAFD] outline-none placeholder:text-[#B3CFE5]/50 border-b border-transparent hover:border-blue-400/15 focus:border-[#4A7FA7] transition-colors pb-1 resize-none min-h-[40px]"
             placeholder="Question text"
             rows={2}
           />
@@ -453,7 +453,7 @@ function QuestionEditor({
               <select
                 value={question.type}
                 onChange={(e) => onUpdate({ type: e.target.value as Question["type"], options: [] })}
-                className="w-full h-9 bg-[#1A3D63]/60 border border-[#4A7FA7]/20 rounded-lg px-2 text-xs font-semibold text-[#F6FAFD] outline-none focus:border-[#4A7FA7] transition-all"
+                className="w-full h-9 bg-blue-950/25 border border-blue-400/10 rounded-lg px-2 text-xs font-semibold text-[#F6FAFD] outline-none focus:border-[#4A7FA7] transition-colors"
               >
                 {QUESTION_TYPES.map(type => (
                   <option key={type.value} value={type.value}>{type.label}</option>
@@ -469,18 +469,18 @@ function QuestionEditor({
                 max="100"
                 value={question.weight}
                 onChange={(e) => onUpdate({ weight: Math.min(100, Math.max(0, parseInt(e.target.value) || 0)) })}
-                className="w-full h-9 bg-[#1A3D63]/60 border border-[#4A7FA7]/20 rounded-lg px-2 text-xs font-semibold text-[#F6FAFD] outline-none focus:border-[#4A7FA7] transition-all"
+                className="w-full h-9 bg-blue-950/25 border border-blue-400/10 rounded-lg px-2 text-xs font-semibold text-[#F6FAFD] outline-none focus:border-[#4A7FA7] transition-colors"
               />
             </div>
           </div>
 
-          <div className="flex items-center gap-3 p-2 bg-[#1A3D63]/60 border border-[#4A7FA7]/20 rounded-lg">
+          <div className="flex items-center gap-3 p-2 bg-blue-950/25 border border-blue-400/10 rounded-lg">
             <input
               type="checkbox"
               id={`required_${question.question_id}`}
               checked={question.required}
               onChange={(e) => onUpdate({ required: e.target.checked })}
-              className="w-4 h-4 rounded border-[#4A7FA7]/30 text-red-500"
+              className="w-4 h-4 rounded border-blue-400/15 text-red-500"
             />
             <label htmlFor={`required_${question.question_id}`} className="text-xs font-bold text-[#F6FAFD] cursor-pointer">
               Required Question
@@ -507,7 +507,7 @@ function QuestionEditor({
             onClick={onMoveUp}
             disabled={questionIndex === 0}
             className={cn(
-              "w-7 h-7 rounded-lg flex items-center justify-center transition-all",
+              "w-7 h-7 rounded-lg flex items-center justify-center transition-colors",
               questionIndex === 0 ? "opacity-30 cursor-not-allowed text-[#B3CFE5]" : "hover:bg-[#4A7FA7]/20 text-[#B3CFE5]"
             )}
             title="Move up"
@@ -518,7 +518,7 @@ function QuestionEditor({
             onClick={onMoveDown}
             disabled={questionIndex === totalQuestions - 1}
             className={cn(
-              "w-7 h-7 rounded-lg flex items-center justify-center transition-all",
+              "w-7 h-7 rounded-lg flex items-center justify-center transition-colors",
               questionIndex === totalQuestions - 1 ? "opacity-30 cursor-not-allowed text-[#B3CFE5]" : "hover:bg-[#4A7FA7]/20 text-[#B3CFE5]"
             )}
             title="Move down"
@@ -528,14 +528,14 @@ function QuestionEditor({
           <div className="h-px bg-[#4A7FA7]/20 my-1" />
           <button
             onClick={onDuplicate}
-            className="w-7 h-7 rounded-lg hover:bg-[#4A7FA7]/20 flex items-center justify-center transition-all text-[#B3CFE5]"
+            className="w-7 h-7 rounded-lg hover:bg-[#4A7FA7]/20 flex items-center justify-center transition-colors text-[#B3CFE5]"
             title="Duplicate"
           >
             <Copy className="w-3.5 h-3.5" />
           </button>
           <button
             onClick={onDelete}
-            className="w-7 h-7 rounded-lg hover:bg-red-500/20 flex items-center justify-center transition-all text-red-400"
+            className="w-7 h-7 rounded-lg hover:bg-red-500/20 flex items-center justify-center transition-colors text-red-400"
             title="Delete"
           >
             <Trash2 className="w-3.5 h-3.5" />
@@ -567,7 +567,7 @@ function ChoiceOptionsEditor({ options, onChange }: ChoiceOptionsEditorProps) {
   };
 
   return (
-    <div className="space-y-2 p-3 bg-[#1A3D63]/40 rounded-lg border border-[#4A7FA7]/20">
+    <div className="space-y-2 p-3 bg-blue-950/18 rounded-lg border border-blue-400/10">
       <label className="text-[9px] font-black uppercase tracking-wider text-[#B3CFE5]">Options</label>
       <div className="space-y-2">
         {options.map((option, index) => (
@@ -576,12 +576,12 @@ function ChoiceOptionsEditor({ options, onChange }: ChoiceOptionsEditorProps) {
               type="text"
               value={option}
               onChange={(e) => updateOption(index, e.target.value)}
-              className="flex-1 h-8 bg-[#0A1931]/60 border border-[#4A7FA7]/20 rounded-lg px-3 text-xs font-medium text-[#F6FAFD] outline-none focus:border-[#4A7FA7] transition-all"
+              className="flex-1 h-8 bg-black/25 border border-blue-400/10 rounded-lg px-3 text-xs font-medium text-[#F6FAFD] outline-none focus:border-[#4A7FA7] transition-colors"
               placeholder={`Option ${index + 1}`}
             />
             <button
               onClick={() => removeOption(index)}
-              className="w-8 h-8 rounded-lg hover:bg-red-500/20 flex items-center justify-center transition-all text-red-400"
+              className="w-8 h-8 rounded-lg hover:bg-red-500/20 flex items-center justify-center transition-colors text-red-400"
             >
               <X className="w-3.5 h-3.5" />
             </button>
@@ -589,7 +589,7 @@ function ChoiceOptionsEditor({ options, onChange }: ChoiceOptionsEditorProps) {
         ))}
         <button
           onClick={addOption}
-          className="w-full h-8 border border-dashed border-[#4A7FA7]/30 rounded-lg hover:bg-[#1A3D63]/40 transition-all flex items-center justify-center gap-2 text-[#B3CFE5] font-bold text-xs"
+          className="w-full h-8 border border-dashed border-blue-400/15 rounded-lg hover:bg-blue-950/18 transition-colors flex items-center justify-center gap-2 text-[#B3CFE5] font-bold text-xs"
         >
           <Plus className="w-3 h-3" />
           Add Option
@@ -616,7 +616,7 @@ function ScaleOptionsEditor({ options, onChange }: ScaleOptionsEditorProps) {
   };
 
   return (
-    <div className="space-y-3 p-3 bg-[#1A3D63]/40 rounded-lg border border-[#4A7FA7]/20">
+    <div className="space-y-3 p-3 bg-blue-950/18 rounded-lg border border-blue-400/10">
       <label className="text-[9px] font-black uppercase tracking-wider text-[#B3CFE5]">Scale Configuration</label>
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1.5">
@@ -625,7 +625,7 @@ function ScaleOptionsEditor({ options, onChange }: ScaleOptionsEditorProps) {
             type="number"
             value={options.min || 1}
             onChange={(e) => onChange({ ...options, min: parseInt(e.target.value) || 1 })}
-            className="w-full h-8 bg-[#0A1931]/60 border border-[#4A7FA7]/20 rounded-lg px-2 text-xs font-semibold text-[#F6FAFD] outline-none focus:border-[#4A7FA7] transition-all"
+            className="w-full h-8 bg-black/25 border border-blue-400/10 rounded-lg px-2 text-xs font-semibold text-[#F6FAFD] outline-none focus:border-[#4A7FA7] transition-colors"
           />
         </div>
         <div className="space-y-1.5">
@@ -634,7 +634,7 @@ function ScaleOptionsEditor({ options, onChange }: ScaleOptionsEditorProps) {
             type="number"
             value={options.max || 5}
             onChange={(e) => onChange({ ...options, max: parseInt(e.target.value) || 5 })}
-            className="w-full h-8 bg-[#0A1931]/60 border border-[#4A7FA7]/20 rounded-lg px-2 text-xs font-semibold text-[#F6FAFD] outline-none focus:border-[#4A7FA7] transition-all"
+            className="w-full h-8 bg-black/25 border border-blue-400/10 rounded-lg px-2 text-xs font-semibold text-[#F6FAFD] outline-none focus:border-[#4A7FA7] transition-colors"
           />
         </div>
       </div>
@@ -648,7 +648,7 @@ function ScaleOptionsEditor({ options, onChange }: ScaleOptionsEditorProps) {
             value={options.labels?.[key] || ""}
             onChange={(e) => updateLabel(key, e.target.value)}
             placeholder={`Label for ${key}`}
-            className="w-full h-8 bg-[#0A1931]/60 border border-[#4A7FA7]/20 rounded-lg px-2 text-xs font-medium text-[#F6FAFD] outline-none focus:border-[#4A7FA7] transition-all placeholder:text-[#B3CFE5]/50"
+            className="w-full h-8 bg-black/25 border border-blue-400/10 rounded-lg px-2 text-xs font-medium text-[#F6FAFD] outline-none focus:border-[#4A7FA7] transition-colors placeholder:text-[#B3CFE5]/50"
           />
         ))}
       </div>

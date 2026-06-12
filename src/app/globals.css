@@ -1,198 +1,230 @@
 @import "tailwindcss";
 
 :root {
-  /* New Color Scheme from Design */
+  --radius: 16px;
+  --glass-blur: 28px;
+  --glass-heavy-blur: 40px;
+
+  /* Water palette */
+  --water-deep:   #020912;
+  --accent:       #2C8FFF;
+  --accent-soft:  rgba(44, 143, 255, 0.22);
+  --accent-glow:  rgba(44, 143, 255, 0.50);
+
+  /* Glass layers */
+  --glass-bg:       rgba(12, 30, 58, 0.45);
+  --glass-border:   rgba(100, 170, 255, 0.14);
+  --glass-hover:    rgba(44, 143, 255, 0.10);
+  --glass-active:   rgba(44, 143, 255, 0.20);
+  --glass-sidebar:  rgba(8, 22, 48, 0.55);
+
+  /* Text */
+  --text-primary:   #EEF4FF;
+  --text-secondary: rgba(180, 215, 255, 0.65);
+  --text-tertiary:  rgba(130, 180, 255, 0.40);
+
+  /* Legacy compat */
   --background: 215 57% 12%;
-  /* #0A1931 - Dark Navy */
   --foreground: 210 27% 93%;
-  /* #F6FAFD - Off White */
-
   --muted: 209 49% 31%;
-  /* #1A3D63 - Darker Blue */
   --muted-foreground: 209 50% 72%;
-  /* #B3CFE5 - Light Blue */
-
-  --border: 209 49% 31% / 0.3;
-  --input: 209 49% 31% / 0.5;
-
-  --primary: 204 38% 47%;
-  /* #4A7FA7 - Medium Blue */
-  --primary-foreground: 210 27% 93%;
-
-  --secondary: 209 49% 31%;
-  /* #1A3D63 */
-  --secondary-foreground: 209 50% 72%;
-
-  --accent: 209 50% 72%;
-  /* #B3CFE5 - Light Blue */
-  --accent-foreground: 215 57% 12%;
-
-  --destructive: 0 84% 60%;
-  --destructive-foreground: 210 27% 93%;
-
-  --ring: 204 38% 47% / 0.3;
-  --radius: 1.25rem;
-
-  /* Glass and blur effects */
-  --glass-blur: 24px;
+  --primary: 210 100% 62%;
+  --primary-foreground: 0 0% 100%;
+  --border: 210 30% 100% / 0.10;
 }
 
-@theme inline {
-  --color-background: hsl(var(--background));
-  --color-foreground: hsl(var(--foreground));
-  --color-muted: hsl(var(--muted));
-  --color-muted-foreground: hsl(var(--muted-foreground));
-  --color-border: hsla(var(--border));
-  --color-primary: hsl(var(--primary));
-  --color-secondary: hsl(var(--secondary));
-  --color-accent: hsl(var(--accent));
-  --color-accent-foreground: hsl(var(--accent-foreground));
-  --radius-2xl: var(--radius);
-  --radius-3xl: 1.5rem;
-}
-
-body {
-  background: #0A1931;
-  color: hsl(var(--foreground));
-  font-family: var(--font-sans);
+/* ─── Base body ────────────────────────────────────── */
+/* Promote background layers to own compositor layers */
+html {
   -webkit-font-smoothing: antialiased;
+}
+body {
+  background: var(--water-deep);
+  color: var(--text-primary);
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text",
+               var(--font-geist-sans), system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
   letter-spacing: -0.015em;
   min-height: 100vh;
-  position: relative;
   overflow-x: hidden;
 }
 
+/* ─── Static water background — isolated layers ─────── */
+/* Each fixed layer gets its own compositor layer via isolation */
 body::before {
   content: '';
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  z-index: -1;
+  inset: 0;
+  z-index: -3;
   will-change: auto;
+  /* Single gradient — much cheaper to composite */
   background:
-    radial-gradient(ellipse 80% 50% at 50% -20%, rgba(179, 207, 229, 0.15), transparent),
-    radial-gradient(ellipse 60% 40% at 80% 50%, rgba(74, 127, 167, 0.12), transparent),
-    radial-gradient(ellipse 70% 50% at 20% 80%, rgba(26, 61, 99, 0.2), transparent),
-    radial-gradient(ellipse 50% 60% at 50% 100%, rgba(179, 207, 229, 0.1), transparent),
-    linear-gradient(135deg, #0A1931 0%, #1A3D63 100%);
-  /* Removed smokeWave animation — was causing continuous full-page repaints */
+    radial-gradient(ellipse 65% 55% at -5% 30%,  rgba(30,100,255,0.50) 0%, transparent 60%),
+    radial-gradient(ellipse 55% 60% at 105% 20%, rgba(20,80,220,0.38)  0%, transparent 60%),
+    radial-gradient(ellipse 50% 50% at 50% 110%, rgba(10,60,180,0.32)  0%, transparent 55%),
+    radial-gradient(ellipse 40% 35% at 65% -5%,  rgba(50,160,255,0.25) 0%, transparent 55%),
+    #020912;
+  /* Isolate to prevent repainting with page content */
+  isolation: isolate;
 }
 
+/* Caustic shimmer — subtle bright patches */
+.water-caustics {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 25% 18% at 22% 25%, rgba(80, 170, 255, 0.12) 0%, transparent 60%),
+    radial-gradient(ellipse 20% 15% at 78% 70%, rgba(60, 150, 255, 0.10) 0%, transparent 60%),
+    radial-gradient(ellipse 18% 12% at 55% 45%, rgba(70, 160, 255, 0.08) 0%, transparent 60%);
+}
+
+/* ─── Glass utilities ─────────────────────────────── */
 @layer utilities {
-  .glass-blur {
-    background: rgba(179, 207, 229, 0.08);
-    backdrop-filter: blur(var(--glass-blur));
-    -webkit-backdrop-filter: blur(var(--glass-blur));
-    border: 1px solid rgba(179, 207, 229, 0.15);
+
+  /* Standard glass — nav items, buttons, inputs */
+  .glass {
+    background: rgba(10, 30, 65, 0.50);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(80, 150, 255, 0.14);
   }
 
-  .apple-blur {
-    backdrop-filter: blur(var(--glass-blur));
-    -webkit-backdrop-filter: blur(var(--glass-blur));
+  /* Heavy glass — sidebar, header (applied via inline style for will-change) */
+  .glass-heavy {
+    background: rgba(6, 18, 45, 0.62);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(80, 150, 255, 0.10);
   }
 
-  .apple-shadow {
-    box-shadow: 0 10px 40px -10px rgba(10, 25, 49, 0.6);
+  /* Card glass — content panels (no backdrop-filter — use bg opacity instead) */
+  .glass-card {
+    background: rgba(10, 28, 62, 0.65);
+    border: 1px solid rgba(80, 155, 255, 0.12);
+    box-shadow: 0 2px 16px rgba(0, 10, 40, 0.35);
   }
 
-  .apple-shadow-hover {
-    box-shadow: 0 20px 50px -15px rgba(10, 25, 49, 0.8);
+  /* Tinted glass — accent widgets */
+  .glass-tinted {
+    background: rgba(30, 80, 180, 0.28);
+    border: 1px solid rgba(60, 140, 255, 0.20);
   }
 
+  /* Active — selected nav item */
+  .glass-active {
+    background: rgba(44, 143, 255, 0.18);
+    border: 1px solid rgba(44, 143, 255, 0.30);
+    box-shadow: 0 0 12px rgba(44, 143, 255, 0.14);
+  }
+
+  /* Legacy compat aliases */
+  .glass-blur     { background: rgba(10,30,65,0.50); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(80,150,255,0.14); }
+  .apple-blur     { backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
+  .apple-shadow   { box-shadow: 0 4px 20px rgba(0,10,40,0.50); }
+  .apple-shadow-hover { box-shadow: 0 8px 32px rgba(0,10,40,0.60); }
+
+  /* Glows — filter is GPU-composited, box-shadow causes paint storms */
+  .glow        { box-shadow: 0 0 12px rgba(44,143,255,0.20); }
+  .glow-strong { box-shadow: 0 0 20px rgba(44,143,255,0.35); }
+
+  /* Top highlight glint (use as sibling or before) */
+  .glass-glint {
+    position: relative;
+  }
+  .glass-glint::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent 0%, rgba(150, 200, 255, 0.35) 40%, rgba(150, 200, 255, 0.35) 60%, transparent 100%);
+    border-radius: inherit;
+    pointer-events: none;
+  }
+
+  /* Subtle dot grid */
   .subtle-grid {
     background-image:
-      linear-gradient(rgba(179, 207, 229, 0.03) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(179, 207, 229, 0.03) 1px, transparent 1px);
-    background-size: 50px 50px;
-  }
-
-  .glow {
-    box-shadow: 0 0 20px rgba(74, 127, 167, 0.5);
-  }
-
-  .glow-strong {
-    box-shadow: 0 0 40px rgba(74, 127, 167, 0.7);
+      linear-gradient(rgba(80,160,255,0.025) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(80,160,255,0.025) 1px, transparent 1px);
+    background-size: 48px 48px;
   }
 }
 
-/* Targeted transitions — never use `transition: all` on * (causes CLS + INP regressions) */
+/* ─── Transitions — targeted only, never `all` ────── */
 a, button, [role="button"] {
-  transition: color 0.15s ease, background-color 0.15s ease, border-color 0.15s ease,
-              box-shadow 0.15s ease, opacity 0.15s ease, transform 0.15s ease;
+  transition: color 0.15s ease, background-color 0.15s ease,
+              border-color 0.15s ease, opacity 0.15s ease;
+}
+input, select, textarea {
+  transition: border-color 0.15s ease, background-color 0.15s ease;
 }
 
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
+/* ─── Scrollbar ───────────────────────────────────── */
+::-webkit-scrollbar       { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(44,143,255,0.22); border-radius: 99px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(44,143,255,0.45); }
 
-::-webkit-scrollbar-track {
-  background: rgba(26, 61, 99, 0.3);
-  border-radius: 10px;
-}
-
-::-webkit-scrollbar-thumb {
-  background: rgba(74, 127, 167, 0.5);
-  border-radius: 10px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: rgba(74, 127, 167, 0.8);
-}
-
+/* ─── Keyframes ───────────────────────────────────── */
 @keyframes shimmer {
-  0% {
-    transform: translateX(-100%);
-  }
-
-  100% {
-    transform: translateX(300%);
-  }
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(300%); }
 }
-
 @keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 16px rgba(44,143,255,0.30); }
+  50%       { box-shadow: 0 0 36px rgba(44,143,255,0.65); }
+}
 
-  0%,
-  100% {
-    box-shadow: 0 0 20px rgba(74, 127, 167, 0.4);
+/* Static orbs removed from DOM — background is in body::after CSS */
+.smoke-particle { display: none; }
+
+/* ─── Floating sidebar content offset ───────────────── */
+/* Sidebar: left(12) + width(240) + gap(8) = 260px      */
+.app-content {
+  padding-left: 260px;
+  /* padding-left transition avoids layout reflow via contain */
+  contain: layout style;
+  transition: padding-left 200ms ease;
+}
+/* Collapsed: left(12) + width(68) + gap(8) = 88px      */
+body.sidebar-collapsed .app-content {
+  padding-left: 88px;
+}
+/* Mobile: no sidebar offset */
+@media (max-width: 1023px) {
+  .app-content { padding-left: 0 !important; }
+}
+
+/* ─── Performance containment helpers ────────────────── */
+
+/* Isolate scrollable panels — prevents full-page repaints on scroll */
+.overflow-y-auto, [class*="overflow-y-auto"] {
+  contain: layout style;
+}
+
+/* Skeleton pulse — tell GPU to animate only opacity */
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.4; }
+}
+.animate-pulse {
+  animation: pulse 1.5s cubic-bezier(0.4,0,0.6,1) infinite;
+  will-change: opacity;
+}
+
+/* Spinner — GPU layer */
+.animate-spin {
+  will-change: transform;
+}
+
+/* Respect reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
-
-  50% {
-    box-shadow: 0 0 40px rgba(74, 127, 167, 0.8);
-  }
-}
-
-/* Smoke particles — static, no animation (3 animated blur layers caused continuous GPU repaints) */
-.smoke-particle {
-  position: fixed;
-  border-radius: 50%;
-  pointer-events: none;
-  z-index: -1;
-  filter: blur(60px);
-}
-
-.smoke-particle:nth-child(1) {
-  width: 400px;
-  height: 400px;
-  background: radial-gradient(circle, rgba(179, 207, 229, 0.08), transparent);
-  top: 10%;
-  left: -10%;
-}
-
-.smoke-particle:nth-child(2) {
-  width: 500px;
-  height: 500px;
-  background: radial-gradient(circle, rgba(74, 127, 167, 0.06), transparent);
-  top: 50%;
-  right: -15%;
-}
-
-.smoke-particle:nth-child(3) {
-  width: 350px;
-  height: 350px;
-  background: radial-gradient(circle, rgba(26, 61, 99, 0.1), transparent);
-  bottom: 10%;
-  left: 20%;
 }

@@ -121,7 +121,7 @@ export function BatchProgress({ batchId, batchName, initialErrors = [], onClose 
   const allFailed = batch && batch.failed_calls === batch.total_calls;
 
   return (
-    <div className="rounded-2xl overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500 border border-[#4A7FA7]/30"
+    <div className="rounded-2xl overflow-hidden animate-in fade-in duration-150 duration-150 border border-blue-400/15"
       style={{ background: '#0D1F35' }}>
 
       {/* ── Header ─────────────────────────────────── */}
@@ -150,9 +150,9 @@ export function BatchProgress({ batchId, batchName, initialErrors = [], onClose 
           </div>
 
           {/* Progress bar */}
-          <div className="h-1.5 bg-[#0A1931]/60 rounded-full overflow-hidden">
+          <div className="h-1.5 bg-black/25 rounded-full overflow-hidden">
             <div className={cn(
-              "h-full rounded-full transition-all duration-700",
+              "h-full rounded-full transition-colors duration-150",
               allFailed ? "bg-red-500" : isComplete ? "bg-green-400" : "bg-gradient-to-r from-[#4A7FA7] to-[#B3CFE5]"
             )} style={{ width: `${progress}%` }} />
           </div>
@@ -174,7 +174,7 @@ export function BatchProgress({ batchId, batchName, initialErrors = [], onClose 
           {batch && (
             <button
               onClick={() => setCallsExpanded(!callsExpanded)}
-              className="w-8 h-8 rounded-lg hover:bg-[#4A7FA7]/20 flex items-center justify-center text-[#B3CFE5] transition-all"
+              className="w-8 h-8 rounded-lg hover:bg-[#4A7FA7]/20 flex items-center justify-center text-[#B3CFE5] transition-colors"
               title={callsExpanded ? "Collapse" : "Expand calls"}
             >
               {callsExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
@@ -183,7 +183,7 @@ export function BatchProgress({ batchId, batchName, initialErrors = [], onClose 
           {onClose && (
             <button
               onClick={onClose}
-              className="w-8 h-8 rounded-lg hover:bg-red-500/20 flex items-center justify-center text-[#B3CFE5] hover:text-red-400 transition-all"
+              className="w-8 h-8 rounded-lg hover:bg-red-500/20 flex items-center justify-center text-[#B3CFE5] hover:text-red-400 transition-colors"
             >
               <X className="w-4 h-4" />
             </button>
@@ -212,9 +212,9 @@ export function BatchProgress({ batchId, batchName, initialErrors = [], onClose 
 
       {/* ── Calls list ─────────────────────────────── */}
       {callsExpanded && batch && (
-        <div className="border-t border-[#4A7FA7]/20">
+        <div className="border-t border-blue-400/10">
           {/* Section header */}
-          <div className="px-4 py-2 flex items-center justify-between bg-[#0A1931]/40">
+          <div className="px-4 py-2 flex items-center justify-between bg-black/18">
             <span className="text-[10px] font-black uppercase tracking-widest text-[#B3CFE5]">
               {isComplete ? "Results — click any call to view details" : "Live progress"}
             </span>
@@ -235,9 +235,9 @@ export function BatchProgress({ batchId, batchName, initialErrors = [], onClose 
                   <div
                     onClick={() => handleCallClick(call)}
                     className={cn(
-                      "flex items-center gap-3 px-4 py-3 transition-all",
-                      isReady ? "cursor-pointer hover:bg-[#1A3D63]/60 group" : "cursor-default",
-                      isSelected ? "bg-[#1A3D63]/60 border-l-2 border-[#4A7FA7]" : ""
+                      "flex items-center gap-3 px-4 py-3 transition-colors",
+                      isReady ? "cursor-pointer hover:bg-blue-950/25 group" : "cursor-default",
+                      isSelected ? "bg-blue-950/25 border-l-2 border-[#4A7FA7]" : ""
                     )}
                   >
                     <FileAudio className="w-4 h-4 text-[#B3CFE5]/40 shrink-0" />
@@ -249,7 +249,7 @@ export function BatchProgress({ batchId, batchName, initialErrors = [], onClose 
                       <span className={cn(
                         "text-xs font-black px-2 py-0.5 rounded-lg shrink-0",
                         score >= 80 ? "text-green-400 bg-green-400/10" :
-                        score >= 50 ? "text-[#F6FAFD] bg-[#1A3D63]/60" :
+                        score >= 50 ? "text-[#F6FAFD] bg-blue-950/25" :
                                       "text-red-400 bg-red-400/10"
                       )}>
                         {score.toFixed(0)}
@@ -277,7 +277,7 @@ export function BatchProgress({ batchId, batchName, initialErrors = [], onClose 
 
                   {/* ── Inline call detail ── */}
                   {isSelected && (
-                    <div className="border-t border-[#4A7FA7]/20 bg-[#0A1931]/40">
+                    <div className="border-t border-blue-400/10 bg-black/18">
                       {isLoadingCall ? (
                         <div className="flex items-center justify-center py-16">
                           <Loader2 className="w-8 h-8 text-[#4A7FA7] animate-spin" />

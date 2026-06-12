@@ -9,7 +9,7 @@ export function Skeleton({ className, style }: SkeletonProps) {
   return (
     <div
       className={cn(
-        "animate-pulse bg-[#1A3D63]/40 rounded-xl",
+        "animate-pulse bg-blue-950/18 rounded-xl",
         className
       )}
       style={style}
@@ -20,7 +20,7 @@ export function Skeleton({ className, style }: SkeletonProps) {
 // Skeleton for Analytics Call List Item
 export function CallListItemSkeleton() {
   return (
-    <div className="flex items-center gap-6 p-8 border-b border-[#4A7FA7]/20">
+    <div className="flex items-center gap-6 p-8 border-b border-blue-400/10">
       <Skeleton className="w-12 h-12 rounded-2xl" />
       <div className="flex-1 space-y-3">
         <div className="flex items-center gap-3">
@@ -45,7 +45,7 @@ export function CallListItemSkeleton() {
 // Skeleton for Red Flag Item
 export function RedFlagItemSkeleton() {
   return (
-    <div className="flex items-center gap-6 p-8 border-b border-[#4A7FA7]/20">
+    <div className="flex items-center gap-6 p-8 border-b border-blue-400/10">
       <Skeleton className="w-16 h-16 rounded-2xl" />
       <div className="flex-1 space-y-3">
         <div className="flex items-center gap-3">
@@ -79,7 +79,7 @@ export function RedFlagItemSkeleton() {
 // Skeleton for Campaign Card
 export function CampaignCardSkeleton() {
   return (
-    <div className="bg-[#1A3D63]/60 rounded-[2.5rem] border border-[#4A7FA7]/30 p-8 space-y-6">
+    <div className="bg-blue-950/25 rounded-[2.5rem] border border-blue-400/15 p-8 space-y-6">
       <div className="flex items-start justify-between">
         <div className="space-y-3 flex-1">
           <Skeleton className="h-8 w-64" />
@@ -87,7 +87,7 @@ export function CampaignCardSkeleton() {
         </div>
         <Skeleton className="w-10 h-10 rounded-xl" />
       </div>
-      <div className="grid grid-cols-2 gap-6 pt-4 border-t border-[#4A7FA7]/20">
+      <div className="grid grid-cols-2 gap-6 pt-4 border-t border-blue-400/10">
         <div className="space-y-3">
           <Skeleton className="h-4 w-20" />
           <div className="space-y-2">
@@ -109,7 +109,7 @@ export function CampaignCardSkeleton() {
 // Skeleton for Script Card
 export function ScriptCardSkeleton() {
   return (
-    <div className="bg-[#1A3D63]/60 rounded-[2rem] border border-[#4A7FA7]/30 p-8 space-y-4">
+    <div className="bg-blue-950/25 rounded-[2rem] border border-blue-400/15 p-8 space-y-4">
       <div className="flex items-start justify-between">
         <div className="space-y-2 flex-1">
           <div className="flex items-center gap-3">
@@ -132,7 +132,7 @@ export function ScriptCardSkeleton() {
 // Skeleton for Questionnaire Card
 export function QuestionnaireCardSkeleton() {
   return (
-    <div className="bg-[#1A3D63]/60 border border-[#4A7FA7]/30 rounded-[2rem] p-8">
+    <div className="glass-card rounded-[2rem] p-8">
       <div className="flex items-center gap-8">
         <div className="flex-1 space-y-3">
           <div className="flex items-center gap-3">
@@ -160,7 +160,7 @@ export function QuestionnaireCardSkeleton() {
 // Skeleton for Stats Card
 export function StatsCardSkeleton() {
   return (
-    <div className="p-6 rounded-[2.5rem] bg-[#1A3D63]/60 border border-[#4A7FA7]/30 min-w-[200px]">
+    <div className="p-6 rounded-[2.5rem] glass-card min-w-[200px]">
       <div className="flex items-center justify-between mb-4">
         <Skeleton className="w-8 h-8 rounded-xl" />
         <Skeleton className="h-4 w-16 rounded-md" />
@@ -177,7 +177,7 @@ export function DetailViewSkeleton() {
   return (
     <div className="max-w-6xl mx-auto space-y-8 p-8">
       {/* Header Card */}
-      <div className="bg-[#1A3D63]/60 rounded-[2.5rem] border border-[#4A7FA7]/30 p-10 space-y-6">
+      <div className="bg-blue-950/25 rounded-[2.5rem] border border-blue-400/15 p-10 space-y-6">
         <div className="flex items-start justify-between">
           <div className="space-y-3 flex-1">
             <Skeleton className="h-8 w-64" />
@@ -186,7 +186,7 @@ export function DetailViewSkeleton() {
           <Skeleton className="w-20 h-20 rounded-2xl" />
         </div>
 
-        <div className="grid grid-cols-4 gap-6 pt-6 border-t border-[#4A7FA7]/20">
+        <div className="grid grid-cols-4 gap-6 pt-6 border-t border-blue-400/10">
           {[1, 2, 3, 4].map((i) => (
             <div key={i} className="space-y-2">
               <Skeleton className="h-3 w-20" />
@@ -199,7 +199,7 @@ export function DetailViewSkeleton() {
       {/* Content Sections */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {[1, 2].map((i) => (
-          <div key={i} className="bg-[#1A3D63]/60 rounded-[2rem] border border-[#4A7FA7]/30 p-8 space-y-4">
+          <div key={i} className="bg-blue-950/25 rounded-[2rem] border border-blue-400/15 p-8 space-y-4">
             <Skeleton className="h-5 w-32" />
             <div className="space-y-3">
               <Skeleton className="h-4 w-full" />
@@ -211,7 +211,7 @@ export function DetailViewSkeleton() {
       </div>
 
       {/* Large Content Card */}
-      <div className="bg-[#1A3D63]/60 rounded-[2rem] border border-[#4A7FA7]/30 p-8 space-y-6">
+      <div className="bg-blue-950/25 rounded-[2rem] border border-blue-400/15 p-8 space-y-6">
         <Skeleton className="h-6 w-48" />
         <div className="space-y-4">
           {[1, 2, 3, 4, 5, 6].map((i) => (
@@ -242,7 +242,7 @@ export function ScriptDetailSkeleton() {
       {/* Source Text Section */}
       <div className="space-y-3">
         <Skeleton className="h-4 w-28" />
-        <div className="bg-[#1A3D63]/40 rounded-2xl p-6 space-y-3">
+        <div className="bg-blue-950/18 rounded-2xl p-6 space-y-3">
           {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((i) => (
             <Skeleton key={i} className="h-3 w-full" style={{ width: `${Math.random() * 30 + 70}%` }} />
           ))}

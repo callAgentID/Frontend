@@ -36,7 +36,7 @@ export default async function RootLayout({
       <head>
         <meta name="google" content="notranslate" />
       </head>
-      <body className="h-screen overflow-hidden flex relative" style={{ background: '#0A1931', color: '#502D55' }}>
+      <body className="h-screen overflow-hidden flex relative" style={{ background: 'var(--water-deep, #060E1A)', color: 'var(--text-primary, #F2F6FF)' }}>
         <ClerkProvider>
           <NextIntlClientProvider messages={messages}>
             {children}

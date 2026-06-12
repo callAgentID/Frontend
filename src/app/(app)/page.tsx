@@ -75,7 +75,7 @@ function HomeContent() {
   return (
     <div className="space-y-20 max-w-7xl mx-auto py-12 px-6">
       {/* Dynamic Navigation Indicator */}
-      <div className="flex justify-center border-b border-[#4A7FA7]/20 pb-8 mb-4">
+      <div className="flex justify-center border-b border-blue-400/10 pb-8 mb-4">
         <div className="flex items-center gap-6">
           <StepIndicator step={1} active={pipelineState === 'input'} done={pipelineState !== 'input'} label={t('ingestion')} />
           <div className="w-8 h-[2px] bg-gradient-to-r from-[#4A7FA7]/50 to-[#B3CFE5]/30" />
@@ -85,14 +85,14 @@ function HomeContent() {
         </div>
       </div>
 
-      <div className="space-y-24 animate-in fade-in slide-in-from-bottom-8 duration-1000">
+      <div className="space-y-24 animate-in fade-in duration-150 duration-150">
         {pipelineState === "input" && (
           <>
             {/* Section 1: Header */}
             <div className="flex flex-col gap-4 text-center items-center">
               <div className="flex items-center gap-2 mb-2">
-                <span className="px-3 py-1 bg-[#4A7FA7]/20 text-[#B3CFE5] text-[10px] uppercase font-[900] tracking-widest rounded-full border border-[#4A7FA7]/30 glow">{t('signalIngestion')}</span>
-                <span className="w-1.5 h-1.5 rounded-full bg-[#4A7FA7] animate-pulse glow-strong" />
+                <span className="px-3 py-1 bg-[#4A7FA7]/20 text-[#B3CFE5] text-[10px] uppercase font-[900] tracking-widest rounded-full border border-blue-400/15 glow">{t('signalIngestion')}</span>
+                <span className="w-1.5 h-1.5 rounded-full bg-[#4A7FA7] animate-pulse" />
               </div>
               <h2 className="text-[52px] font-[850] tracking-tight leading-none text-[#F6FAFD]">
                 {t('title')}
@@ -111,7 +111,7 @@ function HomeContent() {
         )}
 
         {pipelineState === "processing" && (
-          <div className="h-[60vh] flex flex-col items-center justify-center space-y-10 animate-in fade-in zoom-in-95 duration-1000">
+          <div className="h-[60vh] flex flex-col items-center justify-center space-y-10 animate-in fade-in duration-150 duration-150">
             <div className="relative">
               <div className="w-24 h-24 rounded-[3rem] border-4 border-[#1A3D63]/40 border-t-[#4A7FA7] animate-spin glow" />
               <div className="absolute inset-0 flex items-center justify-center">
@@ -126,11 +126,11 @@ function HomeContent() {
         )}
 
         {(pipelineState === "results" || (pipelineState === "input" && analysisResult)) && (
-          <div className="space-y-12 animate-in fade-in slide-in-from-bottom-12 duration-1200">
+          <div className="space-y-12 animate-in fade-in duration-150 duration-150">
             <div className="flex justify-end pr-4">
               <button
                 onClick={resetPipeline}
-                className="flex items-center gap-2.5 px-6 py-3 bg-[#1A3D63]/60 hover:bg-[#4A7FA7]/40 text-[#B3CFE5] hover:text-[#F6FAFD] rounded-2xl font-bold text-xs uppercase tracking-widest transition-all glow active:scale-95 border border-[#4A7FA7]/30"
+                className="flex items-center gap-2.5 px-6 py-3 bg-blue-950/25 hover:bg-[#4A7FA7]/40 text-[#B3CFE5] hover:text-[#F6FAFD] rounded-2xl font-bold text-xs uppercase tracking-widest transition-colors glow active:scale-95 border border-blue-400/15"
               >
                 <RotateCcw className="w-4 h-4" /> {t('resetFramework')}
               </button>
@@ -164,10 +164,10 @@ function StepIndicator({ step, active, done, label }: { step: number, active: bo
   return (
     <div className="flex flex-col items-center gap-4 group">
       <div className={cn(
-        "w-12 h-12 rounded-2xl flex items-center justify-center text-sm font-black transition-all border-2",
-        active ? "bg-gradient-to-br from-[#4A7FA7] to-[#1A3D63] text-[#F6FAFD] border-[#4A7FA7] scale-110 glow-strong" :
-          done ? "bg-[#1A3D63]/60 text-[#4A7FA7] border-[#4A7FA7]/40" :
-            "bg-transparent text-[#B3CFE5]/40 border-[#4A7FA7]/20"
+        "w-12 h-12 rounded-2xl flex items-center justify-center text-sm font-black transition-colors border-2",
+        active ? "bg-gradient-to-br from-[#4A7FA7] to-[#1A3D63] text-[#F6FAFD] border-[#4A7FA7] scale-110" :
+          done ? "bg-blue-950/25 text-[#4A7FA7] border-blue-400/22" :
+            "bg-transparent text-[#B3CFE5]/40 border-blue-400/10"
       )}>
         {done ? <Play className="w-4 h-4 fill-current opacity-80" /> : step}
       </div>

@@ -33,13 +33,13 @@ export function ConfigurationPanel({ onProcess, disabled }: ConfigPanelProps) {
   }, []);
 
   return (
-    <div className="w-full max-w-4xl mx-auto space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-1200 delay-150">
+    <div className="w-full max-w-4xl mx-auto space-y-10 animate-in fade-in duration-150 duration-150 delay-150">
       <div className="flex flex-col gap-2 items-center text-center px-4">
         <h3 className="text-xl font-[850] text-[#F6FAFD] tracking-tight">Configuration</h3>
         <p className="text-[#B3CFE5]/70 text-xs font-bold uppercase tracking-widest leading-none mt-1">Campaign & Template Parameters</p>
       </div>
 
-      <div className="glass-blur apple-blur bg-[#1A3D63]/60 p-10 rounded-[40px] glow border border-[#4A7FA7]/30 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10 items-end">
+      <div className="glass-blur apple-blur bg-blue-950/25 p-10 rounded-[40px] glow border border-blue-400/15 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10 items-end">
         {/* Campaign Selection */}
         <div className="space-y-3">
           <label className="text-[11px] font-bold uppercase tracking-widest text-[#B3CFE5]/70 flex items-center gap-2 px-1">
@@ -49,7 +49,7 @@ export function ConfigurationPanel({ onProcess, disabled }: ConfigPanelProps) {
             <select
               value={campaign}
               onChange={(e) => setCampaign(e.target.value)}
-              className="w-full h-14 pl-5 pr-12 bg-[#1A3D63]/80 border border-[#4A7FA7]/30 rounded-2xl text-[14px] font-bold text-[#F6FAFD] appearance-none focus:outline-none focus:bg-[#1A3D63]/95 focus:glow focus:border-[#4A7FA7]/50 transition-all"
+              className="w-full h-14 pl-5 pr-12 bg-[#1A3D63]/80 border border-blue-400/15 rounded-2xl text-[14px] font-bold text-[#F6FAFD] appearance-none focus:outline-none focus:bg-[#1A3D63]/95 focus:glow focus:border-[#4A7FA7]/50 transition-colors"
             >
               {CAMPAIGNS.map(c => <option key={c} value={c}>{c}</option>)}
             </select>
@@ -66,7 +66,7 @@ export function ConfigurationPanel({ onProcess, disabled }: ConfigPanelProps) {
             <select
               value={template}
               onChange={(e) => setTemplate(e.target.value)}
-              className="w-full h-14 pl-5 pr-12 bg-[#1A3D63]/80 border border-[#4A7FA7]/30 rounded-2xl text-[14px] font-bold text-[#F6FAFD] appearance-none focus:outline-none focus:bg-[#1A3D63]/95 focus:glow focus:border-[#4A7FA7]/50 transition-all"
+              className="w-full h-14 pl-5 pr-12 bg-[#1A3D63]/80 border border-blue-400/15 rounded-2xl text-[14px] font-bold text-[#F6FAFD] appearance-none focus:outline-none focus:bg-[#1A3D63]/95 focus:glow focus:border-[#4A7FA7]/50 transition-colors"
             >
               {TEMPLATES.map(t => <option key={t} value={t}>{t}</option>)}
             </select>
@@ -88,17 +88,17 @@ export function ConfigurationPanel({ onProcess, disabled }: ConfigPanelProps) {
               <RefreshCw className="w-3 h-3" />
             </button>
           </div>
-          <div className="w-full h-14 flex items-center px-5 bg-[#1A3D63]/80 rounded-2xl text-[14px] font-black text-[#4A7FA7] tracking-tight border border-[#4A7FA7]/30">
+          <div className="w-full h-14 flex items-center px-5 bg-[#1A3D63]/80 rounded-2xl text-[14px] font-black text-[#4A7FA7] tracking-tight border border-blue-400/15">
             {callId}
           </div>
         </div>
 
         {/* Process Button - Centered below or taking full width if needed */}
-        <div className="md:col-span-2 lg:col-span-3 pt-6 border-t border-[#4A7FA7]/20 mt-2">
+        <div className="md:col-span-2 lg:col-span-3 pt-6 border-t border-blue-400/10 mt-2">
           <button
             disabled={disabled}
             onClick={() => onProcess({ campaign, template, callId })}
-            className="w-full h-16 rounded-[1.25rem] bg-gradient-to-r from-[#4A7FA7] to-[#1A3D63] hover:from-[#4A7FA7]/90 hover:to-[#1A3D63]/90 disabled:from-[#1A3D63]/50 disabled:to-[#0A1931]/50 text-[#F6FAFD] text-base font-extrabold glow-strong transition-all flex items-center justify-center gap-3 group active:scale-[0.98] border border-[#4A7FA7]/40"
+            className="w-full h-16 rounded-[1.25rem] bg-gradient-to-r from-[#4A7FA7] to-[#1A3D63] hover:from-[#4A7FA7]/90 hover:to-[#1A3D63]/90 disabled:from-[#1A3D63]/50 disabled:to-[#0A1931]/50 text-[#F6FAFD] text-base font-extrabold transition-colors flex items-center justify-center gap-3 group active:scale-[0.98] border border-blue-400/22"
           >
             <Play className="w-5 h-5 fill-current text-[#B3CFE5]/70 group-hover:text-[#F6FAFD] transition-colors" />
             Analyze Data Stream

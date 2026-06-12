@@ -193,7 +193,7 @@ function ScriptsPageContent() {
 
         <button
           onClick={() => setIsCreateModalOpen(true)}
-          className="flex items-center gap-2 px-6 py-3.5 bg-gradient-to-r from-[#4A7FA7] to-[#1A3D63] glow text-white rounded-2xl font-bold text-sm uppercase tracking-widest transition-all hover:opacity-90 active:scale-[0.98]"
+          className="flex items-center gap-2 px-6 py-3.5 bg-gradient-to-r from-[#4A7FA7] to-[#1A3D63] glow text-white rounded-2xl font-bold text-sm uppercase tracking-widest transition-colors hover:opacity-90 active:scale-[0.98]"
         >
           <Plus className="w-5 h-5" />
           {t('createScript')}
@@ -208,7 +208,7 @@ function ScriptsPageContent() {
           placeholder={t('filterPlaceholder')}
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full h-16 bg-[#1A3D63]/60 glow border border-[#4A7FA7]/30 rounded-[1.25rem] pl-16 pr-6 text-[#F6FAFD] font-bold tracking-tight placeholder:text-[#B3CFE5] outline-none focus:border-[#4A7FA7] transition-all"
+          className="w-full h-16 glass-card rounded-[1.25rem] pl-16 pr-6 text-[#F6FAFD] font-bold tracking-tight placeholder:text-[#B3CFE5] outline-none focus:border-[#4A7FA7] transition-colors"
         />
       </div>
 
@@ -243,8 +243,8 @@ function ScriptsPageContent() {
             <div
               key={script.id}
               className={cn(
-                "group bg-[#1A3D63]/60 glow border rounded-[2rem] transition-all duration-500 overflow-hidden",
-                expandedId === script.id ? "border-[#4A7FA7]/50" : "border-[#4A7FA7]/30 hover:border-[#4A7FA7]/40"
+                "group bg-blue-950/25 glow border rounded-[2rem] transition-colors duration-150 overflow-hidden",
+                expandedId === script.id ? "border-[#4A7FA7]/50" : "border-blue-400/15 hover:border-blue-400/22"
               )}
             >
               <div
@@ -265,11 +265,11 @@ function ScriptsPageContent() {
                     <h3 className="text-xl font-[850] text-[#F6FAFD] tracking-tight">{script.title}</h3>
                     <span className={cn(
                       "px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-widest",
-                      script.status === 'active' ? "bg-[#4A7FA7]/20 text-[#4A7FA7] border border-[#4A7FA7]/30" : "bg-[#1A3D63]/40 text-[#B3CFE5]"
+                      script.status === 'active' ? "bg-[#4A7FA7]/20 text-[#4A7FA7] border border-blue-400/15" : "bg-blue-950/18 text-[#B3CFE5]"
                     )}>
                       v{script.version} • {script.status}
                     </span>
-                    <span className="px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-widest bg-[#4A7FA7]/20 text-[#4A7FA7] border border-[#4A7FA7]/30">
+                    <span className="px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-widest bg-[#4A7FA7]/20 text-[#4A7FA7] border border-blue-400/15">
                       {script.call_direction}
                     </span>
                   </div>
@@ -290,25 +290,25 @@ function ScriptsPageContent() {
                       e.stopPropagation();
                       handleDeleteScript(script.id);
                     }}
-                    className="w-10 h-10 rounded-xl bg-red-500/20 hover:bg-red-500 hover:text-white text-red-500 flex items-center justify-center transition-all opacity-0 group-hover:opacity-100"
+                    className="w-10 h-10 rounded-xl bg-red-500/20 hover:bg-red-500 hover:text-white text-red-500 flex items-center justify-center transition-colors opacity-0 group-hover:opacity-100"
                    
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
-                  <div className="w-12 h-12 rounded-2xl bg-[#1A3D63]/40 flex items-center justify-center text-[#4A7FA7] group-hover:bg-gradient-to-r group-hover:from-[#4A7FA7] group-hover:to-[#1A3D63] group-hover:text-white transition-all duration-500">
+                  <div className="w-12 h-12 rounded-2xl bg-blue-950/18 flex items-center justify-center text-[#4A7FA7] group-hover:bg-gradient-to-r group-hover:from-[#4A7FA7] group-hover:to-[#1A3D63] group-hover:text-white transition-colors duration-150">
                     {expandedId === script.id ? <ChevronDown className="w-6 h-6" /> : <ChevronRight className="w-6 h-6" />}
                   </div>
                 </div>
               </div>
 
               {expandedId === script.id && (
-                <div className="px-8 pb-8 space-y-8 animate-in fade-in slide-in-from-top-4 duration-500">
+                <div className="px-8 pb-8 space-y-8 animate-in fade-in duration-150 duration-150">
                   <div className="h-px bg-[#4A7FA7]/30" />
 
                   <div className="space-y-6">
                     <div>
                       <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-[#B3CFE5] mb-3">Source Text</h4>
-                      <div className="bg-[#1A3D63]/40 p-6 rounded-2xl border border-[#4A7FA7]/30 max-h-[400px] overflow-y-auto">
+                      <div className="bg-blue-950/18 p-6 rounded-2xl border border-blue-400/15 max-h-[400px] overflow-y-auto">
                         <p className="text-sm text-[#B3CFE5] whitespace-pre-wrap leading-relaxed">{script.source_text}</p>
                       </div>
                     </div>
@@ -322,16 +322,16 @@ function ScriptsPageContent() {
 
       {/* Create Script Modal */}
       {isCreateModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/50 backdrop-blur-md animate-in fade-in duration-300">
-          <div className="bg-[#1A3D63]/95 glow w-full max-w-xl rounded-[2.5rem] shadow-2xl border border-[#4A7FA7]/30 overflow-hidden animate-in zoom-in-95 duration-300">
-            <div className="p-8 border-b border-[#4A7FA7]/30 bg-[#1A3D63]/40 flex items-center justify-between">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/50 animate-in fade-in duration-150 duration-150">
+          <div className="bg-[#1A3D63]/95 glow w-full max-w-xl rounded-[2.5rem] shadow-2xl border border-blue-400/15 overflow-hidden animate-in fade-in duration-150 duration-150">
+            <div className="p-8 border-b border-blue-400/15 bg-blue-950/18 flex items-center justify-between">
               <div>
                 <h3 className="text-2xl font-[850] text-[#F6FAFD] tracking-tight">Create Neural Script</h3>
                 <p className="text-sm font-semibold text-[#B3CFE5] mt-1">Define a new conversation script.</p>
               </div>
               <button
                 onClick={() => setIsCreateModalOpen(false)}
-                className="w-10 h-10 rounded-xl hover:bg-[#4A7FA7]/20 flex items-center justify-center transition-all text-[#B3CFE5]"
+                className="w-10 h-10 rounded-xl hover:bg-[#4A7FA7]/20 flex items-center justify-center transition-colors text-[#B3CFE5]"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -345,7 +345,7 @@ function ScriptsPageContent() {
                   value={createForm.title}
                   onChange={(e) => setCreateForm({ ...createForm, title: e.target.value })}
                   placeholder="e.g. Sales Discovery Script v1"
-                  className="w-full h-14 bg-[#1F3A3403] border border-[#1f3a3410] rounded-xl px-4 outline-none focus:border-[#1F3A34] transition-all text-[#1F3A34] font-semibold"
+                  className="w-full h-14 bg-[#1F3A3403] border border-[#1f3a3410] rounded-xl px-4 outline-none focus:border-[#1F3A34] transition-colors text-[#1F3A34] font-semibold"
                 />
               </div>
 
@@ -354,7 +354,7 @@ function ScriptsPageContent() {
                 <select
                   value={createForm.campaign_id}
                   onChange={(e) => setCreateForm({ ...createForm, campaign_id: e.target.value })}
-                  className="w-full h-14 bg-[#1F3A3403] border border-[#1f3a3410] rounded-xl px-4 outline-none focus:border-[#1F3A34] transition-all text-[#1F3A34] font-semibold appearance-none cursor-pointer"
+                  className="w-full h-14 bg-[#1F3A3403] border border-[#1f3a3410] rounded-xl px-4 outline-none focus:border-[#1F3A34] transition-colors text-[#1F3A34] font-semibold appearance-none cursor-pointer"
                 >
                   <option value="">No Campaign</option>
                   {campaigns.map(c => (
@@ -370,7 +370,7 @@ function ScriptsPageContent() {
                     type="button"
                     onClick={() => setCreateForm({ ...createForm, inputMode: "text" })}
                     className={cn(
-                      "flex-1 py-2 rounded-lg text-xs font-extrabold transition-all",
+                      "flex-1 py-2 rounded-lg text-xs font-extrabold transition-colors",
                       createForm.inputMode === "text"
                         ? "bg-[#1F3A34] text-white shadow-sm"
                         : "text-[#1F3A3450] hover:text-[#1F3A34]"
@@ -383,7 +383,7 @@ function ScriptsPageContent() {
                     type="button"
                     onClick={() => setCreateForm({ ...createForm, inputMode: "file" })}
                     className={cn(
-                      "flex-1 py-2 rounded-lg text-xs font-extrabold transition-all",
+                      "flex-1 py-2 rounded-lg text-xs font-extrabold transition-colors",
                       createForm.inputMode === "file"
                         ? "bg-[#1F3A34] text-white shadow-sm"
                         : "text-[#1F3A3450] hover:text-[#1F3A34]"
@@ -403,7 +403,7 @@ function ScriptsPageContent() {
                     onChange={(e) => setCreateForm({ ...createForm, text: e.target.value })}
                     placeholder="Paste your script content here..."
                     rows={8}
-                    className="w-full bg-[#1F3A3403] border border-[#1f3a3410] rounded-xl p-4 outline-none focus:border-[#1F3A34] transition-all text-[#1F3A34] font-medium text-sm resize-none"
+                    className="w-full bg-[#1F3A3403] border border-[#1f3a3410] rounded-xl p-4 outline-none focus:border-[#1F3A34] transition-colors text-[#1F3A34] font-medium text-sm resize-none"
                   />
                 </div>
               ) : (
@@ -420,9 +420,9 @@ function ScriptsPageContent() {
                       };
                       input.click();
                     }}
-                    className="w-full h-20 border-2 border-dashed border-[#1f3a3410] rounded-xl flex items-center px-4 gap-3 cursor-pointer hover:bg-[#1F3A3402] transition-all group"
+                    className="w-full h-20 border-2 border-dashed border-[#1f3a3410] rounded-xl flex items-center px-4 gap-3 cursor-pointer hover:bg-[#1F3A3402] transition-colors group"
                   >
-                    <div className="w-10 h-10 rounded-lg bg-[#1F3A3408] group-hover:bg-[#1F3A34] group-hover:text-white flex items-center justify-center text-[#1F3A3440] transition-all">
+                    <div className="w-10 h-10 rounded-lg bg-[#1F3A3408] group-hover:bg-[#1F3A34] group-hover:text-white flex items-center justify-center text-[#1F3A3440] transition-colors">
                       <Upload className="w-5 h-5" />
                     </div>
                     <span className="text-sm font-bold text-[#1F3A3440]">
@@ -450,7 +450,7 @@ function ScriptsPageContent() {
               <button
                 onClick={handleCreateScript}
                 disabled={isSubmitting || !createForm.title || (!createForm.text.trim() && !createForm.file)}
-                className="w-full h-14 bg-[#1F3A34] text-white disabled:opacity-50 disabled:cursor-not-allowed rounded-2xl font-bold flex items-center justify-center gap-3 shadow-xl hover:scale-[1.02] transition-all"
+                className="w-full h-14 bg-[#1F3A34] text-white disabled:opacity-50 disabled:cursor-not-allowed rounded-2xl font-bold flex items-center justify-center gap-3 shadow-xl hover:scale-[1.02] transition-colors"
               >
                 {isSubmitting ? (
                   <Loader2 className="w-5 h-5 animate-spin" />

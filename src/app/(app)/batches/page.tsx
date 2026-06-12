@@ -146,14 +146,14 @@ function BatchesContent() {
     const pct = progress(selectedBatch);
 
     return (
-      <div className="p-6 md:p-8 space-y-8 animate-in fade-in slide-in-from-right-8 duration-700">
-        <div className="flex items-center justify-between border-b border-[#4A7FA7]/30 pb-6">
-          <button onClick={() => setSelectedBatch(null)} className="flex items-center gap-2 text-[#B3CFE5] hover:text-[#F6FAFD] font-bold text-xs uppercase tracking-widest transition-all">
+      <div className="p-6 md:p-8 space-y-8 animate-in fade-in duration-150 duration-150">
+        <div className="flex items-center justify-between border-b border-blue-400/15 pb-6">
+          <button onClick={() => setSelectedBatch(null)} className="flex items-center gap-2 text-[#B3CFE5] hover:text-[#F6FAFD] font-bold text-xs uppercase tracking-widest transition-colors">
             <ArrowLeft className="w-4 h-4" /> Back to Batches
           </button>
           <button
             onClick={() => setDeleteConfirmId(selectedBatch.batch_id)}
-            className="flex items-center gap-2 px-4 py-2 bg-red-500/20 hover:bg-red-500 text-red-400 hover:text-white rounded-xl font-bold text-xs uppercase tracking-wider transition-all"
+            className="flex items-center gap-2 px-4 py-2 bg-red-500/20 hover:bg-red-500 text-red-400 hover:text-white rounded-xl font-bold text-xs uppercase tracking-wider transition-colors"
           >
             <Trash2 className="w-4 h-4" /> Delete Batch
           </button>
@@ -185,14 +185,14 @@ function BatchesContent() {
           </div>
 
           {/* Progress bar */}
-          <div className="p-5 rounded-2xl bg-[#1A3D63]/60 border border-[#4A7FA7]/30 space-y-3">
+          <div className="p-5 rounded-2xl glass-card space-y-3">
             <div className="flex items-center justify-between">
               <span className="text-sm font-black text-[#F6FAFD]">Processing Progress</span>
               <span className="text-sm font-black text-[#F6FAFD]">{pct}%</span>
             </div>
-            <div className="h-3 bg-[#0A1931]/60 rounded-full overflow-hidden">
+            <div className="h-3 bg-black/25 rounded-full overflow-hidden">
               <div
-                className="h-full rounded-full bg-gradient-to-r from-[#4A7FA7] to-green-400 transition-all duration-500"
+                className="h-full rounded-full bg-gradient-to-r from-[#4A7FA7] to-green-400 transition-colors duration-150"
                 style={{ width: `${pct}%` }}
               />
             </div>
@@ -213,8 +213,8 @@ function BatchesContent() {
         </div>
 
         {/* Calls table */}
-        <div className="bg-[#1A3D63]/60 rounded-2xl border border-[#4A7FA7]/30 overflow-hidden">
-          <div className="px-5 py-3 border-b border-[#4A7FA7]/20 bg-[#0A1931]/40 flex items-center justify-between">
+        <div className="bg-blue-950/25 rounded-2xl border border-blue-400/15 overflow-hidden">
+          <div className="px-5 py-3 border-b border-blue-400/10 bg-black/18 flex items-center justify-between">
             <h3 className="text-xs font-black uppercase tracking-widest text-[#B3CFE5]">Calls</h3>
             <Activity className="w-4 h-4 text-[#4A7FA7]" />
           </div>
@@ -232,9 +232,9 @@ function BatchesContent() {
                   <div
                     onClick={() => isReady && handleCallClick(call.call_id)}
                     className={cn(
-                      "px-5 py-4 flex items-center gap-4 transition-all group",
-                      isReady ? "cursor-pointer hover:bg-[#1A3D63]/60" : "cursor-default",
-                      isSelected ? "bg-[#1A3D63]/60 border-l-2 border-[#4A7FA7]" : ""
+                      "px-5 py-4 flex items-center gap-4 transition-colors group",
+                      isReady ? "cursor-pointer hover:bg-blue-950/25" : "cursor-default",
+                      isSelected ? "bg-blue-950/25 border-l-2 border-[#4A7FA7]" : ""
                     )}
                   >
                     <FileAudio className="w-4 h-4 text-[#B3CFE5]/50 shrink-0" />
@@ -248,7 +248,7 @@ function BatchesContent() {
                       <span className={cn(
                         "text-sm font-black px-2 py-0.5 rounded-lg shrink-0",
                         call.overall_score >= 80 ? "text-green-400 bg-green-400/10" :
-                        call.overall_score >= 50 ? "text-[#F6FAFD] bg-[#1A3D63]/40" :
+                        call.overall_score >= 50 ? "text-[#F6FAFD] bg-blue-950/18" :
                         "text-red-400 bg-red-400/10"
                       )}>
                         {call.overall_score.toFixed(0)}
@@ -267,7 +267,7 @@ function BatchesContent() {
 
                   {/* Inline call detail */}
                   {isSelected && (
-                    <div className="border-t border-[#4A7FA7]/20 bg-[#0A1931]/40 px-4 py-6">
+                    <div className="border-t border-blue-400/10 bg-black/18 px-4 py-6">
                       {isCallLoading ? (
                         <div className="flex items-center justify-center py-16">
                           <Loader2 className="w-8 h-8 text-[#4A7FA7] animate-spin" />
@@ -287,7 +287,7 @@ function BatchesContent() {
   }
 
   return (
-    <div className="p-6 md:p-8 space-y-8 animate-in fade-in duration-700">
+    <div className="p-6 md:p-8 space-y-8 animate-in fade-in duration-150 duration-150">
       {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
@@ -300,7 +300,7 @@ function BatchesContent() {
           <p className="text-[#B3CFE5] text-sm font-medium pl-1">Track and manage all batch upload jobs</p>
         </div>
         <button onClick={fetchBatches} disabled={isLoading}
-          className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-[#4A7FA7] to-[#1A3D63] glow text-white rounded-xl font-bold text-xs uppercase tracking-widest hover:opacity-90 disabled:opacity-50 transition-all shrink-0">
+          className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-[#4A7FA7] to-[#1A3D63] glow text-white rounded-xl font-bold text-xs uppercase tracking-widest hover:opacity-90 disabled:opacity-50 transition-colors shrink-0">
           {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
           Refresh
         </button>
@@ -308,7 +308,7 @@ function BatchesContent() {
 
       {isLoading ? (
         <div className="space-y-3">
-          {[1,2,3].map(i => <div key={i} className="h-24 bg-[#1A3D63]/40 rounded-2xl border border-[#4A7FA7]/20 animate-pulse" />)}
+          {[1,2,3].map(i => <div key={i} className="h-24 bg-blue-950/18 rounded-2xl border border-blue-400/10 animate-pulse" />)}
         </div>
       ) : batches.length === 0 ? (
         <div className="p-16 text-center space-y-4">
@@ -323,7 +323,7 @@ function BatchesContent() {
             const pct = progress(batch);
             return (
               <div key={batch.batch_id}
-                className="p-5 bg-[#1A3D63]/60 glow rounded-2xl border border-[#4A7FA7]/30 hover:border-[#4A7FA7]/50 transition-all group">
+                className="p-5 glass-card rounded-2xl hover:border-[#4A7FA7]/50 transition-colors group">
                 <div className="flex items-center gap-4">
                   <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center shrink-0", cfg.bg)}>
                     <StatusIcon className={cn("w-5 h-5", cfg.color, batch.status === "PROCESSING" && "animate-spin")} />
@@ -339,7 +339,7 @@ function BatchesContent() {
                     </div>
                     {/* Mini progress bar */}
                     <div className="flex items-center gap-3">
-                      <div className="flex-1 h-1.5 bg-[#0A1931]/60 rounded-full overflow-hidden">
+                      <div className="flex-1 h-1.5 bg-black/25 rounded-full overflow-hidden">
                         <div
                           className="h-full rounded-full bg-gradient-to-r from-[#4A7FA7] to-green-400"
                           style={{ width: `${pct}%` }}
@@ -361,13 +361,13 @@ function BatchesContent() {
                   </div>
                   <button
                     onClick={e => { e.stopPropagation(); setDeleteConfirmId(batch.batch_id); }}
-                    className="w-9 h-9 rounded-xl bg-red-500/20 hover:bg-red-500 text-red-400 hover:text-white flex items-center justify-center transition-all opacity-0 group-hover:opacity-100"
+                    className="w-9 h-9 rounded-xl bg-red-500/20 hover:bg-red-500 text-red-400 hover:text-white flex items-center justify-center transition-colors opacity-0 group-hover:opacity-100"
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
                   <button
                     onClick={() => fetchBatchDetail(batch.batch_id)}
-                    className="w-9 h-9 rounded-xl bg-[#1A3D63]/40 hover:bg-gradient-to-r hover:from-[#4A7FA7] hover:to-[#1A3D63] text-[#4A7FA7] hover:text-white flex items-center justify-center transition-all"
+                    className="w-9 h-9 rounded-xl bg-blue-950/18 hover:bg-gradient-to-r hover:from-[#4A7FA7] hover:to-[#1A3D63] text-[#4A7FA7] hover:text-white flex items-center justify-center transition-colors"
                   >
                     <ChevronRight className="w-4 h-4" />
                   </button>
@@ -380,8 +380,8 @@ function BatchesContent() {
 
       {/* Delete confirm modal */}
       {mounted && deleteConfirmId && createPortal(
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-6 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-[#1A3D63]/95 glow w-full max-w-md rounded-3xl border border-red-500/40 overflow-hidden animate-in zoom-in-95 duration-200">
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-6 bg-black/60 animate-in fade-in duration-150 duration-150">
+          <div className="bg-[#1A3D63]/95 glow w-full max-w-md rounded-3xl border border-red-500/40 overflow-hidden animate-in fade-in duration-150 duration-150">
             <div className="p-6 border-b border-red-500/20 bg-red-500/10 flex items-center gap-4">
               <AlertTriangle className="w-6 h-6 text-red-400 shrink-0" />
               <div>
@@ -391,11 +391,11 @@ function BatchesContent() {
             </div>
             <div className="p-6 flex gap-3">
               <button onClick={() => setDeleteConfirmId(null)}
-                className="flex-1 h-11 bg-[#0A1931]/60 text-[#B3CFE5] rounded-xl font-bold text-sm uppercase tracking-wider transition-all hover:bg-[#0A1931]/80">
+                className="flex-1 h-11 bg-black/25 text-[#B3CFE5] rounded-xl font-bold text-sm uppercase tracking-wider transition-colors hover:bg-black/35">
                 Cancel
               </button>
               <button onClick={() => handleDelete(deleteConfirmId)} disabled={isDeleting}
-                className="flex-1 h-11 bg-red-500 hover:bg-red-600 disabled:opacity-50 text-white rounded-xl font-bold text-sm uppercase tracking-wider transition-all flex items-center justify-center gap-2">
+                className="flex-1 h-11 bg-red-500 hover:bg-red-600 disabled:opacity-50 text-white rounded-xl font-bold text-sm uppercase tracking-wider transition-colors flex items-center justify-center gap-2">
                 {isDeleting ? <><Loader2 className="w-4 h-4 animate-spin" /> Deleting...</> : <><Trash2 className="w-4 h-4" /> Delete</>}
               </button>
             </div>

@@ -364,11 +364,11 @@ function RedFlagsPageContent() {
   // Detail view
   if (selectedCallId) {
     return (
-      <div className="p-8 space-y-10 animate-in fade-in slide-in-from-right-8 duration-700">
-        <div className="flex items-center justify-between max-w-6xl mx-auto border-b border-[#4A7FA7]/30 pb-8">
+      <div className="p-8 space-y-10 animate-in fade-in duration-150 duration-150">
+        <div className="flex items-center justify-between max-w-6xl mx-auto border-b border-blue-400/15 pb-8">
           <button
             onClick={closeDetail}
-            className="flex items-center gap-2 text-[#B3CFE5] hover:text-[#F6FAFD] font-bold text-xs uppercase tracking-widest transition-all"
+            className="flex items-center gap-2 text-[#B3CFE5] hover:text-[#F6FAFD] font-bold text-xs uppercase tracking-widest transition-colors"
             title="Return to red flags list"
           >
             <ArrowLeft className="w-4 h-4" /> Back to Red Flags
@@ -379,7 +379,7 @@ function RedFlagsPageContent() {
                 const name = prompt("Enter your name to mark this as reviewed:");
                 if (name) markAsReviewed(selectedCallId, name);
               }}
-              className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-[#4A7FA7] to-[#1A3D63] glow hover:opacity-90 text-white rounded-xl font-bold text-xs uppercase tracking-widest transition-all shadow-lg shadow-[#4A7FA7]/20 active:scale-95"
+              className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-[#4A7FA7] to-[#1A3D63] glow hover:opacity-90 text-white rounded-xl font-bold text-xs uppercase tracking-widest transition-colors shadow-lg shadow-[#4A7FA7]/20 active:scale-95"
               title="Mark this red flag as reviewed"
             >
               <Eye className="w-4 h-4" />
@@ -393,7 +393,7 @@ function RedFlagsPageContent() {
         ) : detailData ? (
           <div className="max-w-6xl mx-auto space-y-8">
             {/* Header */}
-            <div className="bg-[#1A3D63]/60 glow rounded-[2.5rem] border border-[#4A7FA7]/30 p-10">
+            <div className="bg-blue-950/25 glow rounded-[2.5rem] border border-blue-400/15 p-10">
               <div className="flex items-start justify-between mb-6">
                 <div>
                   <h2 className="text-3xl font-[850] text-[#F6FAFD] tracking-tight mb-2">
@@ -415,7 +415,7 @@ function RedFlagsPageContent() {
                     </span>
                   )}
                   {detailData.reviewed_at && (
-                    <span className="flex items-center gap-1.5 px-3 py-1.5 bg-[#4A7FA7]/20 text-[#4A7FA7] border border-[#4A7FA7]/30 rounded-lg text-xs font-black uppercase tracking-wider">
+                    <span className="flex items-center gap-1.5 px-3 py-1.5 bg-[#4A7FA7]/20 text-[#4A7FA7] border border-blue-400/15 rounded-lg text-xs font-black uppercase tracking-wider">
                       <Eye className="w-3 h-3" /> Reviewed
                     </span>
                   )}
@@ -423,16 +423,16 @@ function RedFlagsPageContent() {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="p-6 rounded-2xl bg-[#1A3D63]/40 border border-[#4A7FA7]/30">
+                <div className="p-6 rounded-2xl glass">
                   <p className="text-[10px] font-black uppercase tracking-widest text-[#B3CFE5] mb-2">Risk Score</p>
                   <p className="text-3xl font-[850] text-[#F6FAFD]">{detailData.score.toFixed(1)}</p>
                 </div>
-                <div className="p-6 rounded-2xl bg-[#1A3D63]/40 border border-[#4A7FA7]/30">
+                <div className="p-6 rounded-2xl glass">
                   <p className="text-[10px] font-black uppercase tracking-widest text-[#B3CFE5] mb-2">Created</p>
                   <p className="text-sm font-bold text-[#F6FAFD]">{new Date(detailData.created_at).toLocaleString()}</p>
                 </div>
                 {detailData.reviewed_at && (
-                  <div className="p-6 rounded-2xl bg-[#4A7FA7]/20 border border-[#4A7FA7]/30">
+                  <div className="p-6 rounded-2xl bg-[#4A7FA7]/20 border border-blue-400/15">
                     <p className="text-[10px] font-black uppercase tracking-widest text-[#4A7FA7] mb-2">Reviewed By</p>
                     <p className="text-sm font-bold text-[#F6FAFD]">{detailData.reviewed_by}</p>
                     <p className="text-xs text-[#B3CFE5] mt-1">{new Date(detailData.reviewed_at).toLocaleString()}</p>
@@ -443,7 +443,7 @@ function RedFlagsPageContent() {
 
             {/* Audio Player - Check if audio is available */}
             {detailData.full_result?.provider_metadata?.provider !== 'manual' && (
-              <div className="p-8 rounded-[2.5rem] bg-gradient-to-r from-[#4A7FA7] to-[#1A3D63] glow text-white border border-[#4A7FA7]/30 flex flex-col md:flex-row items-center gap-8">
+              <div className="p-8 rounded-[2.5rem] bg-gradient-to-r from-[#4A7FA7] to-[#1A3D63] glow text-white border border-blue-400/15 flex flex-col md:flex-row items-center gap-8">
                 <div className="flex-1 space-y-2">
                   <h4 className="text-lg font-black uppercase tracking-widest text-[#B3CFE5] flex items-center gap-2">
                     <Play className="w-4 h-4 fill-current" /> Call Audio Signal
@@ -454,7 +454,7 @@ function RedFlagsPageContent() {
                   id="red-flag-audio-player"
                   controls
                   preload="metadata"
-                  className="w-full md:w-2/3 h-10 accent-[#4A7FA7] bg-[#1A3D63]/40 rounded-xl"
+                  className="w-full md:w-2/3 h-10 accent-[#4A7FA7] bg-blue-950/18 rounded-xl"
                   src={`${BASE_URL}/api/v1/media/calls/${detailData.call_id}/audio`}
                 >
                   Your browser does not support audio playback.
@@ -464,19 +464,19 @@ function RedFlagsPageContent() {
 
             {/* Questionnaire Results */}
             {detailData.full_result?.answers && (
-              <div className="bg-[#1A3D63]/60 glow rounded-[2.5rem] border border-[#4A7FA7]/30 p-10 space-y-6">
-                <div className="border-b border-[#4A7FA7]/30 pb-6 space-y-4">
+              <div className="bg-blue-950/25 glow rounded-[2.5rem] border border-blue-400/15 p-10 space-y-6">
+                <div className="border-b border-blue-400/15 pb-6 space-y-4">
                   <div className="flex items-center gap-4">
                     <h3 className="text-xl font-[850] text-[#F6FAFD] tracking-tight">Questionnaire Analysis</h3>
                     {detailData.human_interventions && detailData.human_interventions.length > 0 && (
-                      <span className="flex items-center gap-1.5 px-3 py-1 bg-[#4A7FA7]/20 rounded-lg border border-[#4A7FA7]/30">
+                      <span className="flex items-center gap-1.5 px-3 py-1 bg-[#4A7FA7]/20 rounded-lg border border-blue-400/15">
                         <CheckCircle2 className="w-3.5 h-3.5 text-[#4A7FA7]" />
                         <span className="text-xs font-black uppercase tracking-wider text-[#4A7FA7]">{detailData.human_interventions.length} Human Verifications</span>
                       </span>
                     )}
                   </div>
                   {detailData.full_result.summary && (
-                    <div className="p-4 bg-[#1A3D63]/40 rounded-xl border border-[#4A7FA7]/30">
+                    <div className="p-4 bg-blue-950/18 rounded-xl border border-blue-400/15">
                       <p className="text-[10px] font-black uppercase tracking-widest text-[#B3CFE5] mb-2">Overall Summary</p>
                       <p className="text-sm font-bold text-[#F6FAFD] leading-relaxed">{detailData.full_result.summary}</p>
                     </div>
@@ -491,7 +491,7 @@ function RedFlagsPageContent() {
                     return (
                       <div
                         key={questionId}
-                        className="group p-6 rounded-2xl bg-[#1A3D63]/40 border border-[#4A7FA7]/30 hover:bg-[#1A3D63]/60 transition-all space-y-4"
+                        className="group p-6 rounded-2xl glass hover:bg-blue-950/25 transition-colors space-y-4"
                       >
                         {/* Header Row with Question ID, Badges, and Edit Button */}
                         <div className="flex items-center justify-between mb-4">
@@ -500,7 +500,7 @@ function RedFlagsPageContent() {
                               Question {questionId}
                             </span>
                             {answer.skipped && (
-                              <span className="px-2 py-0.5 text-[9px] font-black uppercase tracking-wider rounded-md bg-[#1A3D63]/60 text-[#B3CFE5] border border-[#4A7FA7]/30">
+                              <span className="px-2 py-0.5 text-[9px] font-black uppercase tracking-wider rounded-md bg-blue-950/25 text-[#B3CFE5] border border-blue-400/15">
                                 Skipped
                               </span>
                             )}
@@ -522,7 +522,7 @@ function RedFlagsPageContent() {
                               )}
                               <button
                                 onClick={() => setEditingQuestionId(`${templateId}_${questionId}`)}
-                                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-[#4A7FA7] bg-[#1A3D63]/40 hover:bg-[#1A3D63]/60 rounded-lg border border-[#4A7FA7]/30 transition-all"
+                                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-[#4A7FA7] bg-blue-950/18 hover:bg-blue-950/25 rounded-lg border border-blue-400/15 transition-colors"
                                 title="Edit this answer and provide human correction"
                               >
                                 <Edit className="w-3 h-3" />
@@ -534,7 +534,7 @@ function RedFlagsPageContent() {
 
                         {/* Question Text - Full Width */}
                         {answer.question_text && (
-                          <p className="text-sm font-bold text-[#4A7FA7] bg-[#1A3D63]/60 px-3 py-2 rounded-lg border border-[#4A7FA7]/30 mb-4">
+                          <p className="text-sm font-bold text-[#4A7FA7] bg-blue-950/25 px-3 py-2 rounded-lg border border-blue-400/15 mb-4">
                             Q: {answer.question_text}
                           </p>
                         )}
@@ -590,7 +590,7 @@ function RedFlagsPageContent() {
                                 {interventions.length > 1 && (
                                   <button
                                     onClick={() => setViewHistoryFor({ template_id: templateId, question_id: questionId })}
-                                    className="flex items-center gap-1 px-2 py-1 text-[10px] font-bold text-green-700 hover:text-green-900 hover:bg-green-100 rounded-md transition-all"
+                                    className="flex items-center gap-1 px-2 py-1 text-[10px] font-bold text-green-700 hover:text-green-900 hover:bg-green-100 rounded-md transition-colors"
                                     title="View full edit history for this question"
                                   >
                                     <History className="w-3 h-3" />
@@ -614,7 +614,7 @@ function RedFlagsPageContent() {
                         })()}
 
                         {answer.evidence && answer.evidence.length > 0 && (
-                          <div className="mt-4 pt-4 border-t border-[#4A7FA7]/30">
+                          <div className="mt-4 pt-4 border-t border-blue-400/15">
                             <p className="text-[9px] font-black uppercase tracking-widest text-[#B3CFE5] mb-3">Evidence</p>
                             <div className="space-y-2">
                               {answer.evidence.map((ev: any, evIdx: number) => {
@@ -655,9 +655,9 @@ function RedFlagsPageContent() {
                                       }
                                     }}
                                     className={cn(
-                                      "p-3 bg-[#1A3D63]/20 rounded-xl border border-[#4A7FA7]/20 transition-all",
-                                      hasAudio && ev.start_ms >= 0 && "cursor-pointer hover:border-[#4A7FA7]/40 hover:bg-[#1A3D63]/30",
-                                      isPlaying && "border-[#4A7FA7] bg-[#1A3D63]/40"
+                                      "p-3 bg-[#1A3D63]/20 rounded-xl border border-blue-400/10 transition-colors",
+                                      hasAudio && ev.start_ms >= 0 && "cursor-pointer hover:border-blue-400/22 hover:bg-[#1A3D63]/30",
+                                      isPlaying && "border-[#4A7FA7] bg-blue-950/18"
                                     )}
                                   >
                                     <p className="text-xs text-[#F6FAFD] leading-relaxed italic mb-2">"{ev.quote}"</p>
@@ -727,14 +727,14 @@ function RedFlagsPageContent() {
                   <div className="flex gap-2">
                     <button
                       onClick={() => setPendingEdits(new Map())}
-                      className="flex-1 h-10 px-4 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-bold text-xs uppercase tracking-wider transition-all"
+                      className="flex-1 h-10 px-4 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-bold text-xs uppercase tracking-wider transition-colors"
                       title="Clear all pending edits"
                     >
                       Clear All
                     </button>
                     <button
                       onClick={handleSubmitAllEdits}
-                      className="flex-1 h-10 px-4 bg-[#1F3A34] hover:bg-[#1F3A34]/90 text-white rounded-xl font-bold text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-lg shadow-[#1F3A3420]"
+                      className="flex-1 h-10 px-4 bg-[#1F3A34] hover:bg-[#1F3A34]/90 text-white rounded-xl font-bold text-xs uppercase tracking-wider transition-colors flex items-center justify-center gap-2 shadow-lg shadow-[#1F3A3420]"
                       title="Submit all pending edits and recalculate scores"
                     >
                       <Save className="w-3 h-3" />
@@ -747,7 +747,7 @@ function RedFlagsPageContent() {
 
             {/* Recalculating Overlay */}
             {isRecalculating && (
-              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
                 <div className="bg-white rounded-3xl p-8 shadow-2xl max-w-md text-center space-y-4">
                   <Loader2 className="w-12 h-12 text-[#1F3A34] animate-spin mx-auto" />
                   <h3 className="text-xl font-[850] text-[#1F3A34]">Recalculating...</h3>
@@ -765,8 +765,8 @@ function RedFlagsPageContent() {
               ) || [];
 
               return (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
-                  <div className="bg-white w-full max-w-3xl max-h-[80vh] overflow-hidden rounded-3xl shadow-2xl border border-[#1f3a3410] animate-in zoom-in-95 duration-200">
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/50 animate-in fade-in duration-150 duration-150">
+                  <div className="bg-white w-full max-w-3xl max-h-[80vh] overflow-hidden rounded-3xl shadow-2xl border border-[#1f3a3410] animate-in fade-in duration-150 duration-150">
                     <div className="p-8 border-b border-[#1f3a3408] bg-[#1F3A3402] flex items-center justify-between">
                       <div className="flex items-center gap-3">
                         <History className="w-6 h-6 text-[#1F3A3460]" />
@@ -779,7 +779,7 @@ function RedFlagsPageContent() {
                       </div>
                       <button
                         onClick={() => setViewHistoryFor(null)}
-                        className="w-10 h-10 rounded-xl hover:bg-[#1F3A3410] flex items-center justify-center transition-all text-[#1F3A3420]"
+                        className="w-10 h-10 rounded-xl hover:bg-[#1F3A3410] flex items-center justify-center transition-colors text-[#1F3A3420]"
                         title="Close history modal"
                       >
                         <XIcon className="w-5 h-5" />
@@ -831,7 +831,7 @@ function RedFlagsPageContent() {
                     <div className="p-6 border-t border-[#1f3a3408] bg-[#F4F8F9]">
                       <button
                         onClick={() => setViewHistoryFor(null)}
-                        className="w-full h-12 bg-[#1F3A34] hover:bg-[#1F3A34]/90 text-white rounded-xl font-bold text-sm uppercase tracking-wider transition-all"
+                        className="w-full h-12 bg-[#1F3A34] hover:bg-[#1F3A34]/90 text-white rounded-xl font-bold text-sm uppercase tracking-wider transition-colors"
                         title="Close history modal"
                       >
                         Close
@@ -909,7 +909,7 @@ function RedFlagsPageContent() {
       {/* Stats Cards */}
       {stats && (
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          <div className="bg-[#1A3D63]/60 glow rounded-2xl border border-[#4A7FA7]/30 p-6">
+          <div className="glass-card rounded-2xl p-6">
             <div className="flex items-center justify-between mb-4">
               <Activity className="w-5 h-5 text-[#4A7FA7]" />
               <div className="w-2 h-2 rounded-full bg-[#4A7FA7]" />
@@ -918,7 +918,7 @@ function RedFlagsPageContent() {
             <p className="text-2xl font-[850] text-[#F6FAFD]">{stats.total_red_flag_calls}</p>
           </div>
 
-          <div className="bg-[#1A3D63]/60 glow rounded-2xl border border-[#4A7FA7]/30 p-6">
+          <div className="glass-card rounded-2xl p-6">
             <div className="flex items-center justify-between mb-4">
               <XCircle className="w-5 h-5 text-red-500" />
               <div className="w-2 h-2 rounded-full bg-red-500" />
@@ -927,7 +927,7 @@ function RedFlagsPageContent() {
             <p className="text-2xl font-[850] text-[#F6FAFD]">{stats.critical_issues_count}</p>
           </div>
 
-          <div className="bg-[#1A3D63]/60 glow rounded-2xl border border-[#4A7FA7]/30 p-6">
+          <div className="glass-card rounded-2xl p-6">
             <div className="flex items-center justify-between mb-4">
               <AlertCircle className="w-5 h-5 text-orange-500" />
               <div className="w-2 h-2 rounded-full bg-orange-500" />
@@ -936,7 +936,7 @@ function RedFlagsPageContent() {
             <p className="text-2xl font-[850] text-[#F6FAFD]">{stats.immediate_attention_count}</p>
           </div>
 
-          <div className="bg-[#1A3D63]/60 glow rounded-2xl border border-[#4A7FA7]/30 p-6">
+          <div className="glass-card rounded-2xl p-6">
             <div className="flex items-center justify-between mb-4">
               <BarChart3 className="w-5 h-5 text-[#4A7FA7]" />
               <div className="w-2 h-2 rounded-full bg-[#4A7FA7]" />
@@ -948,7 +948,7 @@ function RedFlagsPageContent() {
       )}
 
       {/* Filters */}
-      <div className="bg-[#1A3D63]/60 glow rounded-2xl border border-[#4A7FA7]/30 p-6 space-y-4">
+      <div className="glass-card rounded-2xl p-6 space-y-4">
         <h3 className="text-sm font-black uppercase tracking-widest text-[#F6FAFD] flex items-center gap-2">
           <Filter className="w-4 h-4" /> {t('filters')}
         </h3>
@@ -958,7 +958,7 @@ function RedFlagsPageContent() {
             <select
               value={filterCritical === null ? "" : String(filterCritical)}
               onChange={(e) => setFilterCritical(e.target.value === "" ? null : e.target.value === "true")}
-              className="w-full h-12 bg-[#1A3D63]/40 border border-[#4A7FA7]/30 rounded-xl px-4 text-[#F6FAFD] font-semibold text-sm outline-none cursor-pointer"
+              className="w-full h-12 glass rounded-xl px-4 text-[#F6FAFD] font-semibold text-sm outline-none cursor-pointer"
               title="Filter by critical issues status"
             >
               <option value="">{t('all')}</option>
@@ -972,7 +972,7 @@ function RedFlagsPageContent() {
             <select
               value={filterAttention === null ? "" : String(filterAttention)}
               onChange={(e) => setFilterAttention(e.target.value === "" ? null : e.target.value === "true")}
-              className="w-full h-12 bg-[#1A3D63]/40 border border-[#4A7FA7]/30 rounded-xl px-4 text-[#F6FAFD] font-semibold text-sm outline-none cursor-pointer"
+              className="w-full h-12 glass rounded-xl px-4 text-[#F6FAFD] font-semibold text-sm outline-none cursor-pointer"
               title="Filter by immediate attention required"
             >
               <option value="">{t('all')}</option>
@@ -990,7 +990,7 @@ function RedFlagsPageContent() {
               value={minScore}
               onChange={(e) => setMinScore(e.target.value)}
               placeholder="0"
-              className="w-full h-12 bg-[#1A3D63]/40 border border-[#4A7FA7]/30 rounded-xl px-4 text-[#F6FAFD] font-semibold text-sm outline-none"
+              className="w-full h-12 glass rounded-xl px-4 text-[#F6FAFD] font-semibold text-sm outline-none"
               title="Set minimum score filter"
             />
           </div>
@@ -1004,7 +1004,7 @@ function RedFlagsPageContent() {
               value={maxScore}
               onChange={(e) => setMaxScore(e.target.value)}
               placeholder="100"
-              className="w-full h-12 bg-[#1A3D63]/40 border border-[#4A7FA7]/30 rounded-xl px-4 text-[#F6FAFD] font-semibold text-sm outline-none"
+              className="w-full h-12 glass rounded-xl px-4 text-[#F6FAFD] font-semibold text-sm outline-none"
               title="Set maximum score filter"
             />
           </div>
@@ -1012,7 +1012,7 @@ function RedFlagsPageContent() {
       </div>
 
       {/* Red Flags List */}
-      <div className="bg-[#1A3D63]/60 glow rounded-[2.5rem] border border-[#4A7FA7]/30 overflow-hidden">
+      <div className="bg-blue-950/25 glow rounded-[2.5rem] border border-blue-400/15 overflow-hidden">
         {loading ? (
           <div className="divide-y divide-[#4A7FA7]/20">
             {[1, 2, 3, 4].map((i) => (
@@ -1042,7 +1042,7 @@ function RedFlagsPageContent() {
               <div
                 key={flag.id}
                 onClick={() => viewDetail(flag.call_id)}
-                className="flex items-center gap-6 p-8 hover:bg-[#1A3D63]/80 transition-all cursor-pointer group"
+                className="flex items-center gap-6 p-8 hover:bg-[#1A3D63]/80 transition-colors cursor-pointer group"
               >
                 {/* Priority Icon */}
                 {flag.has_critical_issues && (
@@ -1073,7 +1073,7 @@ function RedFlagsPageContent() {
                         Pending Review
                       </span>
                     ) : (
-                      <span className="flex items-center gap-1 px-2 py-0.5 text-[9px] font-black uppercase tracking-wider rounded-md bg-[#4A7FA7]/20 text-[#4A7FA7] border border-[#4A7FA7]/30">
+                      <span className="flex items-center gap-1 px-2 py-0.5 text-[9px] font-black uppercase tracking-wider rounded-md bg-[#4A7FA7]/20 text-[#4A7FA7] border border-blue-400/15">
                         <Eye className="w-3 h-3" />
                         Reviewed
                       </span>
@@ -1095,7 +1095,7 @@ function RedFlagsPageContent() {
                 </div>
 
                 {/* Arrow */}
-                <div className="w-11 h-11 rounded-2xl bg-[#1A3D63]/40 text-[#4A7FA7] flex items-center justify-center group-hover:bg-gradient-to-r group-hover:from-[#4A7FA7] group-hover:to-[#1A3D63] group-hover:text-white transition-all group-hover:scale-110 shadow-sm">
+                <div className="w-11 h-11 rounded-2xl bg-blue-950/18 text-[#4A7FA7] flex items-center justify-center group-hover:bg-gradient-to-r group-hover:from-[#4A7FA7] group-hover:to-[#1A3D63] group-hover:text-white transition-colors group-hover:scale-110 shadow-sm">
                   <ChevronRight className="w-5 h-5" />
                 </div>
               </div>
@@ -1163,16 +1163,16 @@ function InterventionModal({ modal, onClose, onSubmit, existingEdit, onRemove }:
   if (!mounted) return null;
 
   return createPortal(
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 md:p-6 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="bg-[#1A3D63] w-full max-w-2xl max-h-[90vh] md:max-h-[85vh] flex flex-col rounded-3xl shadow-2xl border border-[#4A7FA7]/30 overflow-hidden animate-in zoom-in-95 duration-200">
-        <div className="p-6 md:p-8 border-b border-[#4A7FA7]/20 bg-[#0A1931]/60 flex items-center justify-between flex-shrink-0">
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 md:p-6 bg-black/50 animate-in fade-in duration-150 duration-150">
+      <div className="bg-[#1A3D63] w-full max-w-2xl max-h-[90vh] md:max-h-[85vh] flex flex-col rounded-3xl shadow-2xl border border-blue-400/15 overflow-hidden animate-in fade-in duration-150 duration-150">
+        <div className="p-6 md:p-8 border-b border-blue-400/10 bg-black/25 flex items-center justify-between flex-shrink-0">
           <div className="flex-1 min-w-0 pr-4">
             <h3 className="text-xl md:text-2xl font-[850] text-[#F6FAFD] tracking-tight">Edit Answer</h3>
             <p className="text-xs md:text-sm font-semibold text-[#B3CFE5] mt-1 truncate">Manual correction for {modal.question_id}</p>
           </div>
           <button
             onClick={onClose}
-            className="w-10 h-10 rounded-xl hover:bg-[#1A3D63]/60 flex items-center justify-center transition-all text-[#B3CFE5] flex-shrink-0"
+            className="w-10 h-10 rounded-xl hover:bg-blue-950/25 flex items-center justify-center transition-colors text-[#B3CFE5] flex-shrink-0"
             title="Close edit dialog"
           >
             <XIcon className="w-5 h-5" />
@@ -1181,7 +1181,7 @@ function InterventionModal({ modal, onClose, onSubmit, existingEdit, onRemove }:
 
         <div className="p-6 md:p-8 space-y-4 md:space-y-6 overflow-y-auto flex-1">
           {/* Current Answer */}
-          <div className="p-4 rounded-xl bg-[#0A1931]/60 border border-[#4A7FA7]/20 space-y-2">
+          <div className="p-4 rounded-xl bg-black/25 border border-blue-400/10 space-y-2">
             <p className="text-xs font-black uppercase tracking-wider text-[#B3CFE5]">Current Answer</p>
             <p className="text-sm font-bold text-[#F6FAFD]">{modal.current_answer}</p>
             <p className="text-xs font-medium text-[#B3CFE5]">{modal.current_reasoning}</p>
@@ -1202,7 +1202,7 @@ function InterventionModal({ modal, onClose, onSubmit, existingEdit, onRemove }:
                 if (val.toLowerCase() === 'yes') setCorrectedScore(100);
                 else if (val.toLowerCase() === 'no') setCorrectedScore(0);
               }}
-              className="w-full h-12 px-4 bg-[#0A1931] border border-[#4A7FA7]/30 rounded-xl text-[#F6FAFD] font-semibold outline-none focus:border-[#4A7FA7] transition-all"
+              className="w-full h-12 px-4 bg-[#0A1931] border border-blue-400/15 rounded-xl text-[#F6FAFD] font-semibold outline-none focus:border-[#4A7FA7] transition-colors"
             >
               <option value="Yes">Yes</option>
               <option value="No">No</option>
@@ -1220,7 +1220,7 @@ function InterventionModal({ modal, onClose, onSubmit, existingEdit, onRemove }:
               max="100"
               value={correctedScore}
               onChange={(e) => setCorrectedScore(Number(e.target.value))}
-              className="w-full h-12 px-4 bg-[#0A1931] border border-[#4A7FA7]/30 rounded-xl text-[#F6FAFD] font-semibold outline-none focus:border-[#4A7FA7] transition-all"
+              className="w-full h-12 px-4 bg-[#0A1931] border border-blue-400/15 rounded-xl text-[#F6FAFD] font-semibold outline-none focus:border-[#4A7FA7] transition-colors"
             />
           </div>
 
@@ -1234,7 +1234,7 @@ function InterventionModal({ modal, onClose, onSubmit, existingEdit, onRemove }:
               onChange={(e) => setCorrectedReasoning(e.target.value)}
               placeholder="Explain why you're correcting this answer..."
               rows={4}
-              className="w-full px-4 py-3 bg-[#0A1931] border border-[#4A7FA7]/30 rounded-xl text-[#F6FAFD] font-medium outline-none focus:border-[#4A7FA7] transition-all resize-none"
+              className="w-full px-4 py-3 bg-[#0A1931] border border-blue-400/15 rounded-xl text-[#F6FAFD] font-medium outline-none focus:border-[#4A7FA7] transition-colors resize-none"
             />
           </div>
 
@@ -1243,7 +1243,7 @@ function InterventionModal({ modal, onClose, onSubmit, existingEdit, onRemove }:
             {existingEdit && onRemove && (
               <button
                 onClick={onRemove}
-                className="h-11 sm:h-12 px-4 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded-xl font-bold text-xs sm:text-sm uppercase tracking-wider transition-all border border-red-500/30"
+                className="h-11 sm:h-12 px-4 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded-xl font-bold text-xs sm:text-sm uppercase tracking-wider transition-colors border border-red-500/30"
                 title="Remove this pending edit"
               >
                 Remove
@@ -1251,14 +1251,14 @@ function InterventionModal({ modal, onClose, onSubmit, existingEdit, onRemove }:
             )}
             <button
               onClick={onClose}
-              className="flex-1 h-11 sm:h-12 bg-[#0A1931] hover:bg-[#0A1931]/80 text-[#B3CFE5] rounded-xl font-bold text-xs sm:text-sm uppercase tracking-wider transition-all border border-[#4A7FA7]/20"
+              className="flex-1 h-11 sm:h-12 bg-[#0A1931] hover:bg-black/35 text-[#B3CFE5] rounded-xl font-bold text-xs sm:text-sm uppercase tracking-wider transition-colors border border-blue-400/10"
               title="Cancel and close dialog"
             >
               Cancel
             </button>
             <button
               onClick={handleSubmit}
-              className="flex-1 h-11 sm:h-12 bg-gradient-to-r from-[#4A7FA7] to-[#1A3D63] hover:opacity-90 text-[#F6FAFD] rounded-xl font-bold text-xs sm:text-sm uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-lg shadow-[#4A7FA7]/20"
+              className="flex-1 h-11 sm:h-12 bg-gradient-to-r from-[#4A7FA7] to-[#1A3D63] hover:opacity-90 text-[#F6FAFD] rounded-xl font-bold text-xs sm:text-sm uppercase tracking-wider transition-colors flex items-center justify-center gap-2 shadow-lg shadow-[#4A7FA7]/20"
               title={existingEdit ? "Update this pending edit" : "Add edit to queue for batch submission"}
             >
               <Save className="w-4 h-4" />

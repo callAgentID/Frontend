@@ -2,184 +2,194 @@
 
 import { SignIn } from "@clerk/nextjs";
 
+const CLERK_STYLES = `
+  .cl-rootBox * { color: #ffffff; }
+  .cl-card {
+    background: rgba(6, 18, 48, 0.60) !important;
+    backdrop-filter: blur(8px) !important;
+    -webkit-backdrop-filter: blur(8px) !important;
+    border: 1px solid rgba(255,255,255,0.09) !important;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.50), inset 0 1px 0 rgba(255,255,255,0.07) !important;
+    border-radius: 20px !important;
+  }
+  .cl-headerTitle { color: #EEF4FF !important; font-weight: 800 !important; font-size: 1.15rem !important; letter-spacing: -0.02em !important; }
+  .cl-headerSubtitle { color: rgba(180,215,255,0.60) !important; font-size: 0.8rem !important; }
+  .cl-socialButtonsBlockButton {
+    background: rgba(255,255,255,0.05) !important;
+    border: 1px solid rgba(255,255,255,0.10) !important;
+    color: #EEF4FF !important;
+    border-radius: 12px !important;
+  }
+  .cl-socialButtonsBlockButton:hover { background: rgba(44,143,255,0.12) !important; border-color: rgba(44,143,255,0.25) !important; }
+  .cl-socialButtonsBlockButtonText { color: #EEF4FF !important; font-weight: 600 !important; }
+  .cl-dividerLine { background: rgba(255,255,255,0.08) !important; }
+  .cl-dividerText { color: rgba(180,215,255,0.45) !important; font-size: 0.68rem !important; letter-spacing: 0.08em !important; }
+  .cl-formFieldLabel { color: rgba(180,215,255,0.65) !important; font-weight: 700 !important; font-size: 0.68rem !important; text-transform: uppercase !important; letter-spacing: 0.10em !important; }
+  .cl-formFieldInput {
+    background: rgba(4,12,32,0.60) !important;
+    border: 1px solid rgba(255,255,255,0.10) !important;
+    color: #EEF4FF !important;
+    border-radius: 11px !important;
+    height: 44px !important;
+    font-size: 14px !important;
+  }
+  .cl-formFieldInput:focus { border-color: rgba(44,143,255,0.50) !important; box-shadow: 0 0 0 3px rgba(44,143,255,0.12) !important; outline: none !important; }
+  .cl-formFieldInput::placeholder { color: rgba(180,215,255,0.30) !important; }
+  .cl-formFieldInputShowPasswordButton { color: rgba(180,215,255,0.50) !important; }
+  .cl-formFieldInputShowPasswordButton:hover { color: #EEF4FF !important; }
+  .cl-formButtonPrimary {
+    background: rgba(44,143,255,0.85) !important;
+    border: 1px solid rgba(44,143,255,0.40) !important;
+    color: #ffffff !important;
+    font-weight: 700 !important;
+    font-size: 0.82rem !important;
+    letter-spacing: 0.06em !important;
+    height: 44px !important;
+    border-radius: 12px !important;
+    box-shadow: 0 4px 20px rgba(44,143,255,0.25) !important;
+  }
+  .cl-formButtonPrimary:hover { background: rgba(44,143,255,1) !important; }
+  .cl-footer { background: rgba(4,12,32,0.40) !important; border-top: 1px solid rgba(255,255,255,0.06) !important; border-radius: 0 0 20px 20px !important; }
+  .cl-footerActionText { color: rgba(180,215,255,0.55) !important; }
+  .cl-footerActionLink { color: rgba(44,143,255,0.90) !important; font-weight: 700 !important; }
+  .cl-footerActionLink:hover { color: #EEF4FF !important; }
+  .cl-footerPages { background: transparent !important; }
+  .cl-formFieldErrorText { color: rgba(255,120,120,0.90) !important; font-weight: 600 !important; }
+  .cl-alert { background: rgba(4,12,32,0.60) !important; border: 1px solid rgba(255,255,255,0.09) !important; }
+  .cl-alertText { color: #EEF4FF !important; }
+  .cl-identityPreviewText { color: #EEF4FF !important; }
+  .cl-identityPreviewEditButton { color: rgba(44,143,255,0.90) !important; }
+`;
+
 export default function SignInPage() {
   return (
-    <div style={{ display: 'flex', width: '100%', minHeight: '100vh', background: '#0A1931', color: '#ffffff', alignItems: 'stretch' }}>
+    <div style={{ display: 'flex', width: '100%', minHeight: '100vh', alignItems: 'stretch', position: 'relative', overflow: 'hidden' }}>
 
-      {/* ── Left Panel — Branding ── */}
-      <div className="hidden lg:flex flex-col justify-between w-[55%] relative overflow-hidden p-14"
-        style={{ background: 'linear-gradient(135deg, #0D2137 0%, #1A3D63 60%, #0A1931 100%)' }}>
+      {/* ── Water background (same as app) ── */}
+      <div style={{
+        position: 'fixed', inset: 0, zIndex: 0,
+        background: 'radial-gradient(ellipse 120% 80% at 50% -10%, #03122B 0%, #020912 60%)',
+      }} />
+      <div style={{
+        position: 'fixed', inset: 0, zIndex: 1, pointerEvents: 'none',
+        background: `
+          radial-gradient(ellipse 65% 55% at -5% 30%,  rgba(30,100,255,0.50) 0%, transparent 60%),
+          radial-gradient(ellipse 55% 60% at 105% 20%, rgba(20,80,220,0.40)  0%, transparent 60%),
+          radial-gradient(ellipse 50% 50% at 50% 110%, rgba(10,60,180,0.35)  0%, transparent 55%),
+          radial-gradient(ellipse 40% 35% at 65% -5%,  rgba(50,160,255,0.28) 0%, transparent 55%)
+        `,
+      }} />
 
-        {/* Background glow orbs */}
-        <div className="absolute top-[-120px] left-[-80px] w-[500px] h-[500px] rounded-full opacity-20"
-          style={{ background: 'radial-gradient(circle, #4A7FA7, transparent)' }} />
-        <div className="absolute bottom-[-100px] right-[-60px] w-[400px] h-[400px] rounded-full opacity-15"
-          style={{ background: 'radial-gradient(circle, #B3CFE5, transparent)' }} />
-        <div className="absolute top-[40%] right-[10%] w-[250px] h-[250px] rounded-full opacity-10"
-          style={{ background: 'radial-gradient(circle, #4A7FA7, transparent)' }} />
+      {/* ── Left panel — Branding ── */}
+      <div className="hidden lg:flex flex-col justify-between relative z-10 p-14" style={{ width: '52%' }}>
 
-        {/* Subtle grid overlay */}
-        <div className="absolute inset-0 opacity-[0.04]"
-          style={{
-            backgroundImage: 'linear-gradient(rgba(179,207,229,1) 1px, transparent 1px), linear-gradient(90deg, rgba(179,207,229,1) 1px, transparent 1px)',
-            backgroundSize: '50px 50px'
-          }} />
+        {/* Glass panel */}
+        <div style={{
+          position: 'absolute', inset: 0,
+          background: 'rgba(4, 14, 36, 0.38)',
+          backdropFilter: 'blur(8px)',
+          WebkitBackdropFilter: 'blur(8px)',
+          borderRight: '1px solid rgba(255,255,255,0.06)',
+        }} />
+        {/* Top glint */}
+        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 1, background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.12), transparent)', pointerEvents: 'none' }} />
 
-        {/* Top — Logo */}
+        {/* Logo */}
         <div className="relative flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl flex items-center justify-center shadow-lg"
-            style={{ background: 'linear-gradient(135deg, #4A7FA7, #1A3D63)' }}>
-            <svg className="w-5 h-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <div style={{ width: 38, height: 38, borderRadius: 12, background: 'linear-gradient(135deg, rgba(44,143,255,0.9), rgba(10,60,180,0.9))', border: '1px solid rgba(44,143,255,0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 16px rgba(44,143,255,0.25)' }}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
             </svg>
           </div>
-          <div>
-            <span className="text-lg font-extrabold tracking-tight text-white leading-none">Conversation</span>
-            <span className="block text-[10px] font-black uppercase tracking-[0.25em] mt-0.5" style={{ color: '#B3CFE5' }}>Intel Platform</span>
+          <div className="relative">
+            <span style={{ fontSize: 16, fontWeight: 700, color: '#EEF4FF', letterSpacing: '-0.02em' }}>CallBlick</span>
+            <span style={{ display: 'block', fontSize: 9, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'rgba(180,215,255,0.45)', marginTop: 2 }}>Intelligence Platform</span>
           </div>
         </div>
 
-        {/* Middle — Hero text */}
+        {/* Hero */}
         <div className="relative space-y-8">
-          <div className="space-y-4">
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border text-[10px] font-black uppercase tracking-widest"
-              style={{ borderColor: 'rgba(74,127,167,0.4)', background: 'rgba(74,127,167,0.15)', color: '#B3CFE5' }}>
-              <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: '#4A7FA7' }} />
-              AI-Powered Analysis
+          <div className="space-y-5">
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '6px 14px', borderRadius: 99, border: '1px solid rgba(44,143,255,0.25)', background: 'rgba(44,143,255,0.10)' }}>
+              <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'rgba(44,143,255,0.9)' }} />
+              <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'rgba(180,215,255,0.70)' }}>AI-Powered Analysis</span>
             </div>
-            <h1 className="text-5xl font-[900] leading-[1.08] tracking-tight text-white">
+            <h1 style={{ fontSize: '3.2rem', fontWeight: 900, lineHeight: 1.06, letterSpacing: '-0.03em', color: '#EEF4FF' }}>
               Intelligence<br />
-              <span style={{ color: '#4A7FA7' }}>at every</span><br />
+              <span style={{ color: 'rgba(44,143,255,0.90)' }}>at every</span><br />
               conversation
             </h1>
           </div>
-          <p className="text-base font-medium leading-relaxed max-w-sm" style={{ color: 'rgba(179,207,229,0.8)' }}>
+          <p style={{ fontSize: 15, fontWeight: 400, lineHeight: 1.7, color: 'rgba(180,215,255,0.65)', maxWidth: 340 }}>
             Unlock deep insights from your calls with AI-powered transcription, QA scoring, and compliance monitoring.
           </p>
 
           {/* Feature pills */}
-          <div className="flex flex-wrap gap-2">
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
             {['Real-time Transcription', 'QA Scoring', 'Red Flag Detection', 'Campaign Analytics'].map(f => (
-              <span key={f} className="px-3 py-1.5 rounded-lg text-xs font-bold"
-                style={{ background: 'rgba(74,127,167,0.15)', color: '#B3CFE5', border: '1px solid rgba(74,127,167,0.25)' }}>
+              <span key={f} style={{ padding: '6px 14px', borderRadius: 99, fontSize: 11, fontWeight: 600, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.09)', color: 'rgba(200,220,255,0.75)' }}>
                 {f}
               </span>
             ))}
           </div>
         </div>
 
-        {/* Bottom — Stats */}
-        <div className="relative grid grid-cols-3 gap-6 pt-8 border-t" style={{ borderColor: 'rgba(74,127,167,0.2)' }}>
+        {/* Stats */}
+        <div className="relative" style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 24, paddingTop: 32, borderTop: '1px solid rgba(255,255,255,0.07)' }}>
           {[
-            { value: '99.4%', label: 'Transcription Accuracy' },
-            { value: '24/7', label: 'Platform Uptime' },
+            { value: '99.4%', label: 'Accuracy' },
+            { value: '24/7', label: 'Uptime' },
           ].map(s => (
             <div key={s.label}>
-              <p className="text-2xl font-[900] text-white">{s.value}</p>
-              <p className="text-[11px] font-semibold mt-1" style={{ color: 'rgba(179,207,229,0.6)' }}>{s.label}</p>
+              <p style={{ fontSize: '1.5rem', fontWeight: 900, color: '#EEF4FF', letterSpacing: '-0.02em' }}>{s.value}</p>
+              <p style={{ fontSize: 11, fontWeight: 500, color: 'rgba(180,215,255,0.45)', marginTop: 4 }}>{s.label}</p>
             </div>
           ))}
         </div>
       </div>
 
-      {/* ── Right Panel — Sign In Form ── */}
-      <div className="flex-1 flex flex-col items-center justify-center p-8 relative overflow-y-auto" style={{ minHeight: '100vh' }}>
+      {/* ── Right panel — Form ── */}
+      <div className="flex-1 relative z-10 flex flex-col items-center justify-center p-8 overflow-y-auto" style={{ minHeight: '100vh' }}>
 
         {/* Mobile logo */}
         <div className="lg:hidden flex items-center gap-3 mb-10">
-          <div className="w-9 h-9 rounded-xl flex items-center justify-center"
-            style={{ background: 'linear-gradient(135deg, #4A7FA7, #1A3D63)' }}>
-            <svg className="w-4 h-4 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <div style={{ width: 36, height: 36, borderRadius: 10, background: 'linear-gradient(135deg, rgba(44,143,255,0.9), rgba(10,60,180,0.9))', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
             </svg>
           </div>
-          <span className="text-lg font-extrabold text-white">Conversation Intel</span>
+          <span style={{ fontSize: 16, fontWeight: 700, color: '#EEF4FF' }}>CallBlick</span>
         </div>
 
-        <div className="w-full max-w-[420px] space-y-6">
-          {/* Heading above card */}
-          <div className="text-center space-y-1 pb-2">
-            <h2 className="text-2xl font-[850] text-white tracking-tight">Welcome back</h2>
-            <p className="text-sm font-medium" style={{ color: '#B3CFE5' }}>Sign in to your account to continue</p>
+        <div style={{ width: '100%', maxWidth: 420 }}>
+          {/* Heading */}
+          <div style={{ textAlign: 'center', marginBottom: 24 }}>
+            <h2 style={{ fontSize: '1.5rem', fontWeight: 800, color: '#EEF4FF', letterSpacing: '-0.02em', margin: 0 }}>Welcome back</h2>
+            <p style={{ fontSize: 13, color: 'rgba(180,215,255,0.55)', marginTop: 6 }}>Sign in to your account to continue</p>
           </div>
 
-          <style>{`
-            /* ── Clerk card shell ── */
-            .cl-card { background: #162F4A !important; border: 1px solid rgba(74,127,167,0.4) !important; box-shadow: 0 25px 60px rgba(0,0,0,0.5) !important; }
-            .cl-headerTitle { color: #ffffff !important; font-weight: 900 !important; font-size: 1.2rem !important; }
-            .cl-headerSubtitle { color: #B3CFE5 !important; }
-
-            /* ── Social buttons ── */
-            .cl-socialButtonsBlockButton { background: rgba(74,127,167,0.12) !important; border: 1px solid rgba(74,127,167,0.35) !important; color: #ffffff !important; }
-            .cl-socialButtonsBlockButton:hover { background: rgba(74,127,167,0.25) !important; }
-            .cl-socialButtonsBlockButtonText { color: #ffffff !important; font-weight: 600 !important; }
-
-            /* ── Divider ── */
-            .cl-dividerLine { background: rgba(74,127,167,0.3) !important; }
-            .cl-dividerText { color: #B3CFE5 !important; font-weight: 700 !important; font-size: 0.7rem !important; letter-spacing: 0.08em !important; }
-
-            /* ── Form labels ── */
-            .cl-formFieldLabel { color: #B3CFE5 !important; font-weight: 700 !important; font-size: 0.7rem !important; text-transform: uppercase !important; letter-spacing: 0.08em !important; }
-
-            /* ── Inputs ── */
-            .cl-formFieldInput { background: #0D1E30 !important; border: 1px solid rgba(74,127,167,0.4) !important; color: #ffffff !important; border-radius: 10px !important; height: 44px !important; font-size: 14px !important; }
-            .cl-formFieldInput:focus { border-color: #4A7FA7 !important; box-shadow: 0 0 0 2px rgba(74,127,167,0.25) !important; outline: none !important; }
-            .cl-formFieldInput::placeholder { color: rgba(179,207,229,0.4) !important; }
-
-            /* ── Password show/hide ── */
-            .cl-formFieldInputShowPasswordButton { color: #B3CFE5 !important; }
-            .cl-formFieldInputShowPasswordButton:hover { color: #ffffff !important; }
-
-            /* ── Primary button ── */
-            .cl-formButtonPrimary { background: linear-gradient(135deg, #4A7FA7, #2A5F8A) !important; color: #ffffff !important; font-weight: 700 !important; font-size: 0.85rem !important; letter-spacing: 0.08em !important; text-transform: uppercase !important; height: 44px !important; border-radius: 10px !important; border: none !important; box-shadow: 0 4px 15px rgba(74,127,167,0.35) !important; }
-            .cl-formButtonPrimary:hover { opacity: 0.9 !important; }
-
-            /* ── Footer ── */
-            .cl-footer { background: rgba(13,30,48,0.6) !important; border-top: 1px solid rgba(74,127,167,0.2) !important; }
-            .cl-footerActionText { color: #B3CFE5 !important; }
-            .cl-footerActionLink { color: #63B3ED !important; font-weight: 700 !important; }
-            .cl-footerActionLink:hover { color: #B3CFE5 !important; }
-            .cl-footerPages { background: transparent !important; }
-
-            /* ── Errors & alerts ── */
-            .cl-formFieldErrorText { color: #FC6E6E !important; font-weight: 600 !important; }
-            .cl-alert { background: #0D1E30 !important; border: 1px solid rgba(74,127,167,0.3) !important; }
-            .cl-alertText { color: #ffffff !important; }
-
-            /* ── Identity preview ── */
-            .cl-identityPreviewText { color: #ffffff !important; }
-            .cl-identityPreviewEditButton { color: #63B3ED !important; }
-
-            /* ── Internal / misc text ── */
-            .cl-internal-b3fm6y { color: #B3CFE5 !important; }
-            /* Reset inherited pink from root body */
-            .cl-rootBox, .cl-rootBox * { color: #ffffff; }
-            .cl-card, .cl-card * { color: #ffffff; }
-          `}</style>
+          <style>{CLERK_STYLES}</style>
 
           <SignIn
             appearance={{
               variables: {
-                colorPrimary: "#4A7FA7",
-                colorBackground: "#162F4A",
-                colorText: "#ffffff",
-                colorTextSecondary: "#B3CFE5",
-                colorInputBackground: "#0D1E30",
-                colorInputText: "#ffffff",
+                colorPrimary: "rgba(44,143,255,1)",
+                colorBackground: "rgba(6,18,48,0.60)",
+                colorText: "#EEF4FF",
+                colorTextSecondary: "rgba(180,215,255,0.60)",
+                colorInputBackground: "rgba(4,12,32,0.60)",
+                colorInputText: "#EEF4FF",
                 colorTextOnPrimaryBackground: "#ffffff",
-                colorNeutral: "#ffffff",
-                colorDanger: "#FC6E6E",
-                colorSuccess: "#48C78E",
+                colorNeutral: "#EEF4FF",
+                colorDanger: "rgba(255,120,120,0.90)",
                 borderRadius: "14px",
-                fontFamily: "var(--font-geist-sans)",
+                fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', system-ui, sans-serif",
                 fontSize: "14px",
-                spacingUnit: "18px",
               },
             }}
           />
 
-          {/* Footer note */}
-          <p className="text-center text-xs font-medium pb-4" style={{ color: 'rgba(179,207,229,0.5)' }}>
+          <p style={{ textAlign: 'center', fontSize: 11, color: 'rgba(180,215,255,0.30)', marginTop: 20 }}>
             Protected by Clerk · End-to-end encrypted
           </p>
         </div>
