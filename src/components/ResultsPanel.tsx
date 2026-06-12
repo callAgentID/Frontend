@@ -29,7 +29,8 @@ import {
   Save,
   X as XIcon,
   History,
-  Search
+  Search,
+  Layers
 } from "lucide-react";
 import { cn } from "../lib/utils";
 import { formatLLMCost, formatTokens } from "../lib/formatters";
@@ -63,6 +64,7 @@ interface ResultData {
   campaign_name?: string | null;
   questionnaire_name?: string | null;
   script_name?: string | null;
+  batch_id?: string | null;
   human_intervention_count?: number;
   human_interventions?: Array<{
     timestamp: string;
@@ -401,6 +403,21 @@ export function ResultsPanel({ data, isHydrating = false }: { data: ResultData, 
             <span className="text-[9px] sm:text-[10px] font-bold text-[#B3CFE5]/40 uppercase tracking-widest whitespace-nowrap">
               Trace ID: {safeData.call_id?.split('-')[0] || '...'}...
             </span>
+            {safeData.batch_id && (
+              <a
+                href={`/batches?id=${safeData.batch_id}`}
+                className="inline-flex items-center gap-1.5 px-2 py-1 rounded-lg text-[9px] sm:text-[10px] font-black uppercase tracking-widest whitespace-nowrap transition-colors"
+                style={{
+                  background: 'rgba(44,143,255,0.10)',
+                  border: '1px solid rgba(44,143,255,0.22)',
+                  color: 'rgba(44,143,255,0.85)',
+                }}
+                title={`View batch: ${safeData.batch_id}`}
+              >
+                <Layers className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
+                Batch: {safeData.batch_id.split('-')[0]}...
+              </a>
+            )}
           </div>
 
           {/* Campaign, Questionnaire, Script Info */}
