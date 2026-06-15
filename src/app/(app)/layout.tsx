@@ -1,10 +1,12 @@
 import { Sidebar } from "@/components/Sidebar";
 import { Navbar } from "@/components/Navbar";
 import { AuthGuard } from "@/components/AuthGuard";
+import { ToastProvider } from "@/components/Toast";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
     <AuthGuard>
+      <ToastProvider />
       <Sidebar />
       {/*
         Content pushed right: sidebar (240px) + left margin (12px) + gap (8px)

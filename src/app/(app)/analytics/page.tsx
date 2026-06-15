@@ -38,6 +38,7 @@ function AnalyticsPageContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const t = useTranslations('analytics');
+  const tc = useTranslations('common');
   const { apiFetch } = useApi();
 
   const [calls, setCalls] = useState<any[]>([]);
@@ -222,10 +223,10 @@ function AnalyticsPageContent() {
             onClick={closeDetail}
             className="flex items-center gap-2 text-[#B3CFE5] hover:text-[#F6FAFD] font-bold text-xs uppercase tracking-widest transition-colors"
           >
-            <ArrowLeft className="w-4 h-4" /> Back to Signal History
+            <ArrowLeft className="w-4 h-4" /> {t('backToSignalHistory')}
           </button>
           <div className="flex items-center gap-3">
-            <span className="text-[11px] font-bold text-[#B3CFE5] uppercase tracking-widest">Signal Locked</span>
+            <span className="text-[11px] font-bold text-[#B3CFE5] uppercase tracking-widest">{t('signalLocked')}</span>
             <div className="w-2.5 h-2.5 rounded-full bg-[#4A7FA7] shadow-sm shadow-[#4A7FA7]/50 animate-pulse" />
           </div>
         </div>
@@ -245,8 +246,8 @@ function AnalyticsPageContent() {
       <div className="flex flex-col md:flex-row gap-8 items-start justify-between border-b border-blue-400/18 pb-12">
         <div>
           <div className="flex items-center gap-3 mb-4 px-1">
-            <span className="px-3 py-1 bg-gradient-to-r from-[#4A7FA7] to-[#1A3D63] glow text-white text-[10px] uppercase font-[900] tracking-widest rounded-lg">Historical Command</span>
-            <span className="text-[11px] font-bold text-[#B3CFE5] uppercase tracking-widest leading-none">Global Signal Archive</span>
+            <span className="px-3 py-1 bg-gradient-to-r from-[#4A7FA7] to-[#1A3D63] glow text-white text-[10px] uppercase font-[900] tracking-widest rounded-lg">{t('historicalCommand')}</span>
+            <span className="text-[11px] font-bold text-[#B3CFE5] uppercase tracking-widest leading-none">{t('globalSignalArchive')}</span>
           </div>
           <h2 className="text-[32px] sm:text-[42px] md:text-[52px] font-[850] text-[#F6FAFD] tracking-tight leading-none mb-6">{t('title')}</h2>
           <p className="text-[#B3CFE5] text-[16px] font-medium max-w-lg leading-relaxed">
@@ -284,7 +285,7 @@ function AnalyticsPageContent() {
                 setIsLoading(true);
               }}
               className="flex items-center gap-2 px-4 h-11 bg-gradient-to-r from-[#4A7FA7] to-[#1A3D63] glow hover:opacity-90 text-white rounded-xl font-bold text-xs uppercase tracking-wider transition-colors"
-              title="Refresh call history"
+              title={t('refresh')}
             >
               <RefreshCw className="w-4 h-4" />
               {t('refresh')}
@@ -371,14 +372,14 @@ function AnalyticsPageContent() {
                       <span className="w-1 h-1 rounded-full bg-[#4A7FA7]/30" />
                       <span className="flex items-center gap-1.5 px-2 py-0.5 bg-[#4A7FA7]/10 border border-blue-400/12 rounded-md">
                         <Zap className="w-3 h-3 text-[#4A7FA7]" />
-                        <span className="text-[10px] font-black text-[#B3CFE5]/60 uppercase tracking-widest">LLM Cost:</span>
+                        <span className="text-[10px] font-black text-[#B3CFE5]/60 uppercase tracking-widest">{t('llmCost')}:</span>
                         <span className="text-[10px] font-black text-[#F6FAFD] uppercase tracking-widest">
                           {formatLLMCost(call.total_llm_cost_usd)}
                         </span>
                       </span>
                       <span className="flex items-center gap-1.5 px-2 py-0.5 bg-[#4A7FA7]/10 border border-blue-400/12 rounded-md">
                         <Database className="w-3 h-3 text-[#4A7FA7]" />
-                        <span className="text-[10px] font-black text-[#B3CFE5]/60 uppercase tracking-widest">Tokens:</span>
+                        <span className="text-[10px] font-black text-[#B3CFE5]/60 uppercase tracking-widest">{t('tokens')}:</span>
                         <span className="text-[10px] font-black text-[#F6FAFD] uppercase tracking-widest">
                           {formatTokens(call.total_llm_tokens)}
                         </span>
@@ -419,7 +420,7 @@ function AnalyticsPageContent() {
               {calls.length === 0 && (
                 <div className="p-20 text-center space-y-4">
                   <History className="w-12 h-12 text-[#4A7FA7] mx-auto" />
-                  <p className="text-sm font-bold text-[#B3CFE5] uppercase tracking-widest">No signals found in the history.</p>
+                  <p className="text-sm font-bold text-[#B3CFE5] uppercase tracking-widest">{t('noSignals')}</p>
                 </div>
               )}
             </div>
@@ -466,7 +467,7 @@ function AnalyticsPageContent() {
                     ? "bg-[#1A3D63]/20 text-[#4A7FA7]/30 cursor-not-allowed"
                     : "bg-blue-950/20 text-[#4A7FA7] hover:bg-gradient-to-r hover:from-[#4A7FA7] hover:to-[#1A3D63] hover:text-white shadow-sm"
                 )}
-                title="Go to first page"
+                title={t('goToFirstPage')}
               >
                 <ChevronsLeft className="w-5 h-5" />
               </button>
@@ -481,7 +482,7 @@ function AnalyticsPageContent() {
                     ? "bg-[#1A3D63]/20 text-[#4A7FA7]/30 cursor-not-allowed"
                     : "bg-blue-950/20 text-[#4A7FA7] hover:bg-gradient-to-r hover:from-[#4A7FA7] hover:to-[#1A3D63] hover:text-white shadow-sm"
                 )}
-                title="Go to previous page"
+                title={t('goToPreviousPage')}
               >
                 <ChevronRight className="w-5 h-5 rotate-180" />
               </button>
@@ -532,7 +533,7 @@ function AnalyticsPageContent() {
                     ? "bg-[#1A3D63]/20 text-[#4A7FA7]/30 cursor-not-allowed"
                     : "bg-blue-950/20 text-[#4A7FA7] hover:bg-gradient-to-r hover:from-[#4A7FA7] hover:to-[#1A3D63] hover:text-white shadow-sm"
                 )}
-                title="Go to next page"
+                title={t('goToNextPage')}
               >
                 <ChevronRight className="w-5 h-5" />
               </button>
@@ -552,7 +553,7 @@ function AnalyticsPageContent() {
                     ? "bg-[#1A3D63]/20 text-[#4A7FA7]/30 cursor-not-allowed"
                     : "bg-blue-950/20 text-[#4A7FA7] hover:bg-gradient-to-r hover:from-[#4A7FA7] hover:to-[#1A3D63] hover:text-white shadow-sm"
                 )}
-                title="Go to last page"
+                title={t('goToLastPage')}
               >
                 <ChevronsRight className="w-5 h-5" />
               </button>
@@ -570,17 +571,17 @@ function AnalyticsPageContent() {
                 <AlertTriangle className="w-6 h-6" />
               </div>
               <div>
-                <h3 className="text-xl font-[850] text-[#F6FAFD] tracking-tight">Delete Call</h3>
-                <p className="text-sm font-semibold text-red-400 mt-0.5">This action cannot be undone</p>
+                <h3 className="text-xl font-[850] text-[#F6FAFD] tracking-tight">{t('deleteCall')}</h3>
+                <p className="text-sm font-semibold text-red-400 mt-0.5">{tc('deleteConfirmTitle')}</p>
               </div>
             </div>
 
             <div className="p-8 space-y-6">
               <p className="text-sm font-medium text-[#B3CFE5] leading-relaxed">
-                Are you sure you want to delete this call and all its associated data (analytics, red flags, artifacts, jobs, and embeddings)?
+                {t('deleteCallDesc')}
               </p>
               <div className="p-4 rounded-xl glass">
-                <p className="text-xs font-bold text-[#B3CFE5] uppercase tracking-wider mb-1">Call ID</p>
+                <p className="text-xs font-bold text-[#B3CFE5] uppercase tracking-wider mb-1">{tc('callId')}</p>
                 <p className="text-sm font-mono font-semibold text-[#F6FAFD] break-all">{deleteConfirmCallId}</p>
               </div>
 
@@ -590,7 +591,7 @@ function AnalyticsPageContent() {
                   disabled={isDeleting}
                   className="flex-1 h-12 bg-blue-950/20 hover:bg-blue-950/30 disabled:opacity-50 disabled:cursor-not-allowed text-[#B3CFE5] rounded-xl font-bold text-sm uppercase tracking-wider transition-colors"
                 >
-                  Cancel
+                  {tc('cancel')}
                 </button>
                 <button
                   onClick={() => handleDeleteCall(deleteConfirmCallId)}
@@ -600,12 +601,12 @@ function AnalyticsPageContent() {
                   {isDeleting ? (
                     <>
                       <Loader2 className="w-4 h-4 animate-spin" />
-                      Deleting...
+                      {tc('deleting')}
                     </>
                   ) : (
                     <>
                       <Trash2 className="w-4 h-4" />
-                      Delete
+                      {tc('delete')}
                     </>
                   )}
                 </button>

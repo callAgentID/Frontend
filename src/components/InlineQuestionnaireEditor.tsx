@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from 'next-intl';
 import {
   Plus,
   Trash2,
@@ -18,6 +19,8 @@ import {
   GripVertical
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Tooltip } from "./Tooltip";
+import { toast } from "./Toast";
 
 export interface QuestionOption {
   min?: number;
@@ -56,6 +59,8 @@ const QUESTION_TYPES = [
 ];
 
 export function InlineQuestionnaireEditor({ sections: initialSections, onSave, onCancel }: InlineQuestionnaireEditorProps) {
+  const tt = useTranslations('tooltips');
+  const te = useTranslations('editor');
   const [sections, setSections] = useState<Section[]>(initialSections);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -63,10 +68,11 @@ export function InlineQuestionnaireEditor({ sections: initialSections, onSave, o
     const newSectionId = `section_${Date.now()}`;
     const newSection: Section = {
       section_id: newSectionId,
-      title: "New Section",
+      title: te("newSection"),
       questions: []
     };
     setSections([...sections, newSection]);
+    toast(te("sectionAdded"), "info");
   };
 
   const updateSection = (sectionId: string, updates: Partial<Section>) => {
@@ -76,6 +82,7 @@ export function InlineQuestionnaireEditor({ sections: initialSections, onSave, o
   const deleteSection = (sectionId: string) => {
     if (!confirm("Delete this section and all its questions?")) return;
     setSections(sections.filter(s => s.section_id !== sectionId));
+    toast(te("sectionDeleted"), "warning");
   };
 
   const duplicateSection = (sectionId: string) => {
@@ -94,6 +101,7 @@ export function InlineQuestionnaireEditor({ sections: initialSections, onSave, o
     };
 
     setSections([...sections, duplicatedSection]);
+    toast(`${te("sectionDuplicated")} "${section.title}"`, "success");
   };
 
   const moveSectionUp = (index: number) => {
@@ -116,7 +124,7 @@ export function InlineQuestionnaireEditor({ sections: initialSections, onSave, o
 
     const newQuestion: Question = {
       question_id: `${sectionId}_q${section.questions.length + 1}`,
-      text: "New question",
+      text: te("newQuestion"),
       type: "yes_no",
       required: false,
       weight: 10,
@@ -127,6 +135,7 @@ export function InlineQuestionnaireEditor({ sections: initialSections, onSave, o
     updateSection(sectionId, {
       questions: [...section.questions, newQuestion]
     });
+    toast(te("questionAdded"), "info");
   };
 
   const updateQuestion = (sectionId: string, questionIndex: number, updates: Partial<Question>) => {
@@ -148,6 +157,7 @@ export function InlineQuestionnaireEditor({ sections: initialSections, onSave, o
     updateSection(sectionId, {
       questions: section.questions.filter((_, idx) => idx !== questionIndex)
     });
+    toast(te("questionDeleted"), "warning");
   };
 
   const duplicateQuestion = (sectionId: string, questionIndex: number) => {
@@ -193,8 +203,10 @@ export function InlineQuestionnaireEditor({ sections: initialSections, onSave, o
     setIsSaving(true);
     try {
       await onSave(sections);
+      toast(te("savedSuccess"), "success");
     } catch (error) {
       console.error("Failed to save:", error);
+      toast(te("saveFailed"), "error");
     } finally {
       setIsSaving(false);
     }
@@ -209,44 +221,41 @@ export function InlineQuestionnaireEditor({ sections: initialSections, onSave, o
             <Layers className="w-5 h-5 text-[#4A7FA7]" />
           </div>
           <div>
-            <h4 className="text-sm font-black uppercase tracking-wider text-[#F6FAFD]">Editing Mode</h4>
+            <h4 className="text-sm font-black uppercase tracking-wider text-[#F6FAFD]">{te("editingMode")}</h4>
             <p className="text-xs font-semibold text-[#B3CFE5]">
-              {sections.length} sections • {sections.reduce((sum, s) => sum + s.questions.length, 0)} questions
+              {sections.length} {te("sectionsCount")} • {sections.reduce((sum, s) => sum + s.questions.length, 0)} {te("questionsCount")}
             </p>
           </div>
         </div>
 
         <div className="flex items-center gap-3">
-          <button
-            onClick={addSection}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-950/25 hover:bg-[#1A3D63]/80 text-[#B3CFE5] hover:text-[#F6FAFD] rounded-xl font-bold text-xs uppercase tracking-wider transition-colors border border-blue-400/15"
-          >
-            <Plus className="w-4 h-4" />
-            Add Section
-          </button>
-          <button
-            onClick={onCancel}
-            className="px-4 py-2 bg-blue-950/25 hover:bg-[#1A3D63]/80 text-[#B3CFE5] rounded-xl font-bold text-xs uppercase tracking-wider transition-colors"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={handleSave}
-            disabled={isSaving}
-            className="flex items-center gap-2 px-6 py-2 bg-gradient-to-r from-[#4A7FA7] to-[#1A3D63] text-white rounded-xl font-bold text-xs uppercase tracking-wider transition-colors hover:opacity-90 disabled:opacity-50 shadow-lg shadow-[#4A7FA7]/20"
-          >
-            {isSaving ? (
-              <>
-                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                Saving...
-              </>
-            ) : (
-              <>
-                <Save className="w-4 h-4" />
-                Save Changes
-              </>
-            )}
-          </button>
+          <Tooltip content={tt("addSection")} placement="bottom">
+            <button
+              onClick={addSection}
+              className="flex items-center gap-2 px-4 py-2 bg-blue-950/25 hover:bg-[#1A3D63]/80 text-[#B3CFE5] hover:text-[#F6FAFD] rounded-xl font-bold text-xs uppercase tracking-wider transition-colors border border-blue-400/15"
+            >
+              <Plus className="w-4 h-4" />
+              {te("addSection")}
+            </button>
+          </Tooltip>
+          <Tooltip content={tt("cancelEditing")} placement="bottom">
+            <button onClick={onCancel} className="px-4 py-2 bg-blue-950/25 hover:bg-[#1A3D63]/80 text-[#B3CFE5] rounded-xl font-bold text-xs uppercase tracking-wider transition-colors">
+              {te("cancel")}
+            </button>
+          </Tooltip>
+          <Tooltip content={tt("saveChanges")} placement="bottom">
+            <button
+              onClick={handleSave}
+              disabled={isSaving}
+              className="flex items-center gap-2 px-6 py-2 bg-gradient-to-r from-[#4A7FA7] to-[#1A3D63] text-white rounded-xl font-bold text-xs uppercase tracking-wider transition-colors hover:opacity-90 disabled:opacity-50 shadow-lg shadow-[#4A7FA7]/20"
+            >
+              {isSaving ? (
+                <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />{te("saving")}</>
+              ) : (
+                <><Save className="w-4 h-4" />{te("saveChanges")}</>
+              )}
+            </button>
+          </Tooltip>
         </div>
       </div>
 
@@ -254,7 +263,7 @@ export function InlineQuestionnaireEditor({ sections: initialSections, onSave, o
       {sections.length === 0 ? (
         <div className="p-16 text-center space-y-4 bg-blue-950/18 rounded-2xl border border-blue-400/10">
           <Layers className="w-12 h-12 text-[#4A7FA7] mx-auto opacity-50" />
-          <p className="text-[#B3CFE5] font-semibold">No sections yet. Add your first section to get started.</p>
+          <p className="text-[#B3CFE5] font-semibold">{te("noSectionsYet")}</p>
         </div>
       ) : (
         <div className="space-y-6">
@@ -316,6 +325,8 @@ function SectionEditor({
   onMoveQuestionUp,
   onMoveQuestionDown
 }: SectionEditorProps) {
+  const tt = useTranslations('tooltips');
+  const te = useTranslations('editor');
   return (
     <div className="glass-card rounded-3xl overflow-hidden">
       {/* Section Header */}
@@ -330,50 +341,36 @@ function SectionEditor({
             value={section.title}
             onChange={(e) => onUpdate({ title: e.target.value })}
             className="flex-1 bg-transparent text-lg font-black text-[#F6FAFD] outline-none placeholder:text-[#B3CFE5]/50 border-b border-transparent hover:border-blue-400/15 focus:border-[#4A7FA7] transition-colors pb-1"
-            placeholder="Section title"
+            placeholder={te("sectionTitle")}
           />
 
           <span className="text-xs font-bold text-[#B3CFE5] px-3 py-1 bg-black/25 rounded-lg">
-            {section.questions.length} {section.questions.length === 1 ? 'question' : 'questions'}
+            {section.questions.length} {te('questionCount')}
           </span>
 
           <div className="flex items-center gap-1">
-            <button
-              onClick={onMoveUp}
-              disabled={sectionIndex === 0}
-              className={cn(
-                "w-8 h-8 rounded-lg flex items-center justify-center transition-colors",
-                sectionIndex === 0 ? "opacity-30 cursor-not-allowed text-[#B3CFE5]" : "hover:bg-[#4A7FA7]/20 text-[#B3CFE5]"
-              )}
-              title="Move section up"
-            >
-              <ArrowUpDown className="w-4 h-4 rotate-180" />
-            </button>
-            <button
-              onClick={onMoveDown}
-              disabled={sectionIndex === totalSections - 1}
-              className={cn(
-                "w-8 h-8 rounded-lg flex items-center justify-center transition-colors",
-                sectionIndex === totalSections - 1 ? "opacity-30 cursor-not-allowed text-[#B3CFE5]" : "hover:bg-[#4A7FA7]/20 text-[#B3CFE5]"
-              )}
-              title="Move section down"
-            >
-              <ArrowUpDown className="w-4 h-4" />
-            </button>
-            <button
-              onClick={onDuplicate}
-              className="w-8 h-8 rounded-lg hover:bg-[#4A7FA7]/20 flex items-center justify-center transition-colors text-[#B3CFE5]"
-              title="Duplicate section"
-            >
-              <Copy className="w-4 h-4" />
-            </button>
-            <button
-              onClick={onDelete}
-              className="w-8 h-8 rounded-lg hover:bg-red-500/20 flex items-center justify-center transition-colors text-red-400"
-              title="Delete section"
-            >
-              <Trash2 className="w-4 h-4" />
-            </button>
+            <Tooltip content={tt("moveSectionUp")} placement="top">
+              <button onClick={onMoveUp} disabled={sectionIndex === 0}
+                className={cn("w-8 h-8 rounded-lg flex items-center justify-center transition-colors", sectionIndex === 0 ? "opacity-30 cursor-not-allowed text-[#B3CFE5]" : "hover:bg-[#4A7FA7]/20 text-[#B3CFE5]")}>
+                <ArrowUpDown className="w-4 h-4 rotate-180" />
+              </button>
+            </Tooltip>
+            <Tooltip content={tt("moveSectionDown")} placement="top">
+              <button onClick={onMoveDown} disabled={sectionIndex === totalSections - 1}
+                className={cn("w-8 h-8 rounded-lg flex items-center justify-center transition-colors", sectionIndex === totalSections - 1 ? "opacity-30 cursor-not-allowed text-[#B3CFE5]" : "hover:bg-[#4A7FA7]/20 text-[#B3CFE5]")}>
+                <ArrowUpDown className="w-4 h-4" />
+              </button>
+            </Tooltip>
+            <Tooltip content={tt("duplicateSection")} placement="top">
+              <button onClick={onDuplicate} className="w-8 h-8 rounded-lg hover:bg-[#4A7FA7]/20 flex items-center justify-center transition-colors text-[#B3CFE5]">
+                <Copy className="w-4 h-4" />
+              </button>
+            </Tooltip>
+            <Tooltip content={tt("deleteSection")} placement="top">
+              <button onClick={onDelete} className="w-8 h-8 rounded-lg hover:bg-red-500/20 flex items-center justify-center transition-colors text-red-400">
+                <Trash2 className="w-4 h-4" />
+              </button>
+            </Tooltip>
           </div>
         </div>
       </div>
@@ -394,13 +391,17 @@ function SectionEditor({
           />
         ))}
 
-        <button
-          onClick={onAddQuestion}
-          className="w-full py-4 border-2 border-dashed border-blue-400/15 rounded-2xl hover:bg-blue-950/18 hover:border-[#4A7FA7]/50 transition-colors flex items-center justify-center gap-2 text-[#B3CFE5] hover:text-[#F6FAFD] font-bold text-sm group"
-        >
-          <Plus className="w-5 h-5 group-hover:scale-110 transition-transform" />
-          Add Question
-        </button>
+        <div className="w-full">
+          <Tooltip content={tt("addQuestion")} placement="bottom">
+            <button
+              onClick={onAddQuestion}
+              className="w-full py-5 px-6 border-2 border-dashed border-blue-400/15 rounded-2xl hover:bg-blue-950/18 hover:border-[#4A7FA7]/50 transition-colors flex items-center justify-center gap-2 text-[#B3CFE5] hover:text-[#F6FAFD] font-bold text-sm group"
+            >
+              <Plus className="w-5 h-5 group-hover:scale-110 transition-transform" />
+              {te("addQuestion")}
+            </button>
+          </Tooltip>
+        </div>
       </div>
     </div>
   );
@@ -427,6 +428,8 @@ function QuestionEditor({
   onMoveUp,
   onMoveDown
 }: QuestionEditorProps) {
+  const tt = useTranslations('tooltips');
+  const te = useTranslations('editor');
   const questionType = QUESTION_TYPES.find(t => t.value === question.type);
   const Icon = questionType?.icon || HelpCircle;
 
@@ -443,13 +446,15 @@ function QuestionEditor({
             value={question.text}
             onChange={(e) => onUpdate({ text: e.target.value })}
             className="w-full bg-transparent text-sm font-semibold text-[#F6FAFD] outline-none placeholder:text-[#B3CFE5]/50 border-b border-transparent hover:border-blue-400/15 focus:border-[#4A7FA7] transition-colors pb-1 resize-none min-h-[40px]"
-            placeholder="Question text"
+            placeholder={te("questionText")}
             rows={2}
           />
 
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <label className="text-[9px] font-black uppercase tracking-wider text-[#B3CFE5]">Type</label>
+              <Tooltip content={tt("questionType")} placement="top">
+              <label className="text-[9px] font-black uppercase tracking-wider text-[#B3CFE5]">{te("typeLabel")}</label>
+            </Tooltip>
               <select
                 value={question.type}
                 onChange={(e) => onUpdate({ type: e.target.value as Question["type"], options: [] })}
@@ -462,7 +467,9 @@ function QuestionEditor({
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-[9px] font-black uppercase tracking-wider text-[#B3CFE5]">Weight (0-100)</label>
+              <Tooltip content={tt("questionWeight")} placement="top">
+              <label className="text-[9px] font-black uppercase tracking-wider text-[#B3CFE5]">{te("weightLabel")}</label>
+            </Tooltip>
               <input
                 type="number"
                 min="0"
@@ -482,9 +489,9 @@ function QuestionEditor({
               onChange={(e) => onUpdate({ required: e.target.checked })}
               className="w-4 h-4 rounded border-blue-400/15 text-red-500"
             />
-            <label htmlFor={`required_${question.question_id}`} className="text-xs font-bold text-[#F6FAFD] cursor-pointer">
-              Required Question
-            </label>
+            <Tooltip content={tt("questionRequired")} placement="top">
+              <label htmlFor={`required_${question.question_id}`} className="text-xs font-bold text-[#F6FAFD] cursor-pointer">{te("requiredQuestion")}</label>
+            </Tooltip>
           </div>
 
           {(question.type === "single_choice" || question.type === "multi_choice") && (
@@ -503,43 +510,29 @@ function QuestionEditor({
         </div>
 
         <div className="flex flex-col gap-1 shrink-0">
-          <button
-            onClick={onMoveUp}
-            disabled={questionIndex === 0}
-            className={cn(
-              "w-7 h-7 rounded-lg flex items-center justify-center transition-colors",
-              questionIndex === 0 ? "opacity-30 cursor-not-allowed text-[#B3CFE5]" : "hover:bg-[#4A7FA7]/20 text-[#B3CFE5]"
-            )}
-            title="Move up"
-          >
-            <ArrowUpDown className="w-3.5 h-3.5 rotate-180" />
-          </button>
-          <button
-            onClick={onMoveDown}
-            disabled={questionIndex === totalQuestions - 1}
-            className={cn(
-              "w-7 h-7 rounded-lg flex items-center justify-center transition-colors",
-              questionIndex === totalQuestions - 1 ? "opacity-30 cursor-not-allowed text-[#B3CFE5]" : "hover:bg-[#4A7FA7]/20 text-[#B3CFE5]"
-            )}
-            title="Move down"
-          >
-            <ArrowUpDown className="w-3.5 h-3.5" />
-          </button>
+          <Tooltip content={tt("moveQuestionUp")} placement="right">
+            <button onClick={onMoveUp} disabled={questionIndex === 0}
+              className={cn("w-7 h-7 rounded-lg flex items-center justify-center transition-colors", questionIndex === 0 ? "opacity-30 cursor-not-allowed text-[#B3CFE5]" : "hover:bg-[#4A7FA7]/20 text-[#B3CFE5]")}>
+              <ArrowUpDown className="w-3.5 h-3.5 rotate-180" />
+            </button>
+          </Tooltip>
+          <Tooltip content={tt("moveQuestionDown")} placement="right">
+            <button onClick={onMoveDown} disabled={questionIndex === totalQuestions - 1}
+              className={cn("w-7 h-7 rounded-lg flex items-center justify-center transition-colors", questionIndex === totalQuestions - 1 ? "opacity-30 cursor-not-allowed text-[#B3CFE5]" : "hover:bg-[#4A7FA7]/20 text-[#B3CFE5]")}>
+              <ArrowUpDown className="w-3.5 h-3.5" />
+            </button>
+          </Tooltip>
           <div className="h-px bg-[#4A7FA7]/20 my-1" />
-          <button
-            onClick={onDuplicate}
-            className="w-7 h-7 rounded-lg hover:bg-[#4A7FA7]/20 flex items-center justify-center transition-colors text-[#B3CFE5]"
-            title="Duplicate"
-          >
-            <Copy className="w-3.5 h-3.5" />
-          </button>
-          <button
-            onClick={onDelete}
-            className="w-7 h-7 rounded-lg hover:bg-red-500/20 flex items-center justify-center transition-colors text-red-400"
-            title="Delete"
-          >
-            <Trash2 className="w-3.5 h-3.5" />
-          </button>
+          <Tooltip content={tt("duplicateQuestion")} placement="right">
+            <button onClick={onDuplicate} className="w-7 h-7 rounded-lg hover:bg-[#4A7FA7]/20 flex items-center justify-center transition-colors text-[#B3CFE5]">
+              <Copy className="w-3.5 h-3.5" />
+            </button>
+          </Tooltip>
+          <Tooltip content={tt("deleteQuestion")} placement="right">
+            <button onClick={onDelete} className="w-7 h-7 rounded-lg hover:bg-red-500/20 flex items-center justify-center transition-colors text-red-400">
+              <Trash2 className="w-3.5 h-3.5" />
+            </button>
+          </Tooltip>
         </div>
       </div>
     </div>

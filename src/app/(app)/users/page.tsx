@@ -19,6 +19,7 @@ import {
   X
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useTranslations } from "next-intl";
 import { useApi } from "@/lib/useApi";
 import { useCurrentUser } from "@/lib/useCurrentUser";
 
@@ -45,6 +46,8 @@ const getRoleConfig = (role: string) =>
   ROLE_CONFIG[role?.toLowerCase()] ?? ROLE_CONFIG["user"];
 
 export default function UsersPage() {
+  const t = useTranslations('users');
+  const tc = useTranslations('common');
   const { apiFetch } = useApi();
   const { role: myRole, isLoading: roleLoading } = useCurrentUser();
 
@@ -122,8 +125,8 @@ export default function UsersPage() {
         <div className="w-16 h-16 rounded-2xl bg-red-500/20 border border-red-500/30 flex items-center justify-center">
           <AlertTriangle className="w-8 h-8 text-red-400" />
         </div>
-        <h2 className="text-xl font-black text-[#F6FAFD]">Access Denied</h2>
-        <p className="text-[#B3CFE5] text-sm font-medium">This page is only accessible to Admin users.</p>
+        <h2 className="text-xl font-black text-[#F6FAFD]">{tc('accessDenied')}</h2>
+        <p className="text-[#B3CFE5] text-sm font-medium">{tc('accessDeniedDesc')}</p>
       </div>
     );
   }
@@ -137,9 +140,9 @@ export default function UsersPage() {
             <div className="w-10 h-10 rounded-2xl bg-gradient-to-r from-[#4A7FA7] to-[#1A3D63] flex items-center justify-center text-white glow shrink-0">
               <Users className="w-5 h-5" />
             </div>
-            <h1 className="text-2xl font-[900] text-[#F6FAFD] tracking-tight">User Management</h1>
+            <h1 className="text-2xl font-[900] text-[#F6FAFD] tracking-tight">{t('title')}</h1>
           </div>
-          <p className="text-[#B3CFE5] text-sm font-medium pl-1">Manage user accounts and assign roles</p>
+          <p className="text-[#B3CFE5] text-sm font-medium pl-1">{t('subtitle')}</p>
         </div>
         <button
           onClick={fetchUsers}
@@ -147,7 +150,7 @@ export default function UsersPage() {
           className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-[#4A7FA7] to-[#1A3D63] glow text-white rounded-xl font-bold text-xs uppercase tracking-widest hover:opacity-90 disabled:opacity-50 transition-colors shrink-0"
         >
           {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
-          Refresh
+          {t('refresh')}
         </button>
       </div>
 
@@ -175,7 +178,7 @@ export default function UsersPage() {
         <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#B3CFE5]/60 group-focus-within:text-[#4A7FA7] transition-colors" />
         <input
           type="text"
-          placeholder="Search by name, email or role..."
+          placeholder={t('searchPlaceholder')}
           value={search}
           onChange={e => setSearch(e.target.value)}
           className="w-full h-12 bg-blue-950/30 border border-blue-400/18 rounded-xl pl-11 pr-4 text-sm font-medium text-[#F6FAFD] placeholder:text-[#B3CFE5]/50 outline-none focus:border-[#4A7FA7] transition-colors"
@@ -193,17 +196,17 @@ export default function UsersPage() {
         <div className="p-10 bg-red-500/10 border border-red-500/30 rounded-2xl text-center space-y-3">
           <AlertTriangle className="w-10 h-10 text-red-400 mx-auto" />
           <p className="text-red-400 font-bold">{error}</p>
-          <button onClick={fetchUsers} className="px-4 py-2 bg-red-500/20 text-red-400 rounded-xl text-xs font-bold uppercase tracking-wider">Retry</button>
+          <button onClick={fetchUsers} className="px-4 py-2 bg-red-500/20 text-red-400 rounded-xl text-xs font-bold uppercase tracking-wider">{t('retryConnection')}</button>
         </div>
       ) : (
         <div className="glass-card rounded-2xl border border-blue-400/18 overflow-hidden">
           {/* Table Header */}
           <div className="grid grid-cols-12 px-6 py-3 border-b border-blue-400/12 bg-black/15">
-            <span className="col-span-4 text-[10px] font-black uppercase tracking-widest text-[#B3CFE5]">User</span>
-            <span className="col-span-3 text-[10px] font-black uppercase tracking-widest text-[#B3CFE5] hidden md:block">Email</span>
-            <span className="col-span-2 text-[10px] font-black uppercase tracking-widest text-[#B3CFE5]">Role</span>
-            <span className="col-span-2 text-[10px] font-black uppercase tracking-widest text-[#B3CFE5] hidden lg:block">Joined</span>
-            <span className="col-span-1 text-[10px] font-black uppercase tracking-widest text-[#B3CFE5] text-right">Action</span>
+            <span className="col-span-4 text-[10px] font-black uppercase tracking-widest text-[#B3CFE5]">{t('user')}</span>
+            <span className="col-span-3 text-[10px] font-black uppercase tracking-widest text-[#B3CFE5] hidden md:block">{t('email')}</span>
+            <span className="col-span-2 text-[10px] font-black uppercase tracking-widest text-[#B3CFE5]">{t('role')}</span>
+            <span className="col-span-2 text-[10px] font-black uppercase tracking-widest text-[#B3CFE5] hidden lg:block">{t('joined')}</span>
+            <span className="col-span-1 text-[10px] font-black uppercase tracking-widest text-[#B3CFE5] text-right">{t('actions')}</span>
           </div>
 
           {/* Rows */}
@@ -211,7 +214,7 @@ export default function UsersPage() {
             {filtered.length === 0 ? (
               <div className="p-16 text-center">
                 <Users className="w-10 h-10 text-[#4A7FA7]/40 mx-auto mb-3" />
-                <p className="text-[#B3CFE5] font-semibold text-sm">No users found</p>
+                <p className="text-[#B3CFE5] font-semibold text-sm">{t('noUsers')}</p>
               </div>
             ) : (
               filtered.map(user => {
@@ -266,7 +269,7 @@ export default function UsersPage() {
                         onClick={() => openEditModal(user)}
                         className="px-3 py-1.5 bg-[#4A7FA7]/20 hover:bg-[#4A7FA7]/40 text-[#4A7FA7] hover:text-[#F6FAFD] rounded-lg text-[10px] font-black uppercase tracking-wider transition-colors border border-blue-400/18 opacity-0 group-hover:opacity-100"
                       >
-                        Edit
+                        {t('editRole')}
                       </button>
                     </div>
                   </div>
@@ -280,7 +283,7 @@ export default function UsersPage() {
           {filtered.length > 0 && (
             <div className="px-6 py-3 border-t border-blue-400/12 bg-black/15">
               <p className="text-xs font-bold text-[#B3CFE5]">
-                Showing <span className="text-[#F6FAFD]">{filtered.length}</span> of <span className="text-[#F6FAFD]">{users.length}</span> users
+                {t('showing', { from: 1, to: filtered.length })} {t('ofTotal', { total: users.length })}
               </p>
             </div>
           )}
@@ -314,7 +317,7 @@ export default function UsersPage() {
 
             {/* Role Selector */}
             <div className="p-6 space-y-4">
-              <label className="text-[10px] font-black uppercase tracking-widest text-[#B3CFE5]">Assign Role</label>
+              <label className="text-[10px] font-black uppercase tracking-widest text-[#B3CFE5]">{t('assignRole')}</label>
               <div className="space-y-2">
                 {(["admin", "manager", "user"] as Role[]).map(role => {
                   const cfg = getRoleConfig(role);
@@ -340,9 +343,9 @@ export default function UsersPage() {
                       <div className="flex-1">
                         <p className={cn("text-sm font-black", isSelected ? cfg.color : "text-[#F6FAFD]")}>{cfg.label}</p>
                         <p className="text-[10px] text-[#B3CFE5]/60 font-medium mt-0.5">
-                          {role === "admin" && "Full access to all features and user management"}
-                          {role === "manager" && "Access to analytics, campaigns and call management"}
-                          {role === "user" && "Standard access to analysis and reports"}
+                          {role === "admin" && t('adminDesc')}
+                          {role === "manager" && t('managerDesc')}
+                          {role === "user" && t('userDesc')}
                         </p>
                       </div>
                       {isSelected && <Check className={cn("w-4 h-4 shrink-0", cfg.color)} />}
@@ -358,7 +361,7 @@ export default function UsersPage() {
                 onClick={() => setEditingUser(null)}
                 className="flex-1 h-11 bg-black/25 hover:bg-black/35 text-[#B3CFE5] rounded-xl font-bold text-sm uppercase tracking-wider transition-colors"
               >
-                Cancel
+                {tc('cancel')}
               </button>
               <button
                 onClick={handleUpdateRole}
@@ -366,9 +369,9 @@ export default function UsersPage() {
                 className="flex-1 h-11 bg-gradient-to-r from-[#4A7FA7] to-[#1A3D63] text-white rounded-xl font-bold text-sm uppercase tracking-wider transition-colors hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2 glow"
               >
                 {isSaving ? (
-                  <><Loader2 className="w-4 h-4 animate-spin" /> Saving...</>
+                  <><Loader2 className="w-4 h-4 animate-spin" /> {tc('saving')}</>
                 ) : (
-                  <><Shield className="w-4 h-4" /> Save Role</>
+                  <><Shield className="w-4 h-4" /> {t('saveRole')}</>
                 )}
               </button>
             </div>

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useApi } from "@/lib/useApi";
 import {
   Layers,
@@ -52,6 +53,8 @@ const STATUS_CONFIG = {
 };
 
 function BatchesContent() {
+  const t = useTranslations('batches');
+  const tc = useTranslations('common');
   const { apiFetch } = useApi();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -149,13 +152,13 @@ function BatchesContent() {
       <div className="p-6 md:p-8 space-y-8 animate-in fade-in duration-150 duration-150">
         <div className="flex items-center justify-between border-b border-blue-400/15 pb-6">
           <button onClick={() => setSelectedBatch(null)} className="flex items-center gap-2 text-[#B3CFE5] hover:text-[#F6FAFD] font-bold text-xs uppercase tracking-widest transition-colors">
-            <ArrowLeft className="w-4 h-4" /> Back to Batches
+            <ArrowLeft className="w-4 h-4" /> {t('backToBatches')}
           </button>
           <button
             onClick={() => setDeleteConfirmId(selectedBatch.batch_id)}
             className="flex items-center gap-2 px-4 py-2 bg-red-500/20 hover:bg-red-500 text-red-400 hover:text-white rounded-xl font-bold text-xs uppercase tracking-wider transition-colors"
           >
-            <Trash2 className="w-4 h-4" /> Delete Batch
+            <Trash2 className="w-4 h-4" /> {t('deleteBatch')}
           </button>
         </div>
 
@@ -171,7 +174,7 @@ function BatchesContent() {
               </h2>
               <div className="flex items-center gap-3 mt-1">
                 <span className={cn("px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider", cfg.bg, cfg.color)}>
-                  {cfg.label}
+                  {({ QUEUED: t('queued'), PROCESSING: t('processing'), FAILED: t('failed') } as Record<string, string>)[selectedBatch.status] ?? cfg.label}
                 </span>
                 <span className="text-xs text-[#B3CFE5]">{selectedBatch.total_calls} calls</span>
                 {selectedBatch.created_at && (
@@ -187,7 +190,7 @@ function BatchesContent() {
           {/* Progress bar */}
           <div className="p-5 rounded-2xl glass-card space-y-3">
             <div className="flex items-center justify-between">
-              <span className="text-sm font-black text-[#F6FAFD]">Processing Progress</span>
+              <span className="text-sm font-black text-[#F6FAFD]">{t('processingProgress')}</span>
               <span className="text-sm font-black text-[#F6FAFD]">{pct}%</span>
             </div>
             <div className="h-3 bg-black/25 rounded-full overflow-hidden">
@@ -198,10 +201,10 @@ function BatchesContent() {
             </div>
             <div className="grid grid-cols-4 gap-3 text-center">
               {[
-                { label: "Ready", value: selectedBatch.ready_calls, color: "text-green-400" },
-                { label: "Processing", value: selectedBatch.processing_calls, color: "text-[#4A7FA7]" },
-                { label: "Queued", value: selectedBatch.queued_calls, color: "text-[#B3CFE5]" },
-                { label: "Failed", value: selectedBatch.failed_calls, color: "text-red-400" },
+                { label: t('ready'), value: selectedBatch.ready_calls, color: "text-green-400" },
+                { label: t('processing'), value: selectedBatch.processing_calls, color: "text-[#4A7FA7]" },
+                { label: t('queued'), value: selectedBatch.queued_calls, color: "text-[#B3CFE5]" },
+                { label: t('failed'), value: selectedBatch.failed_calls, color: "text-red-400" },
               ].map(s => (
                 <div key={s.label}>
                   <p className={cn("text-xl font-[900]", s.color)}>{s.value}</p>
@@ -215,7 +218,7 @@ function BatchesContent() {
         {/* Calls table */}
         <div className="bg-blue-950/25 rounded-2xl border border-blue-400/15 overflow-hidden">
           <div className="px-5 py-3 border-b border-blue-400/10 bg-black/18 flex items-center justify-between">
-            <h3 className="text-xs font-black uppercase tracking-widest text-[#B3CFE5]">Calls</h3>
+            <h3 className="text-xs font-black uppercase tracking-widest text-[#B3CFE5]">{t('calls')}</h3>
             <Activity className="w-4 h-4 text-[#4A7FA7]" />
           </div>
           <div className="divide-y divide-[#4A7FA7]/10">
@@ -255,7 +258,7 @@ function BatchesContent() {
                       </span>
                     )}
                     <span className={cn("px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider shrink-0", callCfg.bg, callCfg.color)}>
-                      {callCfg.label}
+                      {({ QUEUED: t('queued'), PROCESSING: t('processing'), FAILED: t('failed') } as Record<string, string>)[callStatus] ?? callCfg.label}
                     </span>
                     {isReady && (
                       <ChevronDown className={cn(
@@ -295,14 +298,14 @@ function BatchesContent() {
             <div className="w-10 h-10 rounded-2xl bg-gradient-to-r from-[#4A7FA7] to-[#1A3D63] flex items-center justify-center text-white glow shrink-0">
               <Layers className="w-5 h-5" />
             </div>
-            <h1 className="text-2xl font-[900] text-[#F6FAFD] tracking-tight">Batch Ingestion History</h1>
+            <h1 className="text-2xl font-[900] text-[#F6FAFD] tracking-tight">{t('title')}</h1>
           </div>
-          <p className="text-[#B3CFE5] text-sm font-medium pl-1">Track and manage all batch upload jobs</p>
+          <p className="text-[#B3CFE5] text-sm font-medium pl-1">{t('subtitle')}</p>
         </div>
         <button onClick={fetchBatches} disabled={isLoading}
           className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-[#4A7FA7] to-[#1A3D63] glow text-white rounded-xl font-bold text-xs uppercase tracking-widest hover:opacity-90 disabled:opacity-50 transition-colors shrink-0">
           {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
-          Refresh
+          {t('refresh')}
         </button>
       </div>
 
@@ -313,7 +316,7 @@ function BatchesContent() {
       ) : batches.length === 0 ? (
         <div className="p-16 text-center space-y-4">
           <Layers className="w-12 h-12 text-[#4A7FA7]/40 mx-auto" />
-          <p className="text-[#B3CFE5] font-semibold">No batches yet. Upload multiple files from the Analysis page to create a batch.</p>
+          <p className="text-[#B3CFE5] font-semibold">{t('noBatches')}</p>
         </div>
       ) : (
         <div className="space-y-3">
@@ -334,7 +337,7 @@ function BatchesContent() {
                         {batch.name || `Batch ${batch.batch_id.split('-')[0]}`}
                       </p>
                       <span className={cn("px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider shrink-0", cfg.bg, cfg.color)}>
-                        {cfg.label}
+                        {({ QUEUED: t('queued'), PROCESSING: t('processing'), FAILED: t('failed') } as Record<string, string>)[batch.status] ?? cfg.label}
                       </span>
                     </div>
                     {/* Mini progress bar */}
@@ -346,10 +349,10 @@ function BatchesContent() {
                         />
                       </div>
                       <span className="text-[10px] font-bold text-[#B3CFE5] shrink-0">
-                        {batch.ready_calls}/{batch.total_calls} ready
+                        {batch.ready_calls}/{batch.total_calls} {t('ready').toLowerCase()}
                       </span>
                       {batch.failed_calls > 0 && (
-                        <span className="text-[10px] font-bold text-red-400 shrink-0">{batch.failed_calls} failed</span>
+                        <span className="text-[10px] font-bold text-red-400 shrink-0">{batch.failed_calls} {t('failed').toLowerCase()}</span>
                       )}
                     </div>
                     {batch.created_at && (
@@ -385,18 +388,18 @@ function BatchesContent() {
             <div className="p-6 border-b border-red-500/20 bg-red-500/10 flex items-center gap-4">
               <AlertTriangle className="w-6 h-6 text-red-400 shrink-0" />
               <div>
-                <h3 className="text-lg font-black text-[#F6FAFD]">Delete Batch</h3>
-                <p className="text-sm text-red-400 mt-0.5">This will delete the batch AND all associated calls and analytics.</p>
+                <h3 className="text-lg font-black text-[#F6FAFD]">{t('deleteConfirmTitle')}</h3>
+                <p className="text-sm text-red-400 mt-0.5">{t('deleteConfirmDesc')}</p>
               </div>
             </div>
             <div className="p-6 flex gap-3">
               <button onClick={() => setDeleteConfirmId(null)}
                 className="flex-1 h-11 bg-black/25 text-[#B3CFE5] rounded-xl font-bold text-sm uppercase tracking-wider transition-colors hover:bg-black/35">
-                Cancel
+                {tc('cancel')}
               </button>
               <button onClick={() => handleDelete(deleteConfirmId)} disabled={isDeleting}
                 className="flex-1 h-11 bg-red-500 hover:bg-red-600 disabled:opacity-50 text-white rounded-xl font-bold text-sm uppercase tracking-wider transition-colors flex items-center justify-center gap-2">
-                {isDeleting ? <><Loader2 className="w-4 h-4 animate-spin" /> Deleting...</> : <><Trash2 className="w-4 h-4" /> Delete</>}
+                {isDeleting ? <><Loader2 className="w-4 h-4 animate-spin" /> {tc('deleting')}</> : <><Trash2 className="w-4 h-4" /> {tc('delete')}</>}
               </button>
             </div>
           </div>

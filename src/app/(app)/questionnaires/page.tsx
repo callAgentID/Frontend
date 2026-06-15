@@ -25,12 +25,15 @@ import {
   Upload,
   FileText,
   Edit,
-  Trash2
+  Trash2,
+  Download
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { QuestionnaireCardSkeleton } from "@/components/Skeleton";
 import { InlineQuestionnaireEditor, Section, Question } from "@/components/InlineQuestionnaireEditor";
+import { Tooltip } from "@/components/Tooltip";
+import { toast } from "@/components/Toast";
 
 interface Questionnaire {
   id: string;
@@ -49,6 +52,7 @@ function QuestionnairesPageContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const t = useTranslations('questionnaires');
+  const tt = useTranslations('tooltips');
   const { apiFetch } = useApi();
 
   const [questionnaires, setQuestionnaires] = useState<Questionnaire[]>([]);
@@ -361,6 +365,124 @@ function QuestionnairesPageContent() {
     }
   };
 
+  const downloadPDF = async (q: Questionnaire) => {
+    const { jsPDF } = await import('jspdf');
+    const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+
+    const pageW = 210;
+    const margin = 16;
+    const contentW = pageW - margin * 2;
+    let y = 20;
+
+    // Fill background on current page
+    const fillBg = () => {
+      doc.setFillColor(10, 25, 49);
+      doc.rect(0, 0, 210, 297, 'F');
+    };
+
+    // Fill bg on first page
+    fillBg();
+
+    const addPage = () => {
+      doc.addPage();
+      fillBg(); // fill dark bg on every new page
+      y = 20;
+    };
+    const checkY = (needed: number) => { if (y + needed > 275) addPage(); };
+
+    // Header
+    doc.setFillColor(26, 61, 99);
+    doc.roundedRect(margin, y, contentW, 22, 4, 4, 'F');
+    doc.setTextColor(242, 246, 253);
+    doc.setFontSize(14);
+    doc.setFont('helvetica', 'bold');
+    doc.text(q.name, margin + 6, y + 9);
+    doc.setFontSize(8);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(179, 207, 229);
+    if (q.description) doc.text(q.description, margin + 6, y + 16);
+    y += 30;
+
+    // Meta row
+    doc.setFontSize(7);
+    doc.setTextColor(100, 150, 200);
+    const totalQ = q.schema_definition?.sections?.reduce((a, s) => a + (s.questions?.length || 0), 0) || 0;
+    doc.text(`v${q.version}  •  ${q.active ? 'Active' : 'Archived'}  •  ${q.is_redflag ? 'Red Flag  •  ' : ''}${q.schema_definition?.sections?.length || 0} sections  •  ${totalQ} questions`, margin, y);
+    y += 10;
+
+    // Sections
+    const sections = q.schema_definition?.sections || [];
+    for (const section of sections) {
+      checkY(14);
+      // Section heading
+      doc.setFillColor(30, 65, 110);
+      doc.roundedRect(margin, y, contentW, 10, 2, 2, 'F');
+      doc.setTextColor(242, 246, 253);
+      doc.setFontSize(9);
+      doc.setFont('helvetica', 'bold');
+      doc.text(section.title?.toUpperCase() || 'SECTION', margin + 4, y + 7);
+      const qCount = `${section.questions?.length || 0} questions`;
+      doc.setFontSize(7);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(179, 207, 229);
+      doc.text(qCount, pageW - margin - doc.getTextWidth(qCount) - 4, y + 7);
+      y += 14;
+
+      // Questions
+      for (let i = 0; i < (section.questions || []).length; i++) {
+        const question = section.questions[i];
+        // Estimate height needed
+        const lines = doc.splitTextToSize(question.text, contentW - 28);
+        const qHeight = Math.max(14, lines.length * 5 + 8);
+        checkY(qHeight);
+
+        // Card bg
+        doc.setFillColor(18, 40, 75);
+        doc.roundedRect(margin, y, contentW, qHeight, 2, 2, 'F');
+
+        // Weight badge
+        doc.setFillColor(74, 127, 167);
+        doc.roundedRect(margin + 3, y + (qHeight / 2) - 4, 12, 8, 1.5, 1.5, 'F');
+        doc.setTextColor(242, 246, 253);
+        doc.setFontSize(7);
+        doc.setFont('helvetica', 'bold');
+        doc.text(String(question.weight || 0), margin + 9, y + (qHeight / 2) + 1.5, { align: 'center' });
+
+        // Question text
+        doc.setTextColor(230, 240, 255);
+        doc.setFontSize(8.5);
+        doc.setFont('helvetica', 'bold');
+        doc.text(lines, margin + 18, y + 6);
+
+        // Type + required badges
+        const badgeY = y + qHeight - 5;
+        doc.setFontSize(6);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(130, 170, 210);
+        doc.text((question.type || 'yes_no').replace(/_/g, ' ').toUpperCase(), margin + 18, badgeY);
+        if (question.required) {
+          doc.setTextColor(252, 110, 110);
+          doc.text('REQUIRED', margin + 18 + doc.getTextWidth((question.type || '').replace(/_/g, ' ').toUpperCase()) + 4, badgeY);
+        }
+
+        y += qHeight + 3;
+      }
+      y += 4;
+    }
+
+    // Footer on each page
+    const pageCount = (doc as any).internal.getNumberOfPages();
+    for (let p = 1; p <= pageCount; p++) {
+      doc.setPage(p);
+      doc.setFontSize(7);
+      doc.setTextColor(80, 110, 150);
+      doc.text(`${q.name}  •  Page ${p} of ${pageCount}  •  Generated by CallBlick`, margin, 292);
+    }
+
+    doc.save(`${q.name.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.pdf`);
+    toast(`"${q.name}" downloaded as PDF`, 'success');
+  };
+
   const filtered = questionnaires.filter(q =>
     q.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     q.description.toLowerCase().includes(searchQuery.toLowerCase())
@@ -380,14 +502,18 @@ function QuestionnairesPageContent() {
         </div>
 
         <div className="flex items-center gap-3">
-          <button onClick={() => setIsCreateModalOpen(true)} className="flex items-center gap-2 px-6 py-3.5 bg-blue-950/25 glow text-[#B3CFE5] hover:text-[#F6FAFD] border border-blue-400/15 hover:border-[#4A7FA7]/50 rounded-2xl font-bold text-sm uppercase tracking-widest transition-colors hover:opacity-90 active:scale-[0.98]">
-            <Upload className="w-5 h-5" />
-            Upload Schema
-          </button>
-          <button onClick={handleStartCreate} className="flex items-center gap-2 px-6 py-3.5 bg-gradient-to-r from-[#4A7FA7] to-[#1A3D63] glow text-white rounded-2xl font-bold text-sm uppercase tracking-widest transition-colors hover:opacity-90 active:scale-[0.98]">
-            <Plus className="w-5 h-5" />
-            {t('createSchema')}
-          </button>
+          <Tooltip content={tt("uploadSchema")} placement="bottom">
+            <button onClick={() => setIsCreateModalOpen(true)} className="flex items-center gap-2 px-6 py-3.5 bg-blue-950/25 glow text-[#B3CFE5] hover:text-[#F6FAFD] border border-blue-400/15 hover:border-[#4A7FA7]/50 rounded-2xl font-bold text-sm uppercase tracking-widest transition-colors hover:opacity-90 active:scale-[0.98]">
+              <Upload className="w-5 h-5" />
+              {t('uploadSchema')}
+            </button>
+          </Tooltip>
+          <Tooltip content={tt("createSchema")} placement="bottom">
+            <button onClick={handleStartCreate} className="flex items-center gap-2 px-6 py-3.5 bg-gradient-to-r from-[#4A7FA7] to-[#1A3D63] glow text-white rounded-2xl font-bold text-sm uppercase tracking-widest transition-colors hover:opacity-90 active:scale-[0.98]">
+              <Plus className="w-5 h-5" />
+              {t('createSchema')}
+            </button>
+          </Tooltip>
         </div>
       </div>
 
@@ -411,8 +537,8 @@ function QuestionnairesPageContent() {
                 <Plus className="w-6 h-6" />
               </div>
               <div>
-                <h3 className="text-2xl font-[850] text-[#F6FAFD] tracking-tight">Create New Questionnaire</h3>
-                <p className="text-sm font-semibold text-[#B3CFE5] mt-1">Define metadata and build your schema</p>
+                <h3 className="text-2xl font-[850] text-[#F6FAFD] tracking-tight">{t('createNew')}</h3>
+                <p className="text-sm font-semibold text-[#B3CFE5] mt-1">{t('createSubtitle')}</p>
               </div>
             </div>
           </div>
@@ -420,23 +546,23 @@ function QuestionnairesPageContent() {
           {/* Metadata Form */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-6 bg-black/25 rounded-2xl border border-blue-400/10">
             <div className="space-y-2">
-              <label className="text-[10px] font-black uppercase tracking-wider text-[#B3CFE5]">Name *</label>
+              <label className="text-[10px] font-black uppercase tracking-wider text-[#B3CFE5]">{t('nameLabel')}</label>
               <input
                 type="text"
                 value={newQuestionnaire.name}
                 onChange={(e) => setNewQuestionnaire({ ...newQuestionnaire, name: e.target.value })}
-                placeholder="e.g., Sales Discovery Audit"
+                placeholder={t('namePlaceholder')}
                 className="w-full h-12 glass-card rounded-xl px-4 text-sm font-semibold text-[#F6FAFD] placeholder:text-[#B3CFE5]/50 outline-none focus:border-[#4A7FA7] transition-colors"
               />
             </div>
 
             <div className="space-y-2">
-              <label className="text-[10px] font-black uppercase tracking-wider text-[#B3CFE5]">Description</label>
+              <label className="text-[10px] font-black uppercase tracking-wider text-[#B3CFE5]">{t('descriptionLabel')}</label>
               <input
                 type="text"
                 value={newQuestionnaire.description}
                 onChange={(e) => setNewQuestionnaire({ ...newQuestionnaire, description: e.target.value })}
-                placeholder="What does this evaluate?"
+                placeholder={t('descriptionPlaceholder')}
                 className="w-full h-12 glass-card rounded-xl px-4 text-sm font-semibold text-[#F6FAFD] placeholder:text-[#B3CFE5]/50 outline-none focus:border-[#4A7FA7] transition-colors"
               />
             </div>
@@ -449,9 +575,9 @@ function QuestionnairesPageContent() {
                 onChange={(e) => setNewQuestionnaire({ ...newQuestionnaire, active: e.target.checked })}
                 className="w-5 h-5 rounded border-blue-400/15 text-[#4A7FA7]"
               />
-              <label htmlFor="create_active" className="text-sm font-bold text-[#F6FAFD] cursor-pointer">
-                Active
-              </label>
+              <Tooltip content={tt("activeCheckbox")} placement="top">
+                <label htmlFor="create_active" className="text-sm font-bold text-[#F6FAFD] cursor-pointer">{t('activeLabel')}</label>
+              </Tooltip>
             </div>
 
             <div className="flex items-center gap-3 p-4 glass-card rounded-xl">
@@ -462,9 +588,9 @@ function QuestionnairesPageContent() {
                 onChange={(e) => setNewQuestionnaire({ ...newQuestionnaire, is_redflag: e.target.checked })}
                 className="w-5 h-5 rounded border-red-500/30 text-red-500"
               />
-              <label htmlFor="create_redflag" className="text-sm font-bold text-[#F6FAFD] cursor-pointer">
-                Red Flag Questionnaire
-              </label>
+              <Tooltip content={tt("redFlagCheckbox")} placement="top">
+                <label htmlFor="create_redflag" className="text-sm font-bold text-[#F6FAFD] cursor-pointer">{t('redFlagLabel')}</label>
+              </Tooltip>
             </div>
           </div>
 
@@ -488,12 +614,12 @@ function QuestionnairesPageContent() {
           <div className="p-10 bg-red-500/20 border border-red-500/30 rounded-3xl text-center space-y-4">
              <AlertCircle className="w-12 h-12 text-red-500 mx-auto" />
              <p className="text-red-400 font-bold">{error}</p>
-             <button onClick={() => window.location.reload()} className="px-6 py-2 bg-red-500 text-white rounded-xl font-bold text-xs uppercase tracking-widest">Retry Connection</button>
+             <button onClick={() => window.location.reload()} className="px-6 py-2 bg-red-500 text-white rounded-xl font-bold text-xs uppercase tracking-widest">{t('retryConnection')}</button>
           </div>
         ) : filtered.length === 0 ? (
           <div className="p-20 text-center space-y-4">
              <FileSearch className="w-16 h-16 text-[#4A7FA7] mx-auto" />
-             <p className="text-[#B3CFE5] font-bold">No strategic schemas found matching your search.</p>
+             <p className="text-[#B3CFE5] font-bold">{t('noResults')}</p>
           </div>
         ) : (
           filtered.map((q) => (
@@ -524,11 +650,11 @@ function QuestionnairesPageContent() {
                       "px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-widest",
                       q.active ? "bg-[#4A7FA7]/20 text-[#4A7FA7] border border-blue-400/15" : "bg-blue-950/18 text-[#B3CFE5]"
                     )}>
-                      v{q.version} • {q.active ? 'Active' : 'Archived'}
+                      {q.active ? t('versionActive', { version: q.version }) : t('versionArchived', { version: q.version })}
                     </span>
                     {q.is_redflag && (
                       <span className="px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-widest bg-red-500/20 text-red-400 border border-red-500/30">
-                        Red Flag
+                        {t('redFlagBadge')}
                       </span>
                     )}
                   </div>
@@ -546,39 +672,43 @@ function QuestionnairesPageContent() {
                       {q.schema_definition?.sections?.reduce((acc, s) => acc + (s.questions?.length || 0), 0) || 0}
                     </div>
                   </div>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleEditInline(q.id);
-                    }}
-                    className="w-10 h-10 rounded-xl bg-[#4A7FA7]/20 hover:bg-[#4A7FA7]/30 text-[#4A7FA7] flex items-center justify-center transition-colors border border-blue-400/15"
-                    title="Edit schema"
-                  >
-                    <Edit className="w-4 h-4" />
-                  </button>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleDeleteQuestionnaire(q.id, q.name);
-                    }}
-                    className="w-10 h-10 rounded-xl bg-red-500/20 hover:bg-red-500/30 text-red-400 flex items-center justify-center transition-colors border border-red-500/30"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                  <div
-                    onClick={() => {
-                      const newExpandedId = expandedId === q.id ? null : q.id;
-                      setExpandedId(newExpandedId);
-                      if (newExpandedId) {
-                        router.push(`/questionnaires?id=${newExpandedId}`, { scroll: false });
-                      } else {
-                        router.push('/questionnaires', { scroll: false });
-                      }
-                    }}
-                    className="w-12 h-12 rounded-2xl bg-blue-950/18 flex items-center justify-center text-[#4A7FA7] hover:bg-gradient-to-r hover:from-[#4A7FA7] hover:to-[#1A3D63] hover:text-white transition-colors duration-150 cursor-pointer"
-                  >
-                    {expandedId === q.id ? <ChevronDown className="w-6 h-6" /> : <ChevronRight className="w-6 h-6" />}
-                  </div>
+                  <Tooltip content={tt("downloadPdf")} placement="top">
+                    <button
+                      onClick={(e) => { e.stopPropagation(); downloadPDF(q); }}
+                      className="w-10 h-10 rounded-xl bg-green-500/15 hover:bg-green-500/25 text-green-400 flex items-center justify-center transition-colors border border-green-500/25"
+                    >
+                      <Download className="w-4 h-4" />
+                    </button>
+                  </Tooltip>
+                  <Tooltip content={tt("editSchema")} placement="top">
+                    <button
+                      onClick={(e) => { e.stopPropagation(); handleEditInline(q.id); }}
+                      className="w-10 h-10 rounded-xl bg-[#4A7FA7]/20 hover:bg-[#4A7FA7]/30 text-[#4A7FA7] flex items-center justify-center transition-colors border border-blue-400/15"
+                    >
+                      <Edit className="w-4 h-4" />
+                    </button>
+                  </Tooltip>
+                  <Tooltip content={tt("deleteSchema")} placement="top">
+                    <button
+                      onClick={(e) => { e.stopPropagation(); handleDeleteQuestionnaire(q.id, q.name); }}
+                      className="w-10 h-10 rounded-xl bg-red-500/20 hover:bg-red-500/30 text-red-400 flex items-center justify-center transition-colors border border-red-500/30"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </Tooltip>
+                  <Tooltip content={expandedId === q.id ? tt("collapseSchema") : tt("expandSchema")} placement="top">
+                    <div
+                      onClick={() => {
+                        const newExpandedId = expandedId === q.id ? null : q.id;
+                        setExpandedId(newExpandedId);
+                        if (newExpandedId) { router.push(`/questionnaires?id=${newExpandedId}`, { scroll: false }); }
+                        else { router.push('/questionnaires', { scroll: false }); }
+                      }}
+                      className="w-12 h-12 rounded-2xl bg-blue-950/18 flex items-center justify-center text-[#4A7FA7] hover:bg-gradient-to-r hover:from-[#4A7FA7] hover:to-[#1A3D63] hover:text-white transition-colors duration-150 cursor-pointer"
+                    >
+                      {expandedId === q.id ? <ChevronDown className="w-6 h-6" /> : <ChevronRight className="w-6 h-6" />}
+                    </div>
+                  </Tooltip>
                 </div>
               </div>
 
@@ -653,8 +783,8 @@ function QuestionnairesPageContent() {
            <div className="bg-[#1A3D63]/95 glow w-full max-w-5xl max-h-[90vh] rounded-[2.5rem] shadow-2xl border border-blue-400/15 overflow-hidden animate-in fade-in duration-150 duration-150 flex flex-col">
               <div className="p-8 border-b border-blue-400/15 bg-blue-950/18 flex items-center justify-between shrink-0">
                  <div>
-                    <h3 className="text-2xl font-[850] text-[#F6FAFD] tracking-tight">Create Neural Schema</h3>
-                    <p className="text-sm font-semibold text-[#B3CFE5] mt-1">Define a new strategic audit framework.</p>
+                    <h3 className="text-2xl font-[850] text-[#F6FAFD] tracking-tight">{t('modalCreateTitle')}</h3>
+                    <p className="text-sm font-semibold text-[#B3CFE5] mt-1">{t('modalCreateSubtitle')}</p>
                  </div>
                  <button onClick={() => {
                    setIsCreateModalOpen(false);
@@ -667,7 +797,7 @@ function QuestionnairesPageContent() {
               <div className="p-10 space-y-8 overflow-y-auto flex-1">
                  <div className="space-y-6">
                    <div className="space-y-2">
-                     <label className="text-[10px] font-black uppercase tracking-[0.2em] text-[#B3CFE5]">Schema Name *</label>
+                     <label className="text-[10px] font-black uppercase tracking-[0.2em] text-[#B3CFE5]">{t('schemaNameRequired')}</label>
                      <input
                       type="text"
                       value={createForm.name}
@@ -677,7 +807,7 @@ function QuestionnairesPageContent() {
                      />
                    </div>
                    <div className="space-y-2">
-                     <label className="text-[10px] font-black uppercase tracking-[0.2em] text-[#B3CFE5]">Description</label>
+                     <label className="text-[10px] font-black uppercase tracking-[0.2em] text-[#B3CFE5]">{t('descriptionLabel')}</label>
                      <textarea
                       value={createForm.description}
                       onChange={(e) => setCreateForm({ ...createForm, description: e.target.value })}
@@ -689,7 +819,7 @@ function QuestionnairesPageContent() {
 
                    <div className="grid grid-cols-2 gap-6">
                      <div className="space-y-3">
-                       <label className="text-[10px] font-black uppercase tracking-[0.2em] text-[#B3CFE5]">Status</label>
+                       <label className="text-[10px] font-black uppercase tracking-[0.2em] text-[#B3CFE5]">{t('statusLabel')}</label>
                        <div className="flex items-center gap-3 p-4 glass rounded-xl">
                          <input
                            type="checkbox"
@@ -698,14 +828,14 @@ function QuestionnairesPageContent() {
                            onChange={(e) => setCreateForm({ ...createForm, active: e.target.checked })}
                            className="w-5 h-5 rounded border-blue-400/15 text-[#4A7FA7]"
                          />
-                         <label htmlFor="active" className="text-sm font-bold text-[#F6FAFD] cursor-pointer">
-                           Active
-                         </label>
+                         <Tooltip content={tt("activeCheckbox")} placement="right">
+                           <label htmlFor="active" className="text-sm font-bold text-[#F6FAFD] cursor-pointer">{t('activeLabel')}</label>
+                         </Tooltip>
                        </div>
                      </div>
 
                      <div className="space-y-3">
-                       <label className="text-[10px] font-black uppercase tracking-[0.2em] text-[#B3CFE5]">Type</label>
+                       <label className="text-[10px] font-black uppercase tracking-[0.2em] text-[#B3CFE5]">{t('typeLabel')}</label>
                        <div className="flex items-center gap-3 p-4 glass rounded-xl">
                          <input
                            type="checkbox"
@@ -714,16 +844,16 @@ function QuestionnairesPageContent() {
                            onChange={(e) => setCreateForm({ ...createForm, is_redflag: e.target.checked })}
                            className="w-5 h-5 rounded border-blue-400/15 text-red-500"
                          />
-                         <label htmlFor="is_redflag" className="text-sm font-bold text-[#F6FAFD] cursor-pointer">
-                           Red Flag Questionnaire
-                         </label>
+                         <Tooltip content={tt("redFlagCheckbox")} placement="right">
+                           <label htmlFor="is_redflag" className="text-sm font-bold text-[#F6FAFD] cursor-pointer">{t('redFlagLabel')}</label>
+                         </Tooltip>
                        </div>
                      </div>
                    </div>
                  </div>
 
                  <div className="space-y-4">
-                   <label className="text-[10px] font-black uppercase tracking-[0.2em] text-[#B3CFE5]">Input Method *</label>
+                   <label className="text-[10px] font-black uppercase tracking-[0.2em] text-[#B3CFE5]">{t('inputMethodRequired')}</label>
                    <div className="flex p-1.5 bg-blue-950/18 rounded-xl border border-blue-400/10">
                      <button
                        type="button"
@@ -756,7 +886,7 @@ function QuestionnairesPageContent() {
 
                  {createForm.inputMode === "file" ? (
                    <div className="space-y-2">
-                     <label className="text-[10px] font-black uppercase tracking-[0.2em] text-[#B3CFE5]">Questionnaire Document *</label>
+                     <label className="text-[10px] font-black uppercase tracking-[0.2em] text-[#B3CFE5]">{t('uploadDocLabel')}</label>
                      <div
                        onClick={() => {
                          const input = document.createElement("input");
@@ -776,17 +906,17 @@ function QuestionnairesPageContent() {
                          <Upload className="w-6 h-6" />
                        </div>
                        <span className="text-sm font-bold text-[#B3CFE5]">
-                         {createForm.file ? createForm.file.name : "Click to select .docx or .pdf file"}
+                         {createForm.file ? createForm.file.name : t('uploadDocHint')}
                        </span>
                      </div>
                    </div>
                  ) : (
                    <div className="space-y-2">
-                     <label className="text-[10px] font-black uppercase tracking-[0.2em] text-[#B3CFE5]">Questionnaire Text *</label>
+                     <label className="text-[10px] font-black uppercase tracking-[0.2em] text-[#B3CFE5]">{t('textLabel')}</label>
                      <textarea
                        value={createForm.text}
                        onChange={(e) => setCreateForm({ ...createForm, text: e.target.value })}
-                       placeholder="Paste your questionnaire content here...&#10;&#10;Example:&#10;Section 1: Compliance&#10;Q1: Did the agent verify customer identity?&#10;Q2: Was data protection mentioned?"
+                       placeholder={`${t('textPlaceholder')}\n\nExample:\nSection 1: Compliance\nQ1: Did the agent verify customer identity?\nQ2: Was data protection mentioned?`}
                        rows={12}
                        className="w-full glass rounded-xl p-4 outline-none focus:border-[#4A7FA7] transition-colors text-[#F6FAFD] font-medium text-sm resize-none placeholder:text-[#B3CFE5]/40"
                      />
@@ -805,7 +935,7 @@ function QuestionnairesPageContent() {
                   }
                   className="w-full h-14 bg-gradient-to-r from-[#4A7FA7] to-[#1A3D63] glow text-white disabled:opacity-50 disabled:cursor-not-allowed rounded-2xl font-bold flex items-center justify-center gap-3 shadow-xl hover:scale-[1.02] transition-colors"
                 >
-                  {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : <><CheckCircle2 className="w-5 h-5" /> Create Questionnaire</>}
+                  {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : <><CheckCircle2 className="w-5 h-5" /> {t('createButton')}</>}
                 </button>
               </div>
            </div>
@@ -817,8 +947,8 @@ function QuestionnairesPageContent() {
            <div className="bg-[#1A3D63]/95 glow w-full max-w-xl max-h-[90vh] flex flex-col rounded-[2.5rem] shadow-2xl border border-blue-400/15 overflow-hidden animate-in fade-in duration-150 duration-150">
               <div className="p-6 md:p-8 border-b border-blue-400/15 bg-blue-950/18 flex items-center justify-between flex-shrink-0">
                  <div className="flex-1 min-w-0 pr-4">
-                    <h3 className="text-xl md:text-2xl font-[850] text-[#F6FAFD] tracking-tight">Edit Questionnaire</h3>
-                    <p className="text-xs md:text-sm font-semibold text-[#B3CFE5] mt-1 truncate">Update questionnaire properties</p>
+                    <h3 className="text-xl md:text-2xl font-[850] text-[#F6FAFD] tracking-tight">{t('modalEditTitle')}</h3>
+                    <p className="text-xs md:text-sm font-semibold text-[#B3CFE5] mt-1 truncate">{t('modalEditSubtitle')}</p>
                  </div>
                  <button onClick={() => {
                    setIsEditModalOpen(false);
@@ -830,7 +960,7 @@ function QuestionnairesPageContent() {
 
               <div className="p-6 md:p-10 space-y-6 overflow-y-auto flex-1">
                  <div className="space-y-2">
-                   <label className="text-[10px] font-black uppercase tracking-[0.2em] text-[#B3CFE5]">Schema Name *</label>
+                   <label className="text-[10px] font-black uppercase tracking-[0.2em] text-[#B3CFE5]">{t('schemaNameRequired')}</label>
                    <input
                     type="text"
                     value={editForm.name}
@@ -840,7 +970,7 @@ function QuestionnairesPageContent() {
                    />
                  </div>
                  <div className="space-y-2">
-                   <label className="text-[10px] font-black uppercase tracking-[0.2em] text-[#B3CFE5]">Description</label>
+                   <label className="text-[10px] font-black uppercase tracking-[0.2em] text-[#B3CFE5]">{t('descriptionLabel')}</label>
                    <textarea
                     value={editForm.description}
                     onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
@@ -852,7 +982,7 @@ function QuestionnairesPageContent() {
 
                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
                    <div className="space-y-3">
-                     <label className="text-[10px] font-black uppercase tracking-[0.2em] text-[#B3CFE5]">Status</label>
+                     <label className="text-[10px] font-black uppercase tracking-[0.2em] text-[#B3CFE5]">{t('statusLabel')}</label>
                      <div className="flex items-center gap-3 p-3 md:p-4 glass rounded-xl">
                        <input
                          type="checkbox"
@@ -861,14 +991,14 @@ function QuestionnairesPageContent() {
                          onChange={(e) => setEditForm({ ...editForm, active: e.target.checked })}
                          className="w-5 h-5 rounded border-blue-400/15 text-[#4A7FA7]"
                        />
-                       <label htmlFor="edit_active" className="text-sm font-bold text-[#F6FAFD] cursor-pointer">
-                         Active
-                       </label>
+                       <Tooltip content={tt("activeCheckbox")} placement="right">
+                         <label htmlFor="edit_active" className="text-sm font-bold text-[#F6FAFD] cursor-pointer">{t('activeLabel')}</label>
+                       </Tooltip>
                      </div>
                    </div>
 
                    <div className="space-y-3">
-                     <label className="text-[10px] font-black uppercase tracking-[0.2em] text-[#B3CFE5]">Type</label>
+                     <label className="text-[10px] font-black uppercase tracking-[0.2em] text-[#B3CFE5]">{t('typeLabel')}</label>
                      <div className="flex items-center gap-3 p-3 md:p-4 glass rounded-xl">
                        <input
                          type="checkbox"
@@ -877,9 +1007,9 @@ function QuestionnairesPageContent() {
                          onChange={(e) => setEditForm({ ...editForm, is_redflag: e.target.checked })}
                          className="w-5 h-5 rounded border-blue-400/15 text-red-500"
                        />
-                       <label htmlFor="edit_is_redflag" className="text-sm font-bold text-[#F6FAFD] cursor-pointer">
-                         Red Flag Questionnaire
-                       </label>
+                       <Tooltip content={tt("redFlagCheckbox")} placement="right">
+                         <label htmlFor="edit_is_redflag" className="text-sm font-bold text-[#F6FAFD] cursor-pointer">{t('redFlagLabel')}</label>
+                       </Tooltip>
                      </div>
                    </div>
                  </div>
@@ -887,7 +1017,7 @@ function QuestionnairesPageContent() {
 
               <div className="p-4 md:p-6 border-t border-blue-400/15 bg-blue-950/18 flex-shrink-0">
                 <button onClick={handleUpdateQuestionnaire} disabled={isSubmitting || !editForm.name} className="w-full h-12 md:h-14 bg-gradient-to-r from-[#4A7FA7] to-[#1A3D63] glow text-white disabled:opacity-50 disabled:cursor-not-allowed rounded-2xl font-bold flex items-center justify-center gap-3 shadow-xl hover:scale-[1.02] transition-colors" title="Save changes to questionnaire">
-                   {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : <><CheckCircle2 className="w-5 h-5" /> Update Questionnaire</>}
+                   {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : <><CheckCircle2 className="w-5 h-5" /> {t('updateButton')}</>}
                 </button>
               </div>
            </div>

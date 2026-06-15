@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { useTranslations } from 'next-intl';
 import { useApi } from "@/lib/useApi";
 import {
   DollarSign,
@@ -154,6 +155,7 @@ const baseChartOptions = {
 // ─── Main Component ───────────────────────────────────────
 
 export default function AdminPage() {
+  const t = useTranslations('admin');
   const [llmData, setLlmData] = useState<LLMAnalytics | null>(null);
   const [volumeData, setVolumeData] = useState<VolumeAnalytics | null>(null);
   const [qualityData, setQualityData] = useState<QualityAnalytics | null>(null);
@@ -347,13 +349,13 @@ export default function AdminPage() {
             <div className="w-10 h-10 rounded-2xl bg-gradient-to-r from-[#4A7FA7] to-[#1A3D63] flex items-center justify-center text-white glow shrink-0">
               <BarChart3 className="w-5 h-5" />
             </div>
-            <h1 className="text-2xl font-[900] text-[#F6FAFD] tracking-tight">Admin Analytics</h1>
+            <h1 className="text-2xl font-[900] text-[#F6FAFD] tracking-tight">{t('title')}</h1>
           </div>
-          <p className="text-[#B3CFE5] text-sm font-medium pl-1">Platform-wide intelligence across all campaigns</p>
+          <p className="text-[#B3CFE5] text-sm font-medium pl-1">{t('subtitle')}</p>
         </div>
         <button onClick={fetchAll} disabled={isLoading} className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-[#4A7FA7] to-[#1A3D63] glow text-white rounded-xl font-bold text-xs uppercase tracking-widest hover:opacity-90 disabled:opacity-50 transition-colors shrink-0">
           {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
-          Refresh
+          {t('refresh')}
         </button>
       </div>
 
@@ -361,25 +363,25 @@ export default function AdminPage() {
       <div className="p-5 bg-blue-950/30 rounded-2xl border border-blue-400/18 space-y-4">
         <div className="flex items-center gap-2 mb-2">
           <Filter className="w-4 h-4 text-[#4A7FA7]" />
-          <h3 className="text-sm font-black uppercase tracking-wider text-[#F6FAFD]">Filters</h3>
+          <h3 className="text-sm font-black uppercase tracking-wider text-[#F6FAFD]">{t('filters')}</h3>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="space-y-1.5">
-            <label className="text-[10px] font-black uppercase tracking-wider text-[#B3CFE5]">Start Date</label>
+            <label className="text-[10px] font-black uppercase tracking-wider text-[#B3CFE5]">{t('startDate')}</label>
             <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)}
               className="w-full h-10 bg-black/25 border border-blue-400/18 rounded-xl px-3 text-sm font-semibold text-[#F6FAFD] outline-none focus:border-[#4A7FA7] transition-colors" />
           </div>
           <div className="space-y-1.5">
-            <label className="text-[10px] font-black uppercase tracking-wider text-[#B3CFE5]">End Date</label>
+            <label className="text-[10px] font-black uppercase tracking-wider text-[#B3CFE5]">{t('endDate')}</label>
             <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)}
               className="w-full h-10 bg-black/25 border border-blue-400/18 rounded-xl px-3 text-sm font-semibold text-[#F6FAFD] outline-none focus:border-[#4A7FA7] transition-colors" />
           </div>
           <div className="space-y-1.5 relative">
-            <label className="text-[10px] font-black uppercase tracking-wider text-[#B3CFE5]">Campaign</label>
+            <label className="text-[10px] font-black uppercase tracking-wider text-[#B3CFE5]">{t('campaign')}</label>
             <button type="button" onClick={() => setIsCampaignDropdownOpen(!isCampaignDropdownOpen)}
               className="w-full h-10 bg-black/25 border border-blue-400/18 rounded-xl px-3 text-sm font-semibold text-[#F6FAFD] outline-none focus:border-[#4A7FA7] transition-colors flex items-center justify-between">
               <span className={selectedCampaigns.length === 0 ? "text-[#B3CFE5]/50 text-sm" : "text-sm"}>
-                {selectedCampaigns.length === 0 ? "All campaigns" : `${selectedCampaigns.length} selected`}
+                {selectedCampaigns.length === 0 ? t('allCampaigns') : `${selectedCampaigns.length} ${t('selectedCount').replace('{count}', '')}`}
               </span>
               <ChevronDown className={cn("w-4 h-4 transition-transform shrink-0", isCampaignDropdownOpen && "rotate-180")} />
             </button>
@@ -417,9 +419,9 @@ export default function AdminPage() {
           </div>
         </div>
         <div className="flex gap-3 pt-1">
-          <button onClick={fetchAll} disabled={isLoading} className="px-5 py-2 bg-gradient-to-r from-[#4A7FA7] to-[#1A3D63] text-white rounded-xl font-bold text-xs uppercase tracking-wider hover:opacity-90 disabled:opacity-50 transition-colors">Apply</button>
+          <button onClick={fetchAll} disabled={isLoading} className="px-5 py-2 bg-gradient-to-r from-[#4A7FA7] to-[#1A3D63] text-white rounded-xl font-bold text-xs uppercase tracking-wider hover:opacity-90 disabled:opacity-50 transition-colors">{t('apply')}</button>
           <button onClick={() => { setStartDate(""); setEndDate(""); setSelectedCampaigns([]); setTimeout(fetchAll, 50); }}
-            className="px-5 py-2 bg-blue-950/30 text-[#B3CFE5] hover:text-[#F6FAFD] rounded-xl font-bold text-xs uppercase tracking-wider transition-colors">Reset</button>
+            className="px-5 py-2 bg-blue-950/30 text-[#B3CFE5] hover:text-[#F6FAFD] rounded-xl font-bold text-xs uppercase tracking-wider transition-colors">{t('reset')}</button>
         </div>
       </div>
 
@@ -427,46 +429,46 @@ export default function AdminPage() {
         <div className="flex items-center justify-center py-24">
           <div className="space-y-4 text-center">
             <Loader2 className="w-12 h-12 text-[#4A7FA7] animate-spin mx-auto" />
-            <p className="text-[#B3CFE5] font-bold text-sm uppercase tracking-widest">Loading Analytics...</p>
+            <p className="text-[#B3CFE5] font-bold text-sm uppercase tracking-widest">{t('loadingAnalytics')}</p>
           </div>
         </div>
       ) : (
         <>
           {/* ── Row 1: KPI Cards ── */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            <KPICard icon={Database} label="Total Calls" value={volumeData?.total_calls?.toLocaleString() ?? "—"} sub={`Backlog: ${volumeData?.human_review_backlog ?? 0}`} color="from-[#4A7FA7] to-[#1A3D63]" />
-            <KPICard icon={Target} label="Avg Score" value={qualityData ? `${qualityData.avg_overall_score.toFixed(1)}` : "—"} sub="Out of 100" color="from-[#1A3D63] to-[#4A7FA7]" />
-            <KPICard icon={CheckCircle2} label="Success Rate" value={qualityData ? `${(qualityData.call_success_rate * 100).toFixed(1)}%` : "—"} sub="Call success" color="from-[#4A7FA7] to-[#B3CFE5]" />
-            <KPICard icon={DollarSign} label="LLM Spend" value={formatLLMCost(llmData?.aggregate?.total_spent_usd ?? 0)} sub={`${formatCompactNumber(llmData?.aggregate?.total_tokens_used ?? 0)} tokens`} color="from-[#B3CFE5] to-[#4A7FA7]" />
-            <KPICard icon={Clock} label="Avg Processing" value={volumeData ? `${Math.round(volumeData.avg_processing_time_seconds)}s` : "—"} sub="Per call" color="from-[#1A3D63] to-[#0A1931]" />
-            <KPICard icon={ShieldAlert} label="Red Flag Rate" value={complianceData ? `${(complianceData.red_flag_occurrence_rate * 100).toFixed(1)}%` : "—"} sub="Occurrence rate" color="from-red-900/80 to-red-700/60" />
-            <KPICard icon={Users} label="Agents" value={qualityData ? Object.keys(qualityData.agent_performance_score).length.toString() : "—"} sub="Active agents" color="from-[#4A7FA7] to-[#1A3D63]" />
-            <KPICard icon={Activity} label="QA Review Time" value={qaData ? `${Math.round(qaData.avg_qa_review_time_seconds)}s` : "—"} sub="Avg review time" color="from-[#1A3D63] to-[#4A7FA7]" />
+            <KPICard icon={Database} label={t('totalCalls')} value={volumeData?.total_calls?.toLocaleString() ?? "—"} sub={t('backlog').replace('{count}', String(volumeData?.human_review_backlog ?? 0))} color="from-[#4A7FA7] to-[#1A3D63]" />
+            <KPICard icon={Target} label={t('avgScore')} value={qualityData ? `${qualityData.avg_overall_score.toFixed(1)}` : "—"} sub={t('outOf100')} color="from-[#1A3D63] to-[#4A7FA7]" />
+            <KPICard icon={CheckCircle2} label={t('successRate')} value={qualityData ? `${(qualityData.call_success_rate * 100).toFixed(1)}%` : "—"} sub={t('callSuccess')} color="from-[#4A7FA7] to-[#B3CFE5]" />
+            <KPICard icon={DollarSign} label={t('llmSpend')} value={formatLLMCost(llmData?.aggregate?.total_spent_usd ?? 0)} sub={`${formatCompactNumber(llmData?.aggregate?.total_tokens_used ?? 0)} ${t('tokens_col')}`} color="from-[#B3CFE5] to-[#4A7FA7]" />
+            <KPICard icon={Clock} label={t('avgProcessing')} value={volumeData ? `${Math.round(volumeData.avg_processing_time_seconds)}s` : "—"} sub={t('perCall')} color="from-[#1A3D63] to-[#0A1931]" />
+            <KPICard icon={ShieldAlert} label={t('redFlagRate')} value={complianceData ? `${(complianceData.red_flag_occurrence_rate * 100).toFixed(1)}%` : "—"} sub={t('occurrenceRate')} color="from-red-900/80 to-red-700/60" />
+            <KPICard icon={Users} label={t('agents')} value={qualityData ? Object.keys(qualityData.agent_performance_score).length.toString() : "—"} sub={t('activeAgents')} color="from-[#4A7FA7] to-[#1A3D63]" />
+            <KPICard icon={Activity} label={t('qaReviewTime')} value={qaData ? `${Math.round(qaData.avg_qa_review_time_seconds)}s` : "—"} sub={t('avgReviewTime')} color="from-[#1A3D63] to-[#4A7FA7]" />
           </div>
 
           {/* ── Row 2: Volume over Time + Status Doughnut ── */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="lg:col-span-2">
-              <ChartCard title="Call Volume Over Time" icon={TrendingUp}>
+              <ChartCard title={t('callVolumeOverTime')} icon={TrendingUp}>
                 {volumeLineData ? (
                   <div className="h-64">
                     <Line data={volumeLineData} options={{ ...baseChartOptions, plugins: { ...baseChartOptions.plugins, legend: { display: false } } }} />
                   </div>
-                ) : <EmptyChart />}
+                ) : <EmptyChart label={t('noData')} />}
               </ChartCard>
             </div>
-            <ChartCard title="Call Status Distribution" icon={PieChart}>
+            <ChartCard title={t('callStatusDistribution')} icon={PieChart}>
               {statusDoughnutData ? (
                 <div className="h-64 flex items-center justify-center">
                   <Doughnut data={statusDoughnutData} options={{ ...baseChartOptions, scales: undefined, plugins: { ...baseChartOptions.plugins, legend: { position: "bottom", labels: { color: "#B3CFE5", font: { size: 9 }, boxWidth: 10, padding: 8 } } } }} />
                 </div>
-              ) : <EmptyChart />}
+              ) : <EmptyChart label={t('noData')} />}
             </ChartCard>
           </div>
 
           {/* ── Row 3: Radar + Agent Performance ── */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <ChartCard title="Platform Health Radar" icon={Activity}>
+            <ChartCard title={t('platformHealthRadar')} icon={Activity}>
               {radarData ? (
                 <div className="h-72 flex items-center justify-center">
                   <Radar data={radarData} options={{
@@ -484,9 +486,9 @@ export default function AdminPage() {
                     }
                   }} />
                 </div>
-              ) : <EmptyChart />}
+              ) : <EmptyChart label={t('noData')} />}
             </ChartCard>
-            <ChartCard title="Agent Performance Score" icon={Users}>
+            <ChartCard title={t('agentPerformanceScore')} icon={Users}>
               {agentBarData ? (
                 <div className="h-72">
                   <Bar data={agentBarData} options={{
@@ -496,52 +498,52 @@ export default function AdminPage() {
                     scales: { ...baseChartOptions.scales, x: { ...baseChartOptions.scales.x, min: 0, max: 100 } }
                   }} />
                 </div>
-              ) : <EmptyChart />}
+              ) : <EmptyChart label={t('noData')} />}
             </ChartCard>
           </div>
 
           {/* ── Row 4: Top AI Tags + Red Flag Distribution ── */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="lg:col-span-2">
-              <ChartCard title="Top AI Tags" icon={Tag}>
+              <ChartCard title={t('topAiTags')} icon={Tag}>
                 {tagsBarData ? (
                   <div className="h-64">
                     <Bar data={tagsBarData} options={{ ...baseChartOptions, plugins: { ...baseChartOptions.plugins, legend: { display: false } } }} />
                   </div>
-                ) : <EmptyChart />}
+                ) : <EmptyChart label={t('noData')} />}
               </ChartCard>
             </div>
-            <ChartCard title="Red Flag Score Distribution" icon={ShieldAlert}>
+            <ChartCard title={t('redFlagDistribution')} icon={ShieldAlert}>
               {redFlagDoughnutData ? (
                 <div className="h-64 flex items-center justify-center">
                   <Doughnut data={redFlagDoughnutData} options={{ ...baseChartOptions, scales: undefined, plugins: { ...baseChartOptions.plugins, legend: { position: "bottom", labels: { color: "#B3CFE5", font: { size: 10 }, boxWidth: 10, padding: 8 } } } }} />
                 </div>
-              ) : <EmptyChart />}
+              ) : <EmptyChart label={t('noData')} />}
             </ChartCard>
           </div>
 
           {/* ── Row 5: Compliance Violations + LLM Model Cost ── */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <ChartCard title="Common Compliance Violations" icon={ShieldAlert}>
+            <ChartCard title={t('complianceViolations')} icon={ShieldAlert}>
               {violationsBarData ? (
                 <div className="h-64">
                   <Bar data={violationsBarData} options={{ ...baseChartOptions, plugins: { ...baseChartOptions.plugins, legend: { display: false } } }} />
                 </div>
-              ) : <EmptyChart />}
+              ) : <EmptyChart label={t('noData')} />}
             </ChartCard>
-            <ChartCard title="LLM Spend by Model" icon={DollarSign}>
+            <ChartCard title={t('llmSpendByModel')} icon={DollarSign}>
               {llmModelDoughnutData ? (
                 <div className="h-64 flex items-center justify-center">
                   <Doughnut data={llmModelDoughnutData} options={{ ...baseChartOptions, scales: undefined, plugins: { ...baseChartOptions.plugins, legend: { position: "right", labels: { color: "#B3CFE5", font: { size: 9 }, boxWidth: 10, padding: 6 } } } }} />
                 </div>
-              ) : <EmptyChart />}
+              ) : <EmptyChart label={t('noData')} />}
             </ChartCard>
           </div>
 
           {/* ── Row 6: Intent Distribution + LLM Campaign Table ── */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Intent Distribution */}
-            <ChartCard title="Intent Distribution" icon={Target}>
+            <ChartCard title={t('intentDistribution')} icon={Target}>
               {interactionData && Object.keys(interactionData.intent_distribution).length > 0 ? (
                 <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
                   {Object.entries(interactionData.intent_distribution)
@@ -553,19 +555,19 @@ export default function AdminPage() {
                       </div>
                     ))}
                 </div>
-              ) : <EmptyChart />}
+              ) : <EmptyChart label={t('noData')} />}
             </ChartCard>
 
             {/* LLM Campaign Cost Table */}
-            <ChartCard title="LLM Spend by Campaign" icon={DollarSign}>
+            <ChartCard title={t('llmSpendByCampaign')} icon={DollarSign}>
               {llmData && llmData.breakdown_by_campaign.length > 0 ? (
                 <div className="overflow-x-auto">
                   <table className="w-full text-xs">
                     <thead>
                       <tr className="border-b border-blue-400/18">
-                        <th className="text-left py-2 px-2 font-black uppercase tracking-wider text-[#B3CFE5]">Campaign</th>
-                        <th className="text-right py-2 px-2 font-black uppercase tracking-wider text-[#B3CFE5]">Cost</th>
-                        <th className="text-right py-2 px-2 font-black uppercase tracking-wider text-[#B3CFE5]">Tokens</th>
+                        <th className="text-left py-2 px-2 font-black uppercase tracking-wider text-[#B3CFE5]">{t('campaign_col')}</th>
+                        <th className="text-right py-2 px-2 font-black uppercase tracking-wider text-[#B3CFE5]">{t('cost_col')}</th>
+                        <th className="text-right py-2 px-2 font-black uppercase tracking-wider text-[#B3CFE5]">{t('tokens_col')}</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-[#4A7FA7]/10">
@@ -579,17 +581,17 @@ export default function AdminPage() {
                     </tbody>
                   </table>
                 </div>
-              ) : <EmptyChart />}
+              ) : <EmptyChart label={t('noData')} />}
             </ChartCard>
           </div>
 
           {/* ── Row 7: QA Stats ── */}
           {qaData && (
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-              <StatCard label="Human Intervention Rate" value={`${(qaData.human_intervention_rate * 100).toFixed(1)}%`} />
-              <StatCard label="AI Override Rate" value={`${(qaData.ai_override_rate * 100).toFixed(1)}%`} />
-              <StatCard label="Escalation Rate" value={`${(qaData.escalation_rate * 100).toFixed(1)}%`} />
-              <StatCard label="Avg Review Time" value={`${Math.round(qaData.avg_qa_review_time_seconds)}s`} />
+              <StatCard label={t('humanInterventionRate')} value={`${(qaData.human_intervention_rate * 100).toFixed(1)}%`} />
+              <StatCard label={t('aiOverrideRate')} value={`${(qaData.ai_override_rate * 100).toFixed(1)}%`} />
+              <StatCard label={t('escalationRate')} value={`${(qaData.escalation_rate * 100).toFixed(1)}%`} />
+              <StatCard label={t('avgReviewTime')} value={`${Math.round(qaData.avg_qa_review_time_seconds)}s`} />
             </div>
           )}
         </>
@@ -636,10 +638,10 @@ function StatCard({ label, value }: { label: string; value: string }) {
   );
 }
 
-function EmptyChart() {
+function EmptyChart({ label }: { label: string }) {
   return (
     <div className="h-40 flex items-center justify-center">
-      <p className="text-[#B3CFE5]/50 text-xs font-bold uppercase tracking-wider">No data available</p>
+      <p className="text-[#B3CFE5]/50 text-xs font-bold uppercase tracking-wider">{label}</p>
     </div>
   );
 }
