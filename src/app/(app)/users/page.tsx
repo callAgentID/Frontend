@@ -22,6 +22,7 @@ import { cn } from "@/lib/utils";
 import { useTranslations } from "next-intl";
 import { useApi } from "@/lib/useApi";
 import { useCurrentUser } from "@/lib/useCurrentUser";
+import { RoleGuard } from "@/components/RoleGuard";
 
 type Role = "admin" | "manager" | "user";
 
@@ -49,7 +50,7 @@ export default function UsersPage() {
   const t = useTranslations('users');
   const tc = useTranslations('common');
   const { apiFetch } = useApi();
-  const { role: myRole, isLoading: roleLoading } = useCurrentUser();
+  const { isLoading: roleLoading } = useCurrentUser();
 
   const [users, setUsers] = useState<BackendUser[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -119,19 +120,8 @@ export default function UsersPage() {
   const counts = { admin: 0, manager: 0, user: 0 };
   users.forEach(u => { if (u.role in counts) counts[u.role]++; });
 
-  if (!roleLoading && myRole?.toLowerCase() !== "admin") {
-    return (
-      <div className="flex flex-col items-center justify-center h-[60vh] space-y-4">
-        <div className="w-16 h-16 rounded-2xl bg-red-500/20 border border-red-500/30 flex items-center justify-center">
-          <AlertTriangle className="w-8 h-8 text-red-400" />
-        </div>
-        <h2 className="text-xl font-black text-[#F6FAFD]">{tc('accessDenied')}</h2>
-        <p className="text-[#B3CFE5] text-sm font-medium">{tc('accessDeniedDesc')}</p>
-      </div>
-    );
-  }
-
   return (
+    <RoleGuard allow={["admin", "manager"]}>
     <main className="p-6 md:p-8 space-y-8">
       {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -380,5 +370,6 @@ export default function UsersPage() {
         document.body
       )}
     </main>
+    </RoleGuard>
   );
 }

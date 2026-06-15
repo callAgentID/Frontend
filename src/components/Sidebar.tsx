@@ -38,8 +38,8 @@ const NAV_INACTIVE_STYLE = {
 type NavRole = "all" | "admin" | "admin_manager";
 
 const NAV_ITEMS: { name: string; href: string; icon: any; roles: NavRole }[] = [
-  { name: "admin", href: "/admin", icon: Settings, roles: "admin_manager" },
-  { name: "users", href: "/users", icon: Users, roles: "admin" },
+  { name: "admin", href: "/admin", icon: Settings, roles: "admin" },
+  { name: "users", href: "/users", icon: Users, roles: "admin_manager" },
   { name: "analysis", href: "/", icon: LayoutDashboard, roles: "all" },
   { name: "callAnalytics", href: "/analytics", icon: BarChart3, roles: "all" },
   { name: "batches", href: "/batches", icon: Package, roles: "all" },

@@ -26,6 +26,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { formatLLMCost, formatTokens, formatCompactNumber } from "@/lib/formatters";
+import { RoleGuard } from "@/components/RoleGuard";
 import {
   Chart as ChartJS,
   ArcElement,
@@ -341,6 +342,7 @@ export default function AdminPage() {
   } : null;
 
   return (
+    <RoleGuard allow={["admin"]}>
     <main className="p-6 md:p-8 space-y-8">
       {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -597,6 +599,7 @@ export default function AdminPage() {
         </>
       )}
     </main>
+    </RoleGuard>
   );
 }
 
