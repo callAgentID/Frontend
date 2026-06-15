@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { SignUp } from "@clerk/nextjs";
 
 const CLERK_STYLES = `
@@ -95,15 +96,7 @@ export default function SignUpPage() {
 
         {/* Logo */}
         <div className="relative flex items-center gap-3">
-          <div style={{ width: 38, height: 38, borderRadius: 12, background: 'linear-gradient(135deg, rgba(44,143,255,0.9), rgba(10,60,180,0.9))', border: '1px solid rgba(44,143,255,0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 16px rgba(44,143,255,0.25)' }}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
-            </svg>
-          </div>
-          <div className="relative">
-            <span style={{ fontSize: 16, fontWeight: 700, color: '#EEF4FF', letterSpacing: '-0.02em' }}>CallBlick</span>
-            <span style={{ display: 'block', fontSize: 9, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'rgba(180,215,255,0.45)', marginTop: 2 }}>Intelligence Platform</span>
-          </div>
+          <Image src="/CallBlick-Logo-Text.png" alt="CallBlick" width={120} height={32} className="object-contain" style={{ width: 120, height: 'auto' }} />
         </div>
 
         {/* Hero */}
@@ -160,12 +153,8 @@ export default function SignUpPage() {
 
         {/* Mobile logo */}
         <div className="lg:hidden flex items-center gap-3 mb-10">
-          <div style={{ width: 36, height: 36, borderRadius: 10, background: 'linear-gradient(135deg, rgba(44,143,255,0.9), rgba(10,60,180,0.9))', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
-            </svg>
-          </div>
-          <span style={{ fontSize: 16, fontWeight: 700, color: '#EEF4FF' }}>CallBlick</span>
+          <Image src="/CallBlick-Logo.png" alt="CallBlick" width={36} height={36} className="object-contain" style={{ width: 36, height: 'auto' }} />
+          <Image src="/CallBlick-Logo-Text.png" alt="CallBlick" width={110} height={30} className="object-contain" style={{ width: 110, height: 'auto' }} />
         </div>
 
         <div style={{ width: '100%', maxWidth: 420 }}>

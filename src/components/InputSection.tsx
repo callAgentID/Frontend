@@ -22,7 +22,8 @@ import {
   Target,
   Zap,
   Tag,
-  HelpCircle
+  HelpCircle,
+  Plus
 } from "lucide-react";
 import { cn } from "../lib/utils";
 import { BatchProgress } from "./BatchProgress";
@@ -75,17 +76,18 @@ export function InputSection({
   const [metaTags, setMetaTags] = useState<string[]>([]);
   const [customQuestions, setCustomQuestions] = useState<Array<{ text: string; weight: number }>>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const addMoreRef = useRef<HTMLInputElement>(null);
   const pollIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // Memoized splits — computed once when questionnaires change, not on every render
-  const redFlagQuestionnaires   = useMemo(() => questionnaires.filter(q => q.is_redflag === true),  [questionnaires]);
-  const standardQuestionnaires  = useMemo(() => questionnaires.filter(q => q.is_redflag === false), [questionnaires]);
+  const redFlagQuestionnaires = useMemo(() => questionnaires.filter(q => q.is_redflag === true), [questionnaires]);
+  const standardQuestionnaires = useMemo(() => questionnaires.filter(q => q.is_redflag === false), [questionnaires]);
 
   // Stable callbacks — never recreated unless deps change
-  const toggleRedFlagOpen  = useCallback(() => setIsRedFlagOpen(v => !v),  []);
-  const toggleOtherOpen    = useCallback(() => setIsOtherOpen(v => !v),    []);
+  const toggleRedFlagOpen = useCallback(() => setIsRedFlagOpen(v => !v), []);
+  const toggleOtherOpen = useCallback(() => setIsOtherOpen(v => !v), []);
   const toggleCampaignOpen = useCallback(() => setIsCampaignOpen(v => !v), []);
-  const toggleProfileOpen  = useCallback(() => setIsProfileOpen(v => !v),  []);
+  const toggleProfileOpen = useCallback(() => setIsProfileOpen(v => !v), []);
 
   const selectRedFlag = useCallback((qId: string) => {
     // Radio — toggle off if same, replace if different
@@ -112,8 +114,8 @@ export function InputSection({
     setIsProfileOpen(false);
   }, []);
 
-  const removeMetaTag  = useCallback((i: number) => setMetaTags(prev => prev.filter((_, idx) => idx !== i)), []);
-  const removeCustomQ  = useCallback((i: number) => setCustomQuestions(prev => prev.filter((_, idx) => idx !== i)), []);
+  const removeMetaTag = useCallback((i: number) => setMetaTags(prev => prev.filter((_, idx) => idx !== i)), []);
+  const removeCustomQ = useCallback((i: number) => setCustomQuestions(prev => prev.filter((_, idx) => idx !== i)), []);
 
   // Clear polling on unmount
   useEffect(() => {
@@ -192,12 +194,22 @@ export function InputSection({
   const onFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []).filter(isAudioFile);
     if (files.length === 0) return;
-    // Always store in audioFiles array; audioFile kept for single-file compatibility
     setAudioFiles(files);
-    setAudioFile(files[0]); // keep for single-file poll path
+    setAudioFile(files[0]);
     setGeneratedTranscript("");
     setBatchId(null);
     setBatchIngestErrors([]);
+  };
+
+  const onAddMoreFiles = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newFiles = Array.from(e.target.files || []).filter(isAudioFile);
+    if (newFiles.length === 0) return;
+    setAudioFiles(prev => {
+      const combined = [...prev, ...newFiles];
+      setAudioFile(combined[0]);
+      return combined;
+    });
+    if (addMoreRef.current) addMoreRef.current.value = "";
   };
 
   const pollForTranscript = async (callId: string) => {
@@ -401,6 +413,7 @@ export function InputSection({
   };
 
   const [showManualSuccess, setShowManualSuccess] = useState(false);
+  const [submitAttempted, setSubmitAttempted] = useState(false);
 
   const handleTranscriptSubmit = async () => {
     if ((!manualTranscript.trim() && !manualFile) || !selectedCampaignId) return;
@@ -614,9 +627,26 @@ export function InputSection({
                       </div>
                     </div>
                     {!isProcessing && (
-                      <button onClick={removeFile} className="p-2 hover:bg-red-500/20 text-[#B3CFE5] hover:text-red-400 rounded-xl transition-colors" title="Remove all files">
-                        <Trash2 className="w-4 h-4" />
-                      </button>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => addMoreRef.current?.click()}
+                          className="p-2 hover:bg-blue-500/20 text-[#B3CFE5] hover:text-[#4A7FA7] rounded-xl transition-colors"
+                          title="Add more files"
+                        >
+                          <Plus className="w-4 h-4" />
+                        </button>
+                        <input
+                          type="file"
+                          ref={addMoreRef}
+                          onChange={onAddMoreFiles}
+                          accept="audio/*,video/mpeg,.mpeg,.mp3,.wav,.m4a,.ogg,.opus"
+                          multiple
+                          className="hidden"
+                        />
+                        <button onClick={removeFile} className="p-2 hover:bg-red-500/20 text-[#B3CFE5] hover:text-red-400 rounded-xl transition-colors" title="Remove all files">
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
                     )}
                   </div>
                   {/* Batch name input — only for multiple files */}
@@ -699,12 +729,18 @@ export function InputSection({
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pb-6 border-b border-blue-400/10">
                 {/* Red Flag Single-Select */}
                 <div id="red-flag-dropdown" className="relative group/select">
-                  <label className="text-[10px] font-black uppercase tracking-[0.2em] text-red-400/80 mb-2 block px-1">Risk / High Priority</label>
+                  <div className="flex items-center justify-between px-1 mb-2">
+                    <label className="text-[10px] font-black uppercase tracking-[0.2em] text-red-400/80">Risk / High Priority</label>
+                    {submitAttempted && selectedRedFlagIds.length === 0 && (
+                      <span className="text-[10px] font-bold text-red-400 animate-in fade-in duration-150">Required</span>
+                    )}
+                  </div>
                   <div
                     onClick={toggleRedFlagOpen}
                     className={cn(
-                      "w-full h-16 bg-red-500/10 border border-transparent rounded-2xl px-14 flex items-center cursor-pointer transition-colors hover:bg-red-500/15",
-                      isRedFlagOpen && "border-red-500/30 bg-[#502D55]/50 shadow-lg"
+                      "w-full h-16 bg-red-500/10 border rounded-2xl px-14 flex items-center cursor-pointer transition-colors hover:bg-red-500/15",
+                      isRedFlagOpen && "border-red-500/30 bg-[#502D55]/50 shadow-lg",
+                      submitAttempted && selectedRedFlagIds.length === 0 && !isRedFlagOpen ? "border-red-500/70" : "border-transparent"
                     )}
                   >
                     <span className={cn("font-bold tracking-tight text-base truncate", selectedRedFlagId ? "text-red-400" : "text-[#F8F4E9]")}>
@@ -1052,9 +1088,15 @@ export function InputSection({
               </div>
 
               <button
-                onClick={mode === "audio"
-                  ? (audioFiles.length > 1 ? handleBatchUploadSubmit : handleUploadSubmit)
-                  : handleTranscriptSubmit}
+                onClick={() => {
+                  setSubmitAttempted(true);
+                  if (selectedRedFlagIds.length === 0) return;
+                  if (mode === "audio") {
+                    audioFiles.length > 1 ? handleBatchUploadSubmit() : handleUploadSubmit();
+                  } else {
+                    handleTranscriptSubmit();
+                  }
+                }}
 
                 disabled={isProcessing || !selectedCampaignId || !selectedProfileId}
                 className="w-full h-16 bg-gradient-to-r from-[#4A7FA7] to-[#1A3D63] hover:from-[#4A7FA7]/90 hover:to-[#1A3D63]/90 disabled:bg-[#1A3D63]/50 text-[#F6FAFD] rounded-[1.25rem] font-bold text-sm uppercase tracking-widest transition-colors apple-shadow active:scale-[0.98] flex items-center justify-center gap-3 mt-4 glow"

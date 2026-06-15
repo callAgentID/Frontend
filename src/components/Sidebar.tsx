@@ -2,11 +2,12 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useTranslations } from 'next-intl';
 import {
   LayoutDashboard, BarChart3, Layers, FileSearch, FileCode,
-  ShieldAlert, Settings, Users, LogOut, ChevronLeft, Menu, X, Package, Command
+  ShieldAlert, Settings, Users, LogOut, ChevronLeft, Menu, X, Package
 } from "lucide-react";
 import { cn } from "../lib/utils";
 import { LanguageSwitcher } from "./LanguageSwitcher";
@@ -37,20 +38,20 @@ const NAV_INACTIVE_STYLE = {
 type NavRole = "all" | "admin" | "admin_manager";
 
 const NAV_ITEMS: { name: string; href: string; icon: any; roles: NavRole }[] = [
-  { name: "admin",          href: "/admin",          icon: Settings,        roles: "admin_manager" },
-  { name: "users",          href: "/users",          icon: Users,           roles: "admin"         },
-  { name: "analysis",       href: "/",               icon: LayoutDashboard, roles: "all"           },
-  { name: "callAnalytics",  href: "/analytics",      icon: BarChart3,       roles: "all"           },
-  { name: "batches",        href: "/batches",        icon: Package,         roles: "all"           },
-  { name: "redFlags",       href: "/red-flags",      icon: ShieldAlert,     roles: "all"           },
-  { name: "campaigns",      href: "/campaigns",      icon: Layers,          roles: "all"           },
-  { name: "scripts",        href: "/scripts",        icon: FileCode,        roles: "all"           },
-  { name: "questionnaires", href: "/questionnaires", icon: FileSearch,      roles: "all"           },
+  { name: "admin", href: "/admin", icon: Settings, roles: "admin_manager" },
+  { name: "users", href: "/users", icon: Users, roles: "admin" },
+  { name: "analysis", href: "/", icon: LayoutDashboard, roles: "all" },
+  { name: "callAnalytics", href: "/analytics", icon: BarChart3, roles: "all" },
+  { name: "batches", href: "/batches", icon: Package, roles: "all" },
+  { name: "redFlags", href: "/red-flags", icon: ShieldAlert, roles: "all" },
+  { name: "campaigns", href: "/campaigns", icon: Layers, roles: "all" },
+  { name: "scripts", href: "/scripts", icon: FileCode, roles: "all" },
+  { name: "questionnaires", href: "/questionnaires", icon: FileSearch, roles: "all" },
 ];
 
 export function Sidebar() {
-  const pathname  = usePathname();
-  const t         = useTranslations('nav');
+  const pathname = usePathname();
+  const t = useTranslations('nav');
   const [isCollapsed, setIsCollapsed] = useState(false);
 
   const toggleCollapse = () => {
@@ -61,13 +62,13 @@ export function Sidebar() {
     });
   };
   const [isMobileOpen, setIsMobileOpen] = useState(false);
-  const { signOut }           = useClerk();
-  const { user }              = useUser();
+  const { signOut } = useClerk();
+  const { user } = useUser();
   const { role: backendRole } = useCurrentUser();
 
-  const initials    = user
+  const initials = user
     ? (((user.firstName?.[0] ?? "") + (user.lastName?.[0] ?? "")).toUpperCase()
-        || user.emailAddresses[0]?.emailAddress?.[0]?.toUpperCase() || "U")
+      || user.emailAddresses[0]?.emailAddress?.[0]?.toUpperCase() || "U")
     : "U";
   const displayName = user
     ? (user.fullName || user.emailAddresses[0]?.emailAddress || "User")
@@ -126,16 +127,16 @@ export function Sidebar() {
         <div className={cn("flex flex-col h-full", isCollapsed ? "px-3 py-5" : "px-4 py-5")}>
 
           {/* Logo */}
-          <div className="flex items-center justify-between mb-5">
-            <div className={cn("flex items-center gap-3 overflow-hidden min-w-0", isCollapsed && "justify-center w-full")}>
-              <div className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0"
-                style={{ background: 'linear-gradient(135deg, var(--accent), #1060B8)' }}>
-                <Command className="w-4 h-4 text-white" />
-              </div>
-              {!isCollapsed && (
-                <span className="text-[15px] font-bold tracking-tight truncate text-[var(--text-primary)]">
-                  CallBlick
-                </span>
+          <div className={cn("flex items-center justify-between ", isCollapsed && "mb-5")}>
+            <div className={cn("flex items-center", isCollapsed && "justify-center w-full")}>
+              {isCollapsed ? (
+                <div style={{ borderRadius: 12, padding: '4px', boxShadow: '0 0 18px rgba(255,255,255,0.28), 0 2px 8px rgba(0,0,0,0.28)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <Image src="/CallBlick-Logo.png" alt="CallBlick" width={30} height={30} loading="eager" className="object-contain" style={{ width: 30, height: 'auto', display: 'block' }} />
+                </div>
+              ) : (
+                <div style={{ borderRadius: 12, padding: '6px 2.7rem', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, width: 'full' }}>
+                  <Image src="/CallBlick-Logo-Text.png" alt="CallBlick" width={150} height={32} loading="eager" className="object-contain" style={{ width: 120, height: 'auto', display: 'block' }} />
+                </div>
               )}
             </div>
             <button
@@ -170,7 +171,7 @@ export function Sidebar() {
           <nav className="flex-1 overflow-y-auto overflow-x-hidden space-y-0.5 sidebar-nav">
             {NAV_ITEMS.filter(item => canSee(item.roles)).map((item) => {
               const isActive = pathname === item.href;
-              const Icon     = item.icon;
+              const Icon = item.icon;
               return (
                 <Link
                   key={item.href}
