@@ -135,7 +135,7 @@ export function Sidebar() {
                 </div>
               ) : (
                 <div style={{ borderRadius: 12, padding: '6px 2.7rem', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, width: 'full' }}>
-                  <Image src="/CallBlick-Logo-Text.png" alt="CallBlick" width={150} height={32} loading="eager" className="object-contain" style={{ width: 120, height: 'auto', display: 'block' }} />
+                  <Image src="/CallBlick-Logo-Final.png" alt="CallBlick" width={150} height={32} loading="eager" className="object-contain" style={{ width: 120, height: 'auto', display: 'block' }} />
                 </div>
               )}
             </div>

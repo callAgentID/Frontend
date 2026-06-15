@@ -97,7 +97,7 @@ export default function SignInPage() {
 
         {/* Logo */}
         <div className="relative flex items-center gap-3">
-          <Image src="/CallBlick-Logo-Text.png" alt="CallBlick" width={120} height={32} className="object-contain" style={{ width: 120, height: 'auto' }} />
+          <Image src="/CallBlick-Logo-Final.png" alt="CallBlick" width={120} height={32} className="object-contain" style={{ width: 120, height: 'auto' }} />
         </div>
 
         {/* Hero */}
