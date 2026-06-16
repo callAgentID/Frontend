@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, Suspense } from "react";
+import { createPortal } from "react-dom";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useTranslations } from 'next-intl';
 import { useApi } from "@/lib/useApi";
@@ -17,8 +18,11 @@ import {
   CheckCircle2,
   X,
   Upload,
-  ChevronRight
+  ChevronRight,
+  Pencil,
+  Trash2
 } from "lucide-react";
+import { toast } from "@/components/Toast";
 import { cn } from "@/lib/utils";
 import { CampaignCardSkeleton, ScriptDetailSkeleton } from "@/components/Skeleton";
 
@@ -29,6 +33,7 @@ function CampaignsPageContent() {
   const { apiFetch } = useApi();
 
   const [loading, setLoading] = useState(true);
+  const [mounted, setMounted] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalType, setModalType] = useState<"campaign" | "script" | "questionnaire" | "view_script" | "assign_script">("campaign");
   const [selectedCampaignForAssign, setSelectedCampaignForAssign] = useState<string>("");
@@ -37,6 +42,8 @@ function CampaignsPageContent() {
   const [processedScriptId, setProcessedScriptId] = useState<string | null>(null);
 
   // Read script ID from URL on mount
+  useEffect(() => { setMounted(true); }, []);
+
   useEffect(() => {
     const scriptIdFromUrl = searchParams.get('scriptId');
     if (scriptIdFromUrl && scriptIdFromUrl !== processedScriptId) {
@@ -48,6 +55,53 @@ function CampaignsPageContent() {
   }, [searchParams]);
 
   // Form States
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+  const [editingCampaign, setEditingCampaign] = useState<any | null>(null);
+  const [editForm, setEditForm] = useState({ name: "", code: "" });
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const handleEditCampaign = async () => {
+    if (!editingCampaign) return;
+    setIsSubmitting(true);
+    try {
+      const res = await apiFetch(`/api/v1/campaigns/${editingCampaign.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: editForm.name, code: editForm.code }),
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.detail || "Failed to update campaign");
+      }
+      toast("Campaign updated successfully", "success");
+      setEditingCampaign(null);
+      fetchData();
+    } catch (err: any) {
+      toast(err.message || "Failed to update campaign", "error");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleDeleteCampaign = async (id: string) => {
+    if (!confirm("Are you sure you want to delete this campaign? This cannot be undone.")) return;
+    setIsDeleting(true);
+    try {
+      const res = await apiFetch(`/api/v1/campaigns/${id}`, { method: "DELETE" });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.detail || "Failed to delete campaign");
+      }
+      toast("Campaign deleted", "success");
+      fetchData();
+    } catch (err: any) {
+      toast(err.message || "Failed to delete campaign", "error");
+    } finally {
+      setIsDeleting(false);
+      setOpenMenuId(null);
+    }
+  };
+
   const [campForm, setCampForm] = useState({ name: "", code: "" });
   const [scriptForm, setScriptForm] = useState({
     title: "",
@@ -320,9 +374,35 @@ function CampaignsPageContent() {
                         <p className="text-[10px] font-black uppercase tracking-widest text-[#B3CFE5]">Mapped Assets</p>
                         <p className="font-[850] text-[#F6FAFD]">{campaignScripts.length + campaignQuestionnaires.length} Units</p>
                       </div>
-                      <button className="w-12 h-12 rounded-2xl bg-blue-950/18 flex items-center justify-center text-[#4A7FA7] hover:bg-gradient-to-r hover:from-[#4A7FA7] hover:to-[#1A3D63] hover:text-white transition-colors">
-                        <MoreHorizontal className="w-6 h-6" />
-                      </button>
+                      <div className="relative">
+                        <button
+                          onClick={(e) => { e.stopPropagation(); setOpenMenuId(openMenuId === campaign.id ? null : campaign.id); }}
+                          className="w-12 h-12 rounded-2xl bg-blue-950/18 flex items-center justify-center text-[#4A7FA7] hover:bg-gradient-to-r hover:from-[#4A7FA7] hover:to-[#1A3D63] hover:text-white transition-colors"
+                        >
+                          <MoreHorizontal className="w-6 h-6" />
+                        </button>
+                        {openMenuId === campaign.id && (
+                          <>
+                            <div className="fixed inset-0 z-[100]" onClick={() => setOpenMenuId(null)} />
+                            <div className="absolute right-0 top-14 z-[101] w-44 bg-[#0D1F3C] border border-blue-400/20 rounded-2xl shadow-2xl overflow-hidden animate-in fade-in duration-150">
+                              <button
+                                onClick={(e) => { e.stopPropagation(); setEditingCampaign(campaign); setEditForm({ name: campaign.name, code: campaign.code }); setOpenMenuId(null); }}
+                                className="w-full flex items-center gap-3 px-4 py-3 text-sm font-semibold text-[#F6FAFD] hover:bg-blue-500/15 transition-colors"
+                              >
+                                <Pencil className="w-4 h-4 text-[#4A7FA7]" /> Edit Campaign
+                              </button>
+                              <div className="h-px bg-blue-400/10" />
+                              <button
+                                onClick={(e) => { e.stopPropagation(); handleDeleteCampaign(campaign.id); }}
+                                disabled={isDeleting}
+                                className="w-full flex items-center gap-3 px-4 py-3 text-sm font-semibold text-red-400 hover:bg-red-500/10 transition-colors disabled:opacity-50"
+                              >
+                                <Trash2 className="w-4 h-4" /> Delete Campaign
+                              </button>
+                            </div>
+                          </>
+                        )}
+                      </div>
                     </div>
                   </div>
 
@@ -371,8 +451,8 @@ function CampaignsPageContent() {
       )}
 
       {/* Creation Modal */}
-      {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/40 animate-in fade-in duration-150 duration-150">
+      {mounted && isModalOpen && createPortal(
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-6 bg-black/40 animate-in fade-in duration-150 duration-150">
           <div className="bg-[#1A3D63]/95 glow w-full max-w-xl max-h-[90vh] rounded-[2.5rem] shadow-2xl border border-blue-400/15 overflow-y-auto animate-in fade-in duration-150 duration-150">
             <div className="p-8 border-b border-blue-400/15 bg-blue-950/25 flex items-center justify-between">
               <div>
@@ -587,7 +667,56 @@ function CampaignsPageContent() {
             </div>
           </div>
         </div>
-      )}
+      , document.body)}
+
+      {/* Edit Campaign Modal */}
+      {mounted && editingCampaign && createPortal(
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-6 bg-black/50 animate-in fade-in duration-150">
+          <div className="bg-[#1A3D63]/95 w-full max-w-md rounded-[2rem] shadow-2xl border border-blue-400/15 overflow-hidden">
+            <div className="p-6 border-b border-blue-400/15 flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-[850] text-[#F6FAFD] tracking-tight">Edit Campaign</h3>
+                <p className="text-xs font-semibold text-[#B3CFE5] mt-0.5">Update campaign details</p>
+              </div>
+              <button onClick={() => setEditingCampaign(null)} className="w-8 h-8 rounded-xl hover:bg-blue-500/20 flex items-center justify-center text-[#B3CFE5]">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <div className="p-6 space-y-4">
+              <div className="space-y-2">
+                <label className="text-[10px] font-black uppercase tracking-[0.2em] text-[#B3CFE5]">Campaign Name</label>
+                <input
+                  value={editForm.name}
+                  onChange={e => setEditForm(f => ({ ...f, name: e.target.value }))}
+                  className="w-full h-12 bg-blue-950/30 border border-blue-400/18 rounded-xl px-4 text-sm font-semibold text-[#F6FAFD] outline-none focus:border-[#4A7FA7] transition-colors placeholder:text-[#B3CFE5]/40"
+                  placeholder="e.g. Q4 Growth Sales"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-[10px] font-black uppercase tracking-[0.2em] text-[#B3CFE5]">Identity Code</label>
+                <input
+                  value={editForm.code}
+                  onChange={e => setEditForm(f => ({ ...f, code: e.target.value }))}
+                  className="w-full h-12 bg-blue-950/30 border border-blue-400/18 rounded-xl px-4 text-sm font-semibold text-[#F6FAFD] outline-none focus:border-[#4A7FA7] transition-colors placeholder:text-[#B3CFE5]/40"
+                  placeholder="e.g. SALES_Q4"
+                />
+              </div>
+            </div>
+            <div className="p-6 border-t border-blue-400/15 flex gap-3">
+              <button onClick={() => setEditingCampaign(null)} className="flex-1 h-11 bg-black/25 hover:bg-black/35 text-[#B3CFE5] rounded-xl font-bold text-sm uppercase tracking-wider transition-colors">
+                Cancel
+              </button>
+              <button
+                onClick={handleEditCampaign}
+                disabled={isSubmitting || !editForm.name.trim()}
+                className="flex-1 h-11 bg-gradient-to-r from-[#4A7FA7] to-[#1A3D63] text-white rounded-xl font-bold text-sm uppercase tracking-wider hover:opacity-90 disabled:opacity-40 flex items-center justify-center gap-2 glow"
+              >
+                {isSubmitting ? <><Loader2 className="w-4 h-4 animate-spin" /> Saving...</> : "Save Changes"}
+              </button>
+            </div>
+          </div>
+        </div>
+      , document.body)}
     </div>
   );
 }

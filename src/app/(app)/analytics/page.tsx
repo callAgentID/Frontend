@@ -33,6 +33,7 @@ import { formatLLMCost, formatTokens } from "@/lib/formatters";
 import { ResultsPanel } from "@/components/ResultsPanel";
 import { CallListItemSkeleton, DetailViewSkeleton } from "@/components/Skeleton";
 import { CallFilters, CallFilterParams } from "@/components/CallFilters";
+import { toast } from "@/components/Toast";
 
 function AnalyticsPageContent() {
   const searchParams = useSearchParams();
@@ -176,21 +177,18 @@ function AnalyticsPageContent() {
       });
 
       if (response.ok) {
-        // Remove deleted call from list
         setCalls(calls.filter(call => call.call_id !== callId));
         setDeleteConfirmCallId(null);
-
-        // If we deleted the currently viewed call, close detail view
+        toast("Call deleted successfully", "success");
         if (selectedCallId === callId) {
           closeDetail();
         }
       } else {
-        console.error("Failed to delete call");
-        alert("Failed to delete call. Please try again.");
+        const body = await response.json().catch(() => ({}));
+        toast(body.detail || body.message || "Failed to delete call", "error");
       }
-    } catch (error) {
-      console.error("Error deleting call:", error);
-      alert("Error deleting call. Please try again.");
+    } catch (error: any) {
+      toast(error.message || "Error deleting call. Please try again.", "error");
     } finally {
       setIsDeleting(false);
     }

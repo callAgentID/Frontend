@@ -23,6 +23,7 @@ import {
 import { cn } from "@/lib/utils";
 import { createPortal } from "react-dom";
 import { ResultsPanel } from "@/components/ResultsPanel";
+import { toast } from "@/components/Toast";
 
 interface BatchCall {
   call_id: string;
@@ -105,12 +106,16 @@ function BatchesContent() {
     setIsDeleting(true);
     try {
       const res = await apiFetch(`/api/v1/batches/${batchId}`, { method: "DELETE" });
-      if (!res.ok) throw new Error("Failed to delete batch");
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.detail || body.message || "Failed to delete batch");
+      }
       setBatches(batches.filter(b => b.batch_id !== batchId));
       if (selectedBatch?.batch_id === batchId) setSelectedBatch(null);
       setDeleteConfirmId(null);
+      toast("Batch deleted successfully", "success");
     } catch (err: any) {
-      alert(err.message || "Failed to delete batch");
+      toast(err.message || "Failed to delete batch", "error");
     } finally {
       setIsDeleting(false);
     }

@@ -21,6 +21,7 @@ import {
 import { cn } from "@/lib/utils";
 import { ScriptCardSkeleton } from "@/components/Skeleton";
 import { Tooltip } from "@/components/Tooltip";
+import { toast } from "@/components/Toast";
 
 interface Script {
   id: string;
@@ -138,14 +139,14 @@ function ScriptsPageContent() {
           set_as_campaign_default: false,
           inputMode: "text"
         });
+        toast("Script created successfully", "success");
         fetchScripts();
       } else {
-        const errorData = await res.json();
-        alert(errorData.detail || "Failed to create script");
+        const errorData = await res.json().catch(() => ({}));
+        toast(errorData.detail || errorData.message || "Failed to create script", "error");
       }
     } catch (err: any) {
-      console.error("Failed to create script:", err);
-      alert("Failed to create script. Please try again.");
+      toast(err.message || "Failed to create script. Please try again.", "error");
     } finally {
       setIsSubmitting(false);
     }
@@ -160,13 +161,14 @@ function ScriptsPageContent() {
       });
 
       if (res.ok || res.status === 204) {
+        toast("Script deleted", "success");
         fetchScripts();
       } else {
-        alert("Failed to delete script");
+        const errorData = await res.json().catch(() => ({}));
+        toast(errorData.detail || errorData.message || "Failed to delete script", "error");
       }
-    } catch (err) {
-      console.error("Delete failed:", err);
-      alert("Failed to delete script. Please try again.");
+    } catch (err: any) {
+      toast(err.message || "Failed to delete script. Please try again.", "error");
     }
   };
 
@@ -328,109 +330,93 @@ function ScriptsPageContent() {
         )}
       </div>
 
-      {/* Create Script Modal — rendered via portal so it sits above everything */}
+      {/* Create Script Modal */}
       {mounted && isCreateModalOpen && createPortal(
         <div className="fixed inset-0 z-[9999] flex items-center justify-center p-6 bg-black/60 animate-in fade-in duration-150">
-          <div className="w-full max-w-xl rounded-3xl overflow-hidden animate-in fade-in duration-150"
-            style={{ background: 'rgba(6,18,48,0.92)', border: '1px solid rgba(255,255,255,0.09)', boxShadow: '0 24px 64px rgba(0,0,0,0.60)' }}>
+          <div className="w-full max-w-lg bg-[#0D1F3C] border border-blue-400/18 rounded-[2rem] shadow-2xl overflow-hidden animate-in fade-in duration-150 flex flex-col max-h-[90vh]">
 
             {/* Header */}
-            <div className="px-7 py-5 flex items-center justify-between border-b border-white/[0.07]">
+            <div className="px-6 py-5 border-b border-blue-400/12 flex items-center justify-between shrink-0">
               <div>
-                <h3 className="text-lg font-bold text-[var(--text-primary)] tracking-tight">{t('createNew')}</h3>
-                <p className="text-xs font-medium text-[var(--text-tertiary)] mt-0.5">{t('createSubtitle')}</p>
+                <h3 className="text-base font-black text-[#F6FAFD] tracking-tight">{t('createNew')}</h3>
+                <p className="text-xs text-[#B3CFE5] mt-0.5">{t('createSubtitle')}</p>
               </div>
-              <Tooltip content={tt("closeWithoutSaving")} placement="left">
-                <button onClick={() => setIsCreateModalOpen(false)}
-                  className="w-8 h-8 rounded-xl flex items-center justify-center text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-white/[0.06] transition-colors">
-                  <X className="w-4 h-4" />
-                </button>
-              </Tooltip>
+              <button onClick={() => setIsCreateModalOpen(false)}
+                className="w-8 h-8 rounded-xl flex items-center justify-center text-[#B3CFE5] hover:text-[#F6FAFD] hover:bg-blue-500/15 transition-colors">
+                <X className="w-4 h-4" />
+              </button>
             </div>
 
             {/* Body */}
-            <div className="px-7 py-6 space-y-5">
+            <div className="px-6 py-5 space-y-4 overflow-y-auto">
 
               {/* Title */}
               <div className="space-y-1.5">
-                <Tooltip content={tt("scriptTitleField")} placement="top">
-                  <label className="text-[10px] font-black uppercase tracking-wider text-[var(--text-tertiary)] cursor-default">{t('scriptTitleRequired')}</label>
-                </Tooltip>
+                <label className="text-[10px] font-black uppercase tracking-[0.15em] text-[#B3CFE5]">{t('scriptTitleRequired')}</label>
                 <input
                   type="text"
                   value={createForm.title}
                   onChange={(e) => setCreateForm({ ...createForm, title: e.target.value })}
                   placeholder={t('scriptTitlePlaceholder')}
-                  className="w-full h-11 px-4 rounded-xl text-sm font-medium text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] outline-none transition-colors"
-                  style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.09)' }}
-                  onFocus={e => { e.currentTarget.style.borderColor = 'rgba(44,143,255,0.40)'; }}
-                  onBlur={e =>  { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.09)'; }}
+                  className="w-full h-11 px-4 rounded-xl text-sm font-medium text-[#F6FAFD] bg-blue-950/40 border border-blue-400/18 placeholder:text-[#B3CFE5]/40 outline-none focus:border-[#4A7FA7] transition-colors"
                 />
               </div>
 
               {/* Campaign */}
               <div className="space-y-1.5">
-                <Tooltip content={tt("scriptCampaignField")} placement="top">
-                  <label className="text-[10px] font-black uppercase tracking-wider text-[var(--text-tertiary)] cursor-default">{t('campaign')}</label>
-                </Tooltip>
+                <label className="text-[10px] font-black uppercase tracking-[0.15em] text-[#B3CFE5]">{t('campaign')}</label>
                 <select
                   value={createForm.campaign_id}
                   onChange={(e) => setCreateForm({ ...createForm, campaign_id: e.target.value })}
-                  className="w-full h-11 px-4 rounded-xl text-sm font-medium text-[var(--text-primary)] outline-none appearance-none cursor-pointer transition-colors"
-                  style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.09)' }}
+                  className="w-full h-11 px-4 rounded-xl text-sm font-medium text-[#F6FAFD] bg-blue-950/40 border border-blue-400/18 outline-none appearance-none cursor-pointer focus:border-[#4A7FA7] transition-colors"
                 >
-                  <option value="" style={{ background: '#0a1020' }}>{t('noCampaign')}</option>
+                  <option value="" style={{ background: '#0D1F3C' }}>{t('noCampaign')}</option>
                   {campaigns.map(c => (
-                    <option key={c.id || c._id} value={c.id || c._id} style={{ background: '#0a1020' }}>{c.name}</option>
+                    <option key={c.id || c._id} value={c.id || c._id} style={{ background: '#0D1F3C' }}>{c.name}</option>
                   ))}
                 </select>
               </div>
 
               {/* Input mode toggle */}
               <div className="space-y-1.5">
-                <label className="text-[10px] font-black uppercase tracking-wider text-[var(--text-tertiary)]">{t('inputMethod')}</label>
-                <div className="flex p-1 rounded-xl gap-1" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}>
-                  <Tooltip content={tt("pasteTextMode")} placement="bottom">
-                    <button type="button" onClick={() => setCreateForm({ ...createForm, inputMode: "text" })}
-                      className="flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-xs font-bold transition-colors"
-                      style={createForm.inputMode === "text"
-                        ? { background: 'rgba(44,143,255,0.20)', color: '#EEF4FF', border: '1px solid rgba(44,143,255,0.30)' }
-                        : { color: 'var(--text-tertiary)', border: '1px solid transparent' }
-                      }>
-                      <FileText className="w-3.5 h-3.5" /> {t('pasteText')}
-                    </button>
-                  </Tooltip>
-                  <Tooltip content={tt("uploadFileMode")} placement="bottom">
-                    <button type="button" onClick={() => setCreateForm({ ...createForm, inputMode: "file" })}
-                      className="flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-xs font-bold transition-colors"
-                      style={createForm.inputMode === "file"
-                        ? { background: 'rgba(44,143,255,0.20)', color: '#EEF4FF', border: '1px solid rgba(44,143,255,0.30)' }
-                        : { color: 'var(--text-tertiary)', border: '1px solid transparent' }
-                      }>
-                      <Upload className="w-3.5 h-3.5" /> {t('uploadFile')}
-                    </button>
-                  </Tooltip>
+                <label className="text-[10px] font-black uppercase tracking-[0.15em] text-[#B3CFE5]">{t('inputMethod')}</label>
+                <div className="flex p-1 rounded-xl gap-1 bg-blue-950/40 border border-blue-400/12">
+                  <button type="button" onClick={() => setCreateForm({ ...createForm, inputMode: "text" })}
+                    className={cn(
+                      "flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-xs font-bold transition-colors",
+                      createForm.inputMode === "text"
+                        ? "bg-[#4A7FA7]/30 text-[#F6FAFD] border border-[#4A7FA7]/40"
+                        : "text-[#B3CFE5] border border-transparent hover:text-[#F6FAFD]"
+                    )}>
+                    <FileText className="w-3.5 h-3.5" /> {t('pasteText')}
+                  </button>
+                  <button type="button" onClick={() => setCreateForm({ ...createForm, inputMode: "file" })}
+                    className={cn(
+                      "flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-xs font-bold transition-colors",
+                      createForm.inputMode === "file"
+                        ? "bg-[#4A7FA7]/30 text-[#F6FAFD] border border-[#4A7FA7]/40"
+                        : "text-[#B3CFE5] border border-transparent hover:text-[#F6FAFD]"
+                    )}>
+                    <Upload className="w-3.5 h-3.5" /> {t('uploadFile')}
+                  </button>
                 </div>
               </div>
 
               {/* Content */}
               {createForm.inputMode === "text" ? (
                 <div className="space-y-1.5">
-                  <label className="text-[10px] font-black uppercase tracking-wider text-[var(--text-tertiary)]">{t('scriptContentRequired')}</label>
+                  <label className="text-[10px] font-black uppercase tracking-[0.15em] text-[#B3CFE5]">{t('scriptContentRequired')}</label>
                   <textarea
                     value={createForm.text}
                     onChange={(e) => setCreateForm({ ...createForm, text: e.target.value })}
                     placeholder={t('contentPlaceholder')}
-                    rows={7}
-                    className="w-full p-4 rounded-xl text-sm font-medium text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] outline-none resize-none transition-colors"
-                    style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.09)' }}
-                    onFocus={e => { e.currentTarget.style.borderColor = 'rgba(44,143,255,0.35)'; }}
-                    onBlur={e =>  { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.09)'; }}
+                    rows={6}
+                    className="w-full p-4 rounded-xl text-sm font-medium text-[#F6FAFD] bg-blue-950/40 border border-blue-400/18 placeholder:text-[#B3CFE5]/40 outline-none resize-none focus:border-[#4A7FA7] transition-colors leading-relaxed"
                   />
                 </div>
               ) : (
                 <div className="space-y-1.5">
-                  <label className="text-[10px] font-black uppercase tracking-wider text-[var(--text-tertiary)]">{t('uploadDocRequired')}</label>
+                  <label className="text-[10px] font-black uppercase tracking-[0.15em] text-[#B3CFE5]">{t('uploadDocRequired')}</label>
                   <div
                     onClick={() => {
                       const input = document.createElement("input");
@@ -442,14 +428,12 @@ function ScriptsPageContent() {
                       };
                       input.click();
                     }}
-                    className="w-full h-20 rounded-xl flex items-center px-5 gap-4 cursor-pointer transition-colors group"
-                    style={{ border: '2px dashed rgba(255,255,255,0.12)', background: 'rgba(255,255,255,0.03)' }}
+                    className="w-full h-20 rounded-xl flex items-center px-5 gap-4 cursor-pointer transition-colors group border-2 border-dashed border-blue-400/20 bg-blue-950/20 hover:border-[#4A7FA7]/50 hover:bg-blue-950/30"
                   >
-                    <div className="w-9 h-9 rounded-lg flex items-center justify-center text-[var(--text-tertiary)] group-hover:text-[var(--text-primary)] transition-colors"
-                      style={{ background: 'rgba(44,143,255,0.10)' }}>
+                    <div className="w-9 h-9 rounded-lg flex items-center justify-center bg-[#4A7FA7]/15 text-[#4A7FA7] group-hover:bg-[#4A7FA7]/25 transition-colors">
                       <Upload className="w-4 h-4" />
                     </div>
-                    <span className="text-sm font-semibold text-[var(--text-secondary)]">
+                    <span className="text-sm font-semibold text-[#B3CFE5] group-hover:text-[#F6FAFD] transition-colors">
                       {createForm.file ? createForm.file.name : t('selectFile')}
                     </span>
                   </div>
@@ -458,36 +442,33 @@ function ScriptsPageContent() {
 
               {/* Set as default */}
               {createForm.campaign_id && (
-                <Tooltip content={tt("setDefaultScript")} placement="top">
-                  <label className="flex items-center gap-3 p-3 rounded-xl cursor-pointer"
-                    style={{ background: 'rgba(44,143,255,0.06)', border: '1px solid rgba(44,143,255,0.14)' }}>
-                    <input
-                      type="checkbox"
-                      id="set_default"
-                      checked={createForm.set_as_campaign_default}
-                      onChange={(e) => setCreateForm({ ...createForm, set_as_campaign_default: e.target.checked })}
-                      className="w-4 h-4 rounded"
-                    />
-                    <span className="text-xs font-semibold text-[var(--text-secondary)]">
-                      {t('setDefault')}
-                    </span>
-                  </label>
-                </Tooltip>
+                <label className="flex items-center gap-3 p-3 rounded-xl cursor-pointer bg-[#4A7FA7]/08 border border-[#4A7FA7]/18 hover:bg-[#4A7FA7]/12 transition-colors">
+                  <input
+                    type="checkbox"
+                    checked={createForm.set_as_campaign_default}
+                    onChange={(e) => setCreateForm({ ...createForm, set_as_campaign_default: e.target.checked })}
+                    className="w-4 h-4 rounded accent-[#4A7FA7]"
+                  />
+                  <span className="text-xs font-semibold text-[#B3CFE5]">{t('setDefault')}</span>
+                </label>
               )}
+            </div>
 
-              {/* Submit */}
-              <div className="w-full">
-                <Tooltip content={!createForm.title ? tt("scriptTitleMissing") : !createForm.text.trim() && !createForm.file ? tt("scriptContentMissing") : tt("createScriptBtn")} placement="top">
-                  <button
-                    onClick={handleCreateScript}
-                    disabled={isSubmitting || !createForm.title || (!createForm.text.trim() && !createForm.file)}
-                    className="w-full h-12 rounded-2xl font-bold text-sm text-white flex items-center justify-center gap-2 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-                    style={{ background: 'rgba(44,143,255,0.85)', border: '1px solid rgba(44,143,255,0.35)' }}
-                  >
-                    {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Plus className="w-4 h-4" /> {t('createScript')}</>}
-                  </button>
-                </Tooltip>
-              </div>
+            {/* Footer */}
+            <div className="px-6 py-4 border-t border-blue-400/12 shrink-0 flex gap-3">
+              <button
+                onClick={() => setIsCreateModalOpen(false)}
+                className="flex-1 h-11 bg-blue-950/40 hover:bg-blue-950/60 text-[#B3CFE5] hover:text-[#F6FAFD] rounded-xl font-bold text-sm uppercase tracking-wider transition-colors border border-blue-400/12"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleCreateScript}
+                disabled={isSubmitting || !createForm.title || (!createForm.text.trim() && !createForm.file)}
+                className="flex-1 h-11 bg-gradient-to-r from-[#4A7FA7] to-[#1A3D63] text-white rounded-xl font-bold text-sm uppercase tracking-wider hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2 glow transition-opacity"
+              >
+                {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Plus className="w-4 h-4" /> {t('createScript')}</>}
+              </button>
             </div>
           </div>
         </div>,

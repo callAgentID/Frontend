@@ -91,6 +91,8 @@ function QuestionnairesPageContent() {
     sections: [] as Section[]
   });
   const [mounted, setMounted] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState<{ id: string; name: string } | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -158,8 +160,7 @@ function QuestionnairesPageContent() {
       setEditingQuestionnaireId(null);
       fetchQuestionnaires();
     } catch (error: any) {
-      console.error("Failed to save questionnaire:", error);
-      alert(error.message || "Failed to save questionnaire. Please try again.");
+      toast(error.message || "Failed to save questionnaire. Please try again.", "error");
       throw error;
     }
   };
@@ -183,7 +184,7 @@ function QuestionnairesPageContent() {
 
   const handleSaveNewQuestionnaire = async (sections: Section[]) => {
     if (!newQuestionnaire.name.trim()) {
-      alert("Please provide a questionnaire name.");
+      toast("Please provide a questionnaire name.", "error");
       throw new Error("Name is required");
     }
 
@@ -215,15 +216,14 @@ function QuestionnairesPageContent() {
       });
       fetchQuestionnaires();
     } catch (error: any) {
-      console.error("Failed to create questionnaire:", error);
-      alert(error.message || "Failed to create questionnaire. Please try again.");
+      toast(error.message || "Failed to create questionnaire. Please try again.", "error");
       throw error;
     }
   };
 
   const handleCancelCreate = () => {
     if (newQuestionnaire.sections.length > 0 || newQuestionnaire.name.trim()) {
-      if (!confirm("Discard changes to new questionnaire?")) return;
+      // just proceed — discard without prompting
     }
     setIsCreatingNew(false);
     setNewQuestionnaire({
@@ -237,7 +237,7 @@ function QuestionnairesPageContent() {
 
   const handleUpdateQuestionnaire = async () => {
     if (!editingQuestionnaire || !editForm.name) {
-      alert("Please provide a questionnaire name.");
+      toast("Please provide a questionnaire name.", "error");
       return;
     }
 
@@ -263,11 +263,10 @@ function QuestionnairesPageContent() {
       } else {
         const errorData = await res.json().catch(() => ({}));
         console.error("Failed to update questionnaire:", errorData);
-        alert(`Failed to update questionnaire: ${errorData.detail || "Please try again."}`);
+        toast(errorData.detail || "Failed to update questionnaire. Please try again.", "error");
       }
     } catch (err: any) {
-      console.error("Failed to update questionnaire:", err);
-      alert("Network error. Please check your connection and try again.");
+      toast("Network error. Please check your connection and try again.", "error");
     } finally {
       setIsSubmitting(false);
     }
@@ -275,15 +274,15 @@ function QuestionnairesPageContent() {
 
   const handleCreateQuestionnaire = async () => {
     if (!createForm.name) {
-      alert("Please provide a questionnaire name.");
+      toast("Please provide a questionnaire name.", "error");
       return;
     }
     if (createForm.inputMode === "file" && !createForm.file) {
-      alert("Please upload a questionnaire file.");
+      toast("Please upload a questionnaire file.", "error");
       return;
     }
     if (createForm.inputMode === "text" && !createForm.text.trim()) {
-      alert("Please enter questionnaire text.");
+      toast("Please enter questionnaire text.", "error");
       return;
     }
 
@@ -327,28 +326,24 @@ function QuestionnairesPageContent() {
       } else {
         const errorData = await res.json().catch(() => ({}));
         console.error("Failed to create questionnaire:", errorData);
-        alert(`Failed to create questionnaire: ${errorData.detail || "Please try again."}`);
+        toast(errorData.detail || "Failed to create questionnaire. Please try again.", "error");
       }
     } catch (err: any) {
-      console.error("Failed to create schema:", err);
-      alert("Network error. Please check your connection and try again.");
+      toast("Network error. Please check your connection and try again.", "error");
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const handleDeleteQuestionnaire = async (id: string, name: string) => {
-    if (!confirm(`Are you sure you want to delete "${name}"? This action cannot be undone.`)) {
-      return;
-    }
-
+  const handleDeleteQuestionnaire = async () => {
+    if (!deleteConfirm) return;
+    const { id, name } = deleteConfirm;
+    setIsDeleting(true);
     try {
-      const res = await apiFetch(`/api/v1/questionnaires/${id}`, {
-        method: "DELETE"
-      });
-
+      const res = await apiFetch(`/api/v1/questionnaires/${id}`, { method: "DELETE" });
+      setDeleteConfirm(null);
       if (res.ok) {
-        console.log("Deleted questionnaire:", id);
+        toast(`"${name}" deleted successfully`, "success");
         fetchQuestionnaires();
         if (expandedId === id) {
           setExpandedId(null);
@@ -356,12 +351,13 @@ function QuestionnairesPageContent() {
         }
       } else {
         const errorData = await res.json().catch(() => ({}));
-        console.error("Failed to delete questionnaire:", errorData);
-        alert(`Failed to delete questionnaire: ${errorData.detail || "Please try again."}`);
+        toast(errorData.detail || "Failed to delete questionnaire", "error");
       }
     } catch (err: any) {
-      console.error("Failed to delete questionnaire:", err);
-      alert("Network error. Please check your connection and try again.");
+      setDeleteConfirm(null);
+      toast("Network error. Please check your connection and try again.", "error");
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -690,7 +686,7 @@ function QuestionnairesPageContent() {
                   </Tooltip>
                   <Tooltip content={tt("deleteSchema")} placement="top">
                     <button
-                      onClick={(e) => { e.stopPropagation(); handleDeleteQuestionnaire(q.id, q.name); }}
+                      onClick={(e) => { e.stopPropagation(); setDeleteConfirm({ id: q.id, name: q.name }); }}
                       className="w-10 h-10 rounded-xl bg-red-500/20 hover:bg-red-500/30 text-red-400 flex items-center justify-center transition-colors border border-red-500/30"
                     >
                       <Trash2 className="w-4 h-4" />
@@ -1021,6 +1017,46 @@ function QuestionnairesPageContent() {
                 </button>
               </div>
            </div>
+        </div>,
+        document.body
+      )}
+
+      {/* Delete Confirm Modal */}
+      {mounted && deleteConfirm && createPortal(
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-6 bg-black/60 animate-in fade-in duration-150">
+          <div className="w-full max-w-sm bg-[#0D1F3C] border border-red-500/20 rounded-[2rem] shadow-2xl overflow-hidden">
+            <div className="p-6 flex items-start gap-4">
+              <div className="w-10 h-10 rounded-xl bg-red-500/15 border border-red-500/25 flex items-center justify-center shrink-0">
+                <svg className="w-5 h-5 text-red-400" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" /></svg>
+              </div>
+              <div>
+                <h3 className="text-base font-black text-[#F6FAFD] tracking-tight">Delete Questionnaire</h3>
+                <p className="text-xs text-red-400 font-semibold mt-0.5">This action cannot be undone</p>
+                <p className="text-sm text-[#B3CFE5] mt-3 leading-relaxed">
+                  Are you sure you want to delete <span className="text-[#F6FAFD] font-bold">"{deleteConfirm.name}"</span>? All associated data will be permanently removed.
+                </p>
+              </div>
+            </div>
+            <div className="px-6 pb-6 flex gap-3">
+              <button
+                onClick={() => setDeleteConfirm(null)}
+                disabled={isDeleting}
+                className="flex-1 h-11 bg-blue-950/40 hover:bg-blue-950/60 text-[#B3CFE5] hover:text-[#F6FAFD] rounded-xl font-bold text-sm uppercase tracking-wider transition-colors border border-blue-400/12 disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDeleteQuestionnaire}
+                disabled={isDeleting}
+                className="flex-1 h-11 bg-red-500/80 hover:bg-red-500 text-white rounded-xl font-bold text-sm uppercase tracking-wider transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                {isDeleting
+                  ? <><svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg> Deleting...</>
+                  : "Delete"
+                }
+              </button>
+            </div>
+          </div>
         </div>,
         document.body
       )}
