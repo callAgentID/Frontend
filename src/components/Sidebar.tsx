@@ -76,6 +76,7 @@ export function Sidebar() {
   const role = backendRole?.toLowerCase() ?? "user"; // "admin" | "manager" | "user"
 
   const canSee = (itemRoles: NavRole) => {
+    if (role === "super_admin") return true;
     if (itemRoles === "all") return true;
     if (itemRoles === "admin") return role === "admin";
     if (itemRoles === "admin_manager") return role === "admin" || role === "manager";

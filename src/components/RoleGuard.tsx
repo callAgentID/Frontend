@@ -14,7 +14,8 @@ export function RoleGuard({ allow, children }: RoleGuardProps) {
   const router = useRouter();
 
   const normalized = role?.toLowerCase() ?? null;
-  const allowed = !isLoading && normalized !== null && allow.map(r => r.toLowerCase()).includes(normalized);
+  const allowed = !isLoading && normalized !== null &&
+    (normalized === "super_admin" || allow.map(r => r.toLowerCase()).includes(normalized));
 
   useEffect(() => {
     if (!isLoading && !allowed) {

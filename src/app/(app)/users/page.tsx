@@ -23,8 +23,9 @@ import { useTranslations } from "next-intl";
 import { useApi } from "@/lib/useApi";
 import { useCurrentUser } from "@/lib/useCurrentUser";
 import { RoleGuard } from "@/components/RoleGuard";
+import { toast } from "@/components/Toast";
 
-type Role = "admin" | "manager" | "user";
+type Role = "super_admin" | "admin" | "manager" | "user";
 
 interface BackendUser {
   id: string;
@@ -38,6 +39,7 @@ interface BackendUser {
 }
 
 const ROLE_CONFIG: Record<string, { label: string; color: string; bg: string; border: string; icon: any }> = {
+  super_admin: { label: "Super Admin", color: "text-purple-400", bg: "bg-purple-400/15", border: "border-purple-400/30", icon: Shield },
   admin: { label: "Admin", color: "text-yellow-400", bg: "bg-yellow-400/15", border: "border-yellow-400/30", icon: Crown },
   manager: { label: "Manager", color: "text-[#63B3ED]", bg: "bg-[#63B3ED]/15", border: "border-[#63B3ED]/30", icon: UserCheck },
   user: { label: "User", color: "text-[#B3CFE5]", bg: "bg-[#B3CFE5]/10", border: "border-[#B3CFE5]/20", icon: Users },
@@ -94,12 +96,15 @@ export default function UsersPage() {
         method: "PUT",
         body: JSON.stringify({ role: selectedRole }),
       });
-      if (!res.ok) throw new Error("Failed to update role");
-      // Update local state immediately
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.detail || body.message || "Failed to update role");
+      }
       setUsers(users.map(u => u.id === editingUser.id ? { ...u, role: selectedRole } : u));
       setEditingUser(null);
+      toast("Role updated successfully", "success");
     } catch (err: any) {
-      alert(err.message || "Failed to update role. Please try again.");
+      toast(err.message || "Failed to update role. Please try again.", "error");
     } finally {
       setIsSaving(false);
     }
@@ -117,7 +122,7 @@ export default function UsersPage() {
   );
 
   // Role counts
-  const counts = { admin: 0, manager: 0, user: 0 };
+  const counts = { super_admin: 0, admin: 0, manager: 0, user: 0 };
   users.forEach(u => { if (u.role in counts) counts[u.role]++; });
 
   return (
@@ -145,8 +150,8 @@ export default function UsersPage() {
       </div>
 
       {/* Role Summary Cards */}
-      <div className="grid grid-cols-3 gap-4">
-        {(["admin", "manager", "user"] as Role[]).map(role => {
+      <div className="grid grid-cols-4 gap-4">
+        {(["super_admin", "admin", "manager", "user"] as Role[]).map(role => {
           const cfg = getRoleConfig(role);
           const Icon = cfg.icon;
           return (
@@ -309,7 +314,7 @@ export default function UsersPage() {
             <div className="p-6 space-y-4">
               <label className="text-[10px] font-black uppercase tracking-widest text-[#B3CFE5]">{t('assignRole')}</label>
               <div className="space-y-2">
-                {(["admin", "manager", "user"] as Role[]).map(role => {
+                {(["super_admin", "admin", "manager", "user"] as Role[]).map(role => {
                   const cfg = getRoleConfig(role);
                   const RoleIcon = cfg.icon;
                   const isSelected = selectedRole === role;
@@ -333,6 +338,7 @@ export default function UsersPage() {
                       <div className="flex-1">
                         <p className={cn("text-sm font-black", isSelected ? cfg.color : "text-[#F6FAFD]")}>{cfg.label}</p>
                         <p className="text-[10px] text-[#B3CFE5]/60 font-medium mt-0.5">
+                          {role === "super_admin" && "Full access to everything"}
                           {role === "admin" && t('adminDesc')}
                           {role === "manager" && t('managerDesc')}
                           {role === "user" && t('userDesc')}
