@@ -29,7 +29,7 @@ interface BatchCall {
 interface BatchStatus {
   batch_id: string;
   name?: string;
-  status: "QUEUED" | "PROCESSING" | "COMPLETED" | "FAILED";
+  status: string;
   total_calls: number;
   queued_calls: number;
   processing_calls: number;
@@ -66,7 +66,7 @@ export function BatchProgress({ batchId, batchName, initialErrors = [], onClose 
   const [isLoadingCall, setIsLoadingCall] = useState(false);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  const isComplete = batch?.status === "COMPLETED" || batch?.status === "FAILED";
+  const isComplete = batch?.status?.toUpperCase() === "COMPLETED" || batch?.status?.toUpperCase() === "FAILED";
 
   const fetchBatch = async () => {
     try {
@@ -74,8 +74,8 @@ export function BatchProgress({ batchId, batchName, initialErrors = [], onClose 
       if (!res.ok) return;
       const data: BatchStatus = await res.json();
       setBatch(data);
-      // Auto-expand calls list when completed
-      if (data.status === "COMPLETED" || data.status === "FAILED") {
+      // Stop polling when completed or failed (case-insensitive)
+      if (data.status?.toUpperCase() === "COMPLETED" || data.status?.toUpperCase() === "FAILED") {
         setCallsExpanded(true);
         if (intervalRef.current) {
           clearInterval(intervalRef.current);
@@ -94,7 +94,7 @@ export function BatchProgress({ batchId, batchName, initialErrors = [], onClose 
   }, [batchId]);
 
   const handleCallClick = async (call: BatchCall) => {
-    if (call.status !== "READY" || !call.call_id) return;
+    if (call.status?.toUpperCase() !== "READY" || !call.call_id) return;
     if (selectedCallId === call.call_id) {
       // Toggle off
       setSelectedCallId(null);
