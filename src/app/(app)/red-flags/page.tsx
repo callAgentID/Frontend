@@ -79,6 +79,7 @@ function RedFlagsPageContent() {
   const { apiFetch, BASE_URL } = useApi();
 
   const [redFlags, setRedFlags] = useState<RedFlagSummary[]>([]);
+  const [rawRedFlags, setRawRedFlags] = useState<RedFlagSummary[]>([]);
   const [stats, setStats] = useState<Stats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -108,6 +109,9 @@ function RedFlagsPageContent() {
   const [minScore, setMinScore] = useState<string>("");
   const [maxScore, setMaxScore] = useState<string>("");
 
+  // Sorting
+  const [sortBy, setSortBy] = useState<"date_desc" | "date_asc" | "score_asc" | "score_desc">("date_desc");
+
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(20);
@@ -128,6 +132,19 @@ function RedFlagsPageContent() {
     }
   }, [searchParams]);
 
+  const sortData = (data: RedFlagSummary[], sort: typeof sortBy) =>
+    [...data].sort((a, b) => {
+      if (sort === "date_desc") return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+      if (sort === "date_asc")  return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+      if (sort === "score_asc") return a.score - b.score;
+      return b.score - a.score;
+    });
+
+  // Re-sort from cache when sortBy changes — no API call
+  useEffect(() => {
+    if (rawRedFlags.length > 0) setRedFlags(sortData(rawRedFlags, sortBy));
+  }, [sortBy]);
+
   // Fetch red flags list with filters
   const fetchRedFlags = async () => {
     setLoading(true);
@@ -146,11 +163,9 @@ function RedFlagsPageContent() {
 
       if (response.ok) {
         const data = await response.json();
-        // Sort by score ascending (lower scores first - worse compliance)
-        const sortedData = Array.isArray(data)
-          ? data.sort((a, b) => a.score - b.score)
-          : [];
-        setRedFlags(sortedData);
+        const raw: RedFlagSummary[] = Array.isArray(data) ? data : [];
+        setRawRedFlags(raw);
+        setRedFlags(sortData(raw, sortBy));
       } else {
         throw new Error("Failed to fetch red flags");
       }
@@ -1013,6 +1028,28 @@ function RedFlagsPageContent() {
 
       {/* Red Flags List */}
       <div className="bg-blue-950/25 glow rounded-[2.5rem] border border-blue-400/15 overflow-hidden">
+        {/* List header with sort dropdown */}
+        <div className="px-6 py-3 border-b border-blue-400/10 bg-black/18 flex items-center justify-between">
+          <span className="text-[10px] font-black uppercase tracking-widest text-[#B3CFE5]">
+            {redFlags.length} result{redFlags.length !== 1 ? 's' : ''}
+          </span>
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] font-black uppercase tracking-widest text-[#B3CFE5]">Sort</span>
+            <div className="relative">
+              <select
+                value={sortBy}
+                onChange={e => setSortBy(e.target.value as typeof sortBy)}
+                className="appearance-none h-8 pl-3 pr-8 bg-[#0A1931]/60 border border-blue-400/15 rounded-xl text-[#F6FAFD] text-xs font-bold outline-none cursor-pointer focus:border-[#4A7FA7] transition-colors"
+              >
+                <option value="date_desc">Date Descending</option>
+                <option value="date_asc">Date Ascending</option>
+                <option value="score_asc">Score Ascending</option>
+                <option value="score_desc">Score Descending</option>
+              </select>
+              <ChevronRight className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[#B3CFE5] rotate-90" />
+            </div>
+          </div>
+        </div>
         {loading ? (
           <div className="divide-y divide-[#4A7FA7]/20">
             {[1, 2, 3, 4].map((i) => (

@@ -15,6 +15,7 @@ import {
   Users,
   FileSearch,
   ChevronRight,
+  ChevronDown,
   ShieldCheck,
   XCircle,
   Play,
@@ -57,6 +58,7 @@ interface ResultData {
   smart_summary?: string | null;
   call_success?: boolean | null;
   call_success_reason?: string | null;
+  script_follow_score?: number | null;
   user_meta_tags?: string[] | null;
   ai_meta_tags?: string[] | null;
   final_meta_tags?: string[] | null;
@@ -212,6 +214,8 @@ export function ResultsPanel({ data, isHydrating = false }: { data: ResultData, 
   const [editingQuestionId, setEditingQuestionId] = useState<string | null>(null);
   const [viewHistoryFor, setViewHistoryFor] = useState<{ template_id: string; question_id: string } | null>(null);
   const [transcriptSearch, setTranscriptSearch] = useState("");
+  const [expandedAnswer, setExpandedAnswer] = useState<string | null>(null);
+  const toggleAnswer = (key: string) => setExpandedAnswer(prev => prev === key ? null : key);
 
   if (!data && !isHydrating) return null;
 
@@ -548,6 +552,14 @@ export function ResultsPanel({ data, isHydrating = false }: { data: ResultData, 
             color={isHydrating ? "neutral" : "green"}
             isPending={isHydrating}
           />
+          <MetricCard
+            label="Script Follow"
+            value={safeData.script_follow_score != null ? safeData.script_follow_score.toFixed(0) + "/100" : "N/A"}
+            icon={ScrollText}
+            color={safeData.script_follow_score == null ? 'neutral' : safeData.script_follow_score >= 80 ? 'green' : safeData.script_follow_score >= 50 ? 'neutral' : 'red'}
+            isPending={isHydrating}
+            className="col-span-2"
+          />
         </div>
       </div>
 
@@ -624,220 +636,227 @@ export function ResultsPanel({ data, isHydrating = false }: { data: ResultData, 
                           ? safeData.custom_questions[parseInt(answer.question_id.replace('custom_', '')) - 1]?.text
                           : null);
 
+                      const answerKey = `${templateResult.template_id}||${answer.question_id}`;
+                      const isExpanded = expandedAnswer === answerKey;
+                      const isCustomFreeText = templateResult.template_id === 'custom_questions' && answer.answer && answer.answer !== 'yes' && answer.answer !== 'no';
+                      const isYes = String(answer.answer || '').toLowerCase() === 'yes';
+                      const isPartial = !isYes && !answer.skipped && String(answer.evidence_quality || '').toUpperCase() === 'PARTIAL';
+                      const iconBgClass = isCustomFreeText
+                        ? 'bg-blue-500 text-white shadow-blue-500/20'
+                        : isYes
+                          ? 'bg-green-500 text-white shadow-green-500/20'
+                          : answer.skipped
+                            ? 'bg-gray-400 text-white shadow-gray-400/20'
+                            : isPartial
+                              ? 'bg-amber-500 text-white shadow-amber-500/20'
+                              : 'bg-red-500 text-white shadow-red-500/20';
+
                       return (
-                        <div key={idx} className="group bg-blue-950/25 rounded-[2.5rem] border border-blue-400/15 shadow-sm shadow-[#0A1931]/50 overflow-hidden hover:border-[#4A7FA7]/50 transition-colors">
-                          <div className="p-10 space-y-6">
-                            <div className="flex justify-between items-start gap-8">
-                              <div className="flex-1 space-y-4">
-                                <div className="flex items-center justify-between gap-2">
-                                  <div className="flex items-center gap-2">
-                                    <span className="text-[11px] font-black text-[#B3CFE5] uppercase tracking-[0.2em]">{answer.question_id}</span>
-                                    <ChevronRight className="w-3 h-3 text-[#4A7FA7]/30" />
-                                    {(answer.is_edited || (safeData.human_interventions?.some(
-                                      (i: any) => i.question_id === answer.question_id && i.template_id === templateResult.template_id
-                                    ))) && (
-                                        <span className="px-2 py-1 text-[9px] font-black uppercase tracking-wider bg-green-100 text-green-700 rounded-md border border-green-200 flex items-center gap-1">
-                                          <CheckCircle2 className="w-3 h-3" />
-                                          Human Verified
-                                        </span>
-                                      )}
-                                  </div>
-                                  {!isRecalculating && !answer.skipped && (
-                                    <div className="flex items-center gap-2">
-                                      {getPendingEdit(templateResult.template_id, answer.question_id) && (
-                                        <span className="px-2 py-1 text-[9px] font-black uppercase tracking-wider bg-orange-100 text-orange-700 rounded-md border border-orange-200">
-                                          Pending Edit
-                                        </span>
-                                      )}
-                                      <button
-                                        onClick={() => setEditingQuestionId(`${templateResult.template_id}_${answer.question_id}`)}
-                                        className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg border border-blue-200 transition-colors opacity-0 group-hover:opacity-100"
-                                        title="Edit this answer and provide human correction"
-                                      >
-                                        <Edit className="w-3 h-3" />
-                                        Edit
-                                      </button>
-                                    </div>
-                                  )}
-                                </div>
-                                {questionText && (
-                                  <p className="text-sm font-bold text-purple-600 bg-purple-50 px-3 py-2 rounded-lg border border-purple-200">
-                                    Q: {questionText}
-                                  </p>
-                                )}
-                                {/* Show actual answer for custom questions, otherwise reasoning summary */}
-                                {templateResult.template_id === 'custom_questions' && answer.answer && answer.answer !== 'yes' && answer.answer !== 'no' ? (
-                                  <div className="space-y-2">
-                                    <h5 className="text-[19px] font-[850] text-[#F6FAFD] tracking-tight leading-snug">{answer.answer}</h5>
-                                    <p className="text-sm text-[#B3CFE5] font-medium">{answer.reasoning_summary}</p>
-                                  </div>
-                                ) : (
-                                  <h5 className="text-[19px] font-[850] text-[#F6FAFD] tracking-tight leading-snug">{answer.reasoning_summary}</h5>
-                                )}
-                                {/* Show extracted_info if present */}
-                                {answer.extracted_info && (
-                                  <div className="mt-3 p-4 rounded-xl bg-blue-50 border border-blue-200">
-                                    <p className="text-sm font-semibold text-blue-900">{answer.extracted_info}</p>
-                                  </div>
-                                )}
-                              </div>
-                              <div className={cn(
-                                "w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 shadow-lg transition-transform group-hover:scale-110",
-                                templateResult.template_id === 'custom_questions' && answer.answer && answer.answer !== 'yes' && answer.answer !== 'no'
-                                  ? 'bg-blue-500 text-white shadow-blue-500/20'
-                                  : String(answer.answer || '').toLowerCase() === 'yes'
-                                    ? 'bg-green-500 text-white shadow-green-500/20'
-                                    : answer.skipped
-                                      ? 'bg-gray-400 text-white shadow-gray-400/20'
-                                      : 'bg-red-500 text-white shadow-red-500/20'
-                              )}>
-                                {templateResult.template_id === 'custom_questions' && answer.answer && answer.answer !== 'yes' && answer.answer !== 'no' ? (
-                                  <CheckCircle2 className="w-7 h-7" />
-                                ) : String(answer.answer || '').toLowerCase() === 'yes' ? (
-                                  <ShieldCheck className="w-7 h-7" />
-                                ) : answer.skipped ? (
-                                  <MinusCircle className="w-7 h-7" />
-                                ) : (
-                                  <XCircle className="w-7 h-7" />
-                                )}
-                              </div>
+                        <div key={idx} className="group bg-blue-950/25 rounded-2xl border border-blue-400/15 shadow-sm shadow-[#0A1931]/50 overflow-hidden hover:border-[#4A7FA7]/50 transition-colors">
+
+                          {/* ── Accordion Header (always visible) ── */}
+                          <button
+                            onClick={() => toggleAnswer(answerKey)}
+                            className="w-full flex items-center gap-4 px-6 py-4 text-left hover:bg-blue-950/20 transition-colors"
+                          >
+                            {/* Status icon */}
+                            <div className={cn("w-9 h-9 rounded-xl flex items-center justify-center shrink-0 shadow-md", iconBgClass)}>
+                              {isCustomFreeText ? <CheckCircle2 className="w-5 h-5" />
+                                : isYes ? <ShieldCheck className="w-5 h-5" />
+                                : answer.skipped ? <MinusCircle className="w-5 h-5" />
+                                : isPartial ? <MinusCircle className="w-5 h-5" />
+                                : <XCircle className="w-5 h-5" />}
                             </div>
 
-                            {/* Show latest edit if question has interventions - Full width */}
-                            {safeData.human_interventions && (() => {
-                              const interventions = safeData.human_interventions.filter(
-                                (i: any) => i.question_id === answer.question_id && i.template_id === templateResult.template_id
-                              );
+                            {/* Question info */}
+                            <div className="flex-1 min-w-0 space-y-1">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <span className="text-[11px] font-black text-[#B3CFE5] uppercase tracking-[0.2em]">{answer.question_id}</span>
+                                {answer.evidence_quality && (
+                                  <span className={cn(
+                                    "px-2 py-0.5 text-[9px] font-black uppercase tracking-wider rounded-md border",
+                                    String(answer.evidence_quality).toUpperCase() === 'DIRECT'
+                                      ? "bg-green-50 text-green-700 border-green-200"
+                                      : String(answer.evidence_quality).toUpperCase() === 'PARTIAL'
+                                        ? "bg-amber-50 text-amber-700 border-amber-200"
+                                        : "bg-gray-50 text-gray-500 border-gray-200"
+                                  )}>
+                                    {answer.evidence_quality}
+                                  </span>
+                                )}
+                                {answer.weight != null && (
+                                  <span className="px-2 py-0.5 text-[9px] font-black uppercase tracking-wider rounded-md border bg-blue-950/30 text-[#B3CFE5] border-blue-400/20">
+                                    Weight: {answer.weight}
+                                  </span>
+                                )}
+                                {(answer.is_edited || safeData.human_interventions?.some(
+                                  (i: any) => i.question_id === answer.question_id && i.template_id === templateResult.template_id
+                                )) && (
+                                  <span className="px-2 py-0.5 text-[9px] font-black uppercase tracking-wider bg-green-100 text-green-700 rounded-md border border-green-200 flex items-center gap-1">
+                                    <CheckCircle2 className="w-3 h-3" />
+                                    Human Verified
+                                  </span>
+                                )}
+                                {getPendingEdit(templateResult.template_id, answer.question_id) && (
+                                  <span className="px-2 py-0.5 text-[9px] font-black uppercase tracking-wider bg-orange-100 text-orange-700 rounded-md border border-orange-200">
+                                    Pending Edit
+                                  </span>
+                                )}
+                              </div>
+                              {questionText && (
+                                <p className="text-sm font-semibold text-[#F6FAFD] truncate">{questionText}</p>
+                              )}
+                            </div>
 
-                              if (interventions.length === 0) return null;
+                            {/* Chevron */}
+                            <ChevronDown className={cn("w-4 h-4 text-[#B3CFE5]/50 shrink-0 transition-transform duration-200", isExpanded && "rotate-180")} />
+                          </button>
 
-                              const latest = interventions[interventions.length - 1];
-
-                              return (
-                                <div className="p-4 rounded-xl bg-green-50 border border-green-200 space-y-2">
-                                  <div className="flex items-center justify-between">
-                                    <div className="flex items-center gap-2">
-                                      <Clock className="w-4 h-4 text-green-600" />
-                                      <p className="text-xs font-bold text-green-900">
-                                        Last edited: {new Date(latest.timestamp).toLocaleString()}
-                                      </p>
-                                    </div>
-                                    {interventions.length > 1 && (
-                                      <button
-                                        onClick={() => setViewHistoryFor({ template_id: templateResult.template_id, question_id: answer.question_id })}
-                                        className="flex items-center gap-1 px-2 py-1 text-[10px] font-bold text-green-700 hover:text-green-900 hover:bg-green-100 rounded-md transition-colors"
-                                        title="View full edit history for this question"
-                                      >
-                                        <History className="w-3 h-3" />
-                                        View History ({interventions.length})
-                                      </button>
-                                    )}
-                                  </div>
-                                  <p className="text-xs font-medium text-green-700 italic">"{latest.corrected_reasoning}"</p>
-                                  <div className="flex items-center gap-4 pt-2 border-t border-green-200">
-                                    <div>
-                                      <p className="text-[9px] font-black uppercase tracking-wider text-green-600">Answer</p>
-                                      <p className="text-sm font-bold text-green-900">{latest.corrected_answer}</p>
-                                    </div>
-                                    <div>
-                                      <p className="text-[9px] font-black uppercase tracking-wider text-green-600">Score</p>
-                                      <p className="text-sm font-bold text-green-900">{latest.corrected_score}</p>
-                                    </div>
-                                  </div>
+                          {/* ── Accordion Body (expanded details) ── */}
+                          {isExpanded && (
+                            <div className="px-6 pb-6 space-y-6 border-t border-blue-400/10 pt-5">
+                              {/* Edit button */}
+                              {!isRecalculating && !answer.skipped && (
+                                <div className="flex justify-end">
+                                  <button
+                                    onClick={() => setEditingQuestionId(`${templateResult.template_id}||${answer.question_id}`)}
+                                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg border border-blue-200 transition-colors"
+                                    title="Edit this answer and provide human correction"
+                                  >
+                                    <Edit className="w-3 h-3" />
+                                    Edit
+                                  </button>
                                 </div>
-                              );
-                            })()}
+                              )}
 
-                            {(answer.evidence?.length || 0) > 0 && (() => {
-                              const evidence = answer.evidence[0];
-                              const segmentId = `${answer.question_id}_${evidence?.start_ms}`;
-                              const isPlaying = playingSegment === segmentId;
+                              {/* Reasoning */}
+                              {templateResult.template_id === 'custom_questions' && answer.answer && answer.answer !== 'yes' && answer.answer !== 'no' ? (
+                                <div className="space-y-2">
+                                  <h5 className="text-[19px] font-[850] text-[#F6FAFD] tracking-tight leading-snug">{answer.answer}</h5>
+                                  <p className="text-sm text-[#B3CFE5] font-medium">{answer.reasoning_summary}</p>
+                                </div>
+                              ) : (
+                                <h5 className="text-[17px] font-[850] text-[#F6FAFD] tracking-tight leading-snug">{answer.reasoning_summary}</h5>
+                              )}
 
-                              return (
-                                <div
-                                  onClick={() => {
-                                    if (!hasAudio) return;
+                              {answer.extracted_info && (
+                                <div className="p-4 rounded-xl bg-blue-50 border border-blue-200">
+                                  <p className="text-sm font-semibold text-blue-900">{answer.extracted_info}</p>
+                                </div>
+                              )}
 
-                                    const player = document.getElementById('call-audio-player') as HTMLAudioElement;
-                                    if (!player || !evidence) return;
-
-                                    if (isPlaying) {
-                                      // Pause
-                                      player.pause();
-                                      setPlayingSegment(null);
-                                    } else {
-                                      // Play chunk
-                                      const startTime = (evidence.start_ms || 0) / 1000;
-                                      const endTime = (evidence.end_ms || evidence.start_ms || 0) / 1000;
-
-                                      player.currentTime = startTime;
-                                      player.play();
-                                      setPlayingSegment(segmentId);
-
-                                      // Stop at end_ms — track rAF id so it can be cancelled on unmount
-                                      let rafId: number;
-                                      const checkTime = () => {
-                                        if (player.currentTime >= endTime) {
-                                          player.pause();
-                                          setPlayingSegment(null);
-                                        } else {
-                                          rafId = requestAnimationFrame(checkTime);
-                                        }
-                                      };
-                                      rafId = requestAnimationFrame(checkTime);
-                                      // Cancel rAF when the player ends or is paused externally
-                                      const cancel = () => cancelAnimationFrame(rafId);
-                                      player.addEventListener('pause', cancel, { once: true });
-                                      player.addEventListener('ended', cancel, { once: true });
-                                    }
-                                  }}
-                                  className={cn(
-                                    "p-6 rounded-2xl glass transition-colors relative group/evidence",
-                                    hasAudio && "group-hover:border-[#4A7FA7] cursor-pointer hover:bg-blue-950/25",
-                                    isPlaying && "border-[#4A7FA7] bg-blue-950/25"
-                                  )}
-                                >
-                                  <div className="flex items-center justify-between mb-3">
-                                    <div className="flex items-center gap-2">
-                                      <MessageSquareQuote className="w-4 h-4 text-[#B3CFE5]" />
-                                      <span className="text-[11px] font-black uppercase tracking-widest text-[#B3CFE5]">Evidence Trace</span>
-                                    </div>
-                                    {hasAudio && (
-                                      <div className={cn(
-                                        "flex items-center gap-1 text-[9px] font-black uppercase tracking-widest transition-colors",
-                                        isPlaying ? "text-[#4A7FA7]" : "text-[#B3CFE5] group-hover/evidence:text-[#4A7FA7]"
-                                      )}>
-                                        {isPlaying ? (
-                                          <>
-                                            <Pause className="w-2.5 h-2.5 fill-current" /> Pause
-                                          </>
-                                        ) : (
-                                          <>
-                                            <Play className="w-2.5 h-2.5 fill-current" /> Play Segment
-                                          </>
-                                        )}
+                              {/* Human intervention */}
+                              {safeData.human_interventions && (() => {
+                                const interventions = safeData.human_interventions.filter(
+                                  (i: any) => i.question_id === answer.question_id && i.template_id === templateResult.template_id
+                                );
+                                if (interventions.length === 0) return null;
+                                const latest = interventions[interventions.length - 1];
+                                return (
+                                  <div className="p-4 rounded-xl bg-green-50 border border-green-200 space-y-2">
+                                    <div className="flex items-center justify-between">
+                                      <div className="flex items-center gap-2">
+                                        <Clock className="w-4 h-4 text-green-600" />
+                                        <p className="text-xs font-bold text-green-900">Last edited: {new Date(latest.timestamp).toLocaleString()}</p>
                                       </div>
-                                    )}
+                                      {interventions.length > 1 && (
+                                        <button
+                                          onClick={() => setViewHistoryFor({ template_id: templateResult.template_id, question_id: answer.question_id })}
+                                          className="flex items-center gap-1 px-2 py-1 text-[10px] font-bold text-green-700 hover:text-green-900 hover:bg-green-100 rounded-md transition-colors"
+                                        >
+                                          <History className="w-3 h-3" />
+                                          View History ({interventions.length})
+                                        </button>
+                                      )}
+                                    </div>
+                                    <p className="text-xs font-medium text-green-700 italic">"{latest.corrected_reasoning}"</p>
+                                    <div className="flex items-center gap-4 pt-2 border-t border-green-200">
+                                      <div>
+                                        <p className="text-[9px] font-black uppercase tracking-wider text-green-600">Answer</p>
+                                        <p className="text-sm font-bold text-green-900">{latest.corrected_answer}</p>
+                                      </div>
+                                      <div>
+                                        <p className="text-[9px] font-black uppercase tracking-wider text-green-600">Score</p>
+                                        <p className="text-sm font-bold text-green-900">{latest.corrected_score}</p>
+                                      </div>
+                                    </div>
                                   </div>
-                                  <p className="text-[15px] font-bold text-[#B3CFE5] italic leading-relaxed">
-                                    "{evidence?.quote || 'No specific quote provided'}"
-                                  </p>
-                                  <div className="mt-3 text-[10px] font-black text-[#B3CFE5] uppercase tracking-tighter">
-                                    {evidence?.start_ms && evidence?.end_ms ? (
-                                      <>
-                                        {((evidence.start_ms) / 1000).toFixed(1)}s - {((evidence.end_ms) / 1000).toFixed(1)}s
-                                        <span className="ml-2 text-[#B3CFE5]/40">
-                                          ({(((evidence.end_ms - evidence.start_ms) / 1000).toFixed(1))}s duration)
-                                        </span>
-                                      </>
-                                    ) : (
-                                      <>Starts at {((evidence?.start_ms || 0) / 1000).toFixed(1)}s</>
+                                );
+                              })()}
+
+                              {/* Evidence */}
+                              {(answer.evidence?.length || 0) > 0 && (() => {
+                                const evidence = answer.evidence[0];
+                                const segmentId = `${answer.question_id}_${evidence?.start_ms}`;
+                                const isPlaying = playingSegment === segmentId;
+                                return (
+                                  <div
+                                    onClick={() => {
+                                      if (!hasAudio) return;
+                                      const player = document.getElementById('call-audio-player') as HTMLAudioElement;
+                                      if (!player || !evidence) return;
+                                      if (isPlaying) {
+                                        player.pause();
+                                        setPlayingSegment(null);
+                                      } else {
+                                        const startTime = (evidence.start_ms || 0) / 1000;
+                                        const endTime = (evidence.end_ms || evidence.start_ms || 0) / 1000;
+                                        player.currentTime = startTime;
+                                        player.play();
+                                        setPlayingSegment(segmentId);
+                                        let rafId: number;
+                                        const checkTime = () => {
+                                          if (player.currentTime >= endTime) {
+                                            player.pause();
+                                            setPlayingSegment(null);
+                                          } else {
+                                            rafId = requestAnimationFrame(checkTime);
+                                          }
+                                        };
+                                        rafId = requestAnimationFrame(checkTime);
+                                        const cancel = () => cancelAnimationFrame(rafId);
+                                        player.addEventListener('pause', cancel, { once: true });
+                                        player.addEventListener('ended', cancel, { once: true });
+                                      }
+                                    }}
+                                    className={cn(
+                                      "p-6 rounded-2xl glass transition-colors relative group/evidence",
+                                      hasAudio && "cursor-pointer hover:bg-blue-950/25",
+                                      isPlaying && "border-[#4A7FA7] bg-blue-950/25"
                                     )}
+                                  >
+                                    <div className="flex items-center justify-between mb-3">
+                                      <div className="flex items-center gap-2">
+                                        <MessageSquareQuote className="w-4 h-4 text-[#B3CFE5]" />
+                                        <span className="text-[11px] font-black uppercase tracking-widest text-[#B3CFE5]">Evidence Trace</span>
+                                      </div>
+                                      {hasAudio && (
+                                        <div className={cn(
+                                          "flex items-center gap-1 text-[9px] font-black uppercase tracking-widest transition-colors",
+                                          isPlaying ? "text-[#4A7FA7]" : "text-[#B3CFE5] group-hover/evidence:text-[#4A7FA7]"
+                                        )}>
+                                          {isPlaying ? <><Pause className="w-2.5 h-2.5 fill-current" /> Pause</> : <><Play className="w-2.5 h-2.5 fill-current" /> Play Segment</>}
+                                        </div>
+                                      )}
+                                    </div>
+                                    <p className="text-[15px] font-bold text-[#B3CFE5] italic leading-relaxed">
+                                      "{evidence?.quote || 'No specific quote provided'}"
+                                    </p>
+                                    <div className="mt-3 text-[10px] font-black text-[#B3CFE5] uppercase tracking-tighter">
+                                      {evidence?.start_ms && evidence?.end_ms ? (
+                                        <>
+                                          {(evidence.start_ms / 1000).toFixed(1)}s - {(evidence.end_ms / 1000).toFixed(1)}s
+                                          <span className="ml-2 text-[#B3CFE5]/40">({((evidence.end_ms - evidence.start_ms) / 1000).toFixed(1)}s duration)</span>
+                                        </>
+                                      ) : (
+                                        <>Starts at {((evidence?.start_ms || 0) / 1000).toFixed(1)}s</>
+                                      )}
+                                    </div>
                                   </div>
-                                </div>
-                              );
-                            })()}
-                          </div>
+                                );
+                              })()}
+                            </div>
+                          )}
                         </div>
                       );
                     })}
@@ -1392,7 +1411,9 @@ export function ResultsPanel({ data, isHydrating = false }: { data: ResultData, 
 
       {/* Intervention Modal */}
       {editingQuestionId && (() => {
-        const [templateId, questionId] = editingQuestionId.split('_');
+        const separatorIdx = editingQuestionId.indexOf('||');
+        const templateId = editingQuestionId.slice(0, separatorIdx);
+        const questionId = editingQuestionId.slice(separatorIdx + 2);
         // Find the answer data
         const templateResult = (safeData.qa_result?.results || []).find((r: any) => r.template_id === templateId);
         const answer = templateResult?.answers?.find((a: any) => a.question_id === questionId);
@@ -1590,11 +1611,12 @@ function InterventionModal({ modal, onClose, onSubmit, existingEdit, onRemove }:
   );
 }
 
-function MetricCard({ label, value, icon: Icon, color, isPending = false }: { label: string, value: string, icon: any, color: 'green' | 'red' | 'neutral', isPending?: boolean }) {
+function MetricCard({ label, value, icon: Icon, color, isPending = false, className }: { label: string, value: string, icon: any, color: 'green' | 'red' | 'neutral', isPending?: boolean, className?: string }) {
   return (
     <div className={cn(
       "p-6 rounded-[2rem] bg-blue-950/25 apple-shadow border border-blue-400/15 group hover:scale-[1.03] transition-colors",
-      isPending && "animate-pulse"
+      isPending && "animate-pulse",
+      className
     )}>
       <div className="flex items-start justify-between mb-4">
         <div className="p-2.5 rounded-xl bg-blue-950/20 text-[#4A7FA7]">

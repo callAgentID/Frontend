@@ -331,6 +331,7 @@ export function InputSection({
       if (customQuestions.length > 0) {
         formData.append("custom_questions", JSON.stringify(customQuestions));
       }
+      formData.append("scoring_method", selectedScoringMethod);
 
       const response = await apiFetch("/api/v1/calls/", {
         method: "POST",
@@ -387,6 +388,7 @@ export function InputSection({
       if (batchName.trim()) formData.append("name", batchName.trim());
       if (metaTags.length > 0) formData.append("meta_tags", JSON.stringify(metaTags));
       if (customQuestions.length > 0) formData.append("custom_questions", JSON.stringify(customQuestions));
+      formData.append("scoring_method", selectedScoringMethod);
 
       const response = await apiFetch("/api/v1/batches/", {
         method: "POST",
@@ -412,6 +414,7 @@ export function InputSection({
     }
   };
 
+  const [selectedScoringMethod, setSelectedScoringMethod] = useState<"v4" | "v5">("v4");
   const [showManualSuccess, setShowManualSuccess] = useState(false);
   const [submitAttempted, setSubmitAttempted] = useState(false);
 
@@ -463,6 +466,7 @@ export function InputSection({
       if (customQuestions.length > 0) {
         formData.append("custom_questions", JSON.stringify(customQuestions));
       }
+      formData.append("scoring_method", selectedScoringMethod);
 
       const response = await apiFetch("/api/v1/ingest/manual", {
         method: "POST",
@@ -1084,6 +1088,27 @@ export function InputSection({
                       ))}
                     </div>
                   )}
+                </div>
+              </div>
+
+              {/* Scoring Method Toggle */}
+              <div className="flex items-center justify-between px-1 pt-4 border-t border-blue-400/10">
+                <label className="text-[10px] font-black uppercase tracking-[0.2em] text-[#B3CFE5]">Scoring Method</label>
+                <div className="flex p-1 bg-[#1A3D63]/40 rounded-xl border border-blue-400/10">
+                  {(["v4", "v5"] as const).map(v => (
+                    <button
+                      key={v}
+                      onClick={() => setSelectedScoringMethod(v)}
+                      className={cn(
+                        "px-4 py-1.5 rounded-lg text-xs font-black uppercase tracking-widest transition-colors",
+                        selectedScoringMethod === v
+                          ? "bg-gradient-to-r from-[#4A7FA7] to-[#1A3D63] text-[#F6FAFD] shadow-sm"
+                          : "text-[#B3CFE5] hover:text-[#F6FAFD]"
+                      )}
+                    >
+                      {v}
+                    </button>
+                  ))}
                 </div>
               </div>
 
