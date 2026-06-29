@@ -52,6 +52,8 @@ export function InputSection({
   const [mode, setMode] = useState<InputMode>("audio");
   const [audioFile, setAudioFile] = useState<File | null>(null);
   const [audioFiles, setAudioFiles] = useState<File[]>([]); // multi-file batch
+  const [fileSizeError, setFileSizeError] = useState<string | null>(null);
+  const [fileError, setFileError] = useState<string | null>(null);
   const [batchId, setBatchId] = useState<string | null>(null);
   const [batchName, setBatchName] = useState<string>("");
   const [batchIngestErrors, setBatchIngestErrors] = useState<Array<{ file_name: string; error: string }>>([]);
@@ -187,15 +189,36 @@ export function InputSection({
     setIsProcessing(false);
   };
 
+  const AUDIO_EXTENSIONS = /\.(mp3|m4a|wav|ogg|opus|flac|aac|wma|aiff|aif|webm|mpeg|mpga|mp4a|caf|amr|3gp|3g2)$/i;
   const isAudioFile = (f: File) =>
-    f.type.startsWith("audio/") || f.type.startsWith("video/mpeg") ||
-    ["audio/mpeg", "audio/wav", "audio/x-m4a"].includes(f.type) || f.name.endsWith('.mpeg');
+    f.type.startsWith("audio/") || f.type.startsWith("video/mpeg") || AUDIO_EXTENSIONS.test(f.name);
+
+  const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100 MB
+
+  const isDuplicate = (file: File, existing: File[]) =>
+    existing.some(f => f.name === file.name && f.size === file.size);
 
   const onFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []).filter(isAudioFile);
     if (files.length === 0) return;
-    setAudioFiles(files);
-    setAudioFile(files[0]);
+
+    const oversized = files.filter(f => f.size > MAX_FILE_SIZE);
+    if (oversized.length > 0) {
+      setFileSizeError(`File${oversized.length > 1 ? 's' : ''} too large: ${oversized.map(f => `"${f.name}" (${(f.size / (1024 * 1024)).toFixed(1)} MB)`).join(', ')}. Maximum allowed size is 100 MB.`);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+      return;
+    }
+
+    // Deduplicate within the selection itself
+    const seen = new Map<string, File>();
+    files.forEach(f => seen.set(`${f.name}__${f.size}`, f));
+    const unique = Array.from(seen.values());
+    const dupeCount = files.length - unique.length;
+
+    setFileSizeError(null);
+    setFileError(dupeCount > 0 ? `${dupeCount} duplicate file${dupeCount > 1 ? 's' : ''} removed.` : null);
+    setAudioFiles(unique);
+    setAudioFile(unique[0]);
     setGeneratedTranscript("");
     setBatchId(null);
     setBatchIngestErrors([]);
@@ -204,8 +227,25 @@ export function InputSection({
   const onAddMoreFiles = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newFiles = Array.from(e.target.files || []).filter(isAudioFile);
     if (newFiles.length === 0) return;
+
+    const oversized = newFiles.filter(f => f.size > MAX_FILE_SIZE);
+    if (oversized.length > 0) {
+      setFileSizeError(`File${oversized.length > 1 ? 's' : ''} too large: ${oversized.map(f => `"${f.name}" (${(f.size / (1024 * 1024)).toFixed(1)} MB)`).join(', ')}. Maximum allowed size is 100 MB.`);
+      if (addMoreRef.current) addMoreRef.current.value = "";
+      return;
+    }
+
+    setFileSizeError(null);
     setAudioFiles(prev => {
-      const combined = [...prev, ...newFiles];
+      const dupes = newFiles.filter(f => isDuplicate(f, prev));
+      const fresh = newFiles.filter(f => !isDuplicate(f, prev));
+      if (dupes.length > 0) {
+        setFileError(`${dupes.length} duplicate file${dupes.length > 1 ? 's' : ''} skipped: ${dupes.map(f => `"${f.name}"`).join(', ')}.`);
+      } else {
+        setFileError(null);
+      }
+      if (fresh.length === 0) return prev;
+      const combined = [...prev, ...fresh];
       setAudioFile(combined[0]);
       return combined;
     });
@@ -540,6 +580,8 @@ export function InputSection({
     setCallAnalytics(null);
     setBatchId(null);
     setBatchIngestErrors([]);
+    setFileSizeError(null);
+    setFileError(null);
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
@@ -600,14 +642,14 @@ export function InputSection({
                   <div className="text-center">
                     <p className="text-lg font-extrabold text-[#F6FAFD] group-hover:translate-y-[-2px] transition-transform">{t('uploadSignalFile')}</p>
                     <p className="text-xs font-bold text-[#B3CFE5] uppercase tracking-widest mt-1.5">
-                      {t('mp3WavInfo')} · Select multiple files for batch
+                      MP3, M4A, WAV, FLAC, AAC, OGG and more · Max 100 MB · Select multiple for batch
                     </p>
                   </div>
                   <input
                     type="file"
                     ref={fileInputRef}
                     onChange={onFileChange}
-                    accept="audio/*,video/mpeg,.mpeg,.mp3,.wav,.m4a,.ogg,.opus"
+                    accept="audio/*,.mp3,.m4a,.wav,.ogg,.opus,.flac,.aac,.wma,.aiff,.aif,.webm,.mpeg,.mpga,.caf,.amr,.3gp,.3g2"
                     multiple
                     className="hidden"
                   />
@@ -643,7 +685,7 @@ export function InputSection({
                           type="file"
                           ref={addMoreRef}
                           onChange={onAddMoreFiles}
-                          accept="audio/*,video/mpeg,.mpeg,.mp3,.wav,.m4a,.ogg,.opus"
+                          accept="audio/*,.mp3,.m4a,.wav,.ogg,.opus,.flac,.aac,.wma,.aiff,.aif,.webm,.mpeg,.mpga,.caf,.amr,.3gp,.3g2"
                           multiple
                           className="hidden"
                         />
@@ -678,6 +720,22 @@ export function InputSection({
                       </div>
                     ))}
                   </div>}
+                </div>
+              )}
+
+              {/* File size error */}
+              {fileSizeError && (
+                <div className="flex items-start gap-3 px-4 py-3 rounded-2xl bg-red-500/10 border border-red-500/30 animate-in fade-in duration-150">
+                  <X className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
+                  <p className="text-xs font-bold text-red-300 leading-snug">{fileSizeError}</p>
+                </div>
+              )}
+
+              {/* Duplicate file warning */}
+              {fileError && (
+                <div className="flex items-start gap-3 px-4 py-3 rounded-2xl bg-amber-500/10 border border-amber-500/30 animate-in fade-in duration-150">
+                  <X className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+                  <p className="text-xs font-bold text-amber-300 leading-snug">{fileError}</p>
                 </div>
               )}
 

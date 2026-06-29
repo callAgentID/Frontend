@@ -215,7 +215,21 @@ export function ResultsPanel({ data, isHydrating = false }: { data: ResultData, 
   const [viewHistoryFor, setViewHistoryFor] = useState<{ template_id: string; question_id: string } | null>(null);
   const [transcriptSearch, setTranscriptSearch] = useState("");
   const [expandedAnswer, setExpandedAnswer] = useState<string | null>(null);
+  const [expandedSection, setExpandedSection] = useState<string | null>(null);
   const toggleAnswer = (key: string) => setExpandedAnswer(prev => prev === key ? null : key);
+  const toggleSection = (key: string) => setExpandedSection(prev => prev === key ? null : key);
+
+  // Auto-expand first section of first template result
+  useEffect(() => {
+    const firstResult = data?.qa_result?.results?.[0];
+    if (firstResult) {
+      const firstSection = firstResult.sections?.[0];
+      const key = firstSection
+        ? `${firstResult.template_id}||${firstSection.section_id}`
+        : `${firstResult.template_id}||default`;
+      setExpandedSection(key);
+    }
+  }, [data?.call_id]);
 
   if (!data && !isHydrating) return null;
 
@@ -544,6 +558,7 @@ export function ResultsPanel({ data, isHydrating = false }: { data: ResultData, 
             icon={ShieldAlert}
             color={hasRedFlags ? 'red' : 'green'}
             isPending={isHydrating && !safeData.analytics?.red_flags}
+            href={`/red-flags?callId=${safeData.call_id}`}
           />
           <MetricCard
             label="Confidence"
@@ -617,19 +632,81 @@ export function ResultsPanel({ data, isHydrating = false }: { data: ResultData, 
                   </div>
                 ))
               ) : (
-                (safeData.qa_result?.results || []).map((templateResult: any, templateIdx: number) => (
-                  <div key={templateIdx} className="space-y-6">
-                    {/* Template Header for Custom Questions */}
-                    {templateResult.template_id === 'custom_questions' && (
-                      <div className="flex items-center gap-3 px-1 mb-4">
-                        <div className="p-2 rounded-xl bg-purple-50 text-purple-600">
-                          <HelpCircle className="w-5 h-5" />
-                        </div>
-                        <h5 className="text-xl font-[850] text-[#F6FAFD] tracking-tight">Custom Questions</h5>
+                (safeData.qa_result?.results || []).map((templateResult: any, templateIdx: number) => {
+                  // Normalize: new format has sections[], old format has flat answers[]
+                  const sections: Array<{ section_id: string; title: string; answers: any[] }> =
+                    templateResult.sections?.length > 0
+                      ? templateResult.sections
+                      : [{ section_id: 'default', title: templateResult.template_id === 'custom_questions' ? 'Custom Questions' : '', answers: templateResult.answers || [] }];
+
+                  return (
+                  <div key={templateIdx} className="space-y-8">
+                    {/* Template-level summary / overall score */}
+                    {(templateResult.overall_score != null || templateResult.summary) && (
+                      <div className="flex items-center justify-between px-1 py-3 border-b border-blue-400/10">
+                        {templateResult.summary && (
+                          <p className="text-sm font-medium text-[#B3CFE5] italic flex-1 pr-6">"{templateResult.summary}"</p>
+                        )}
+                        {templateResult.overall_score != null && (
+                          <span className={cn(
+                            "shrink-0 px-3 py-1.5 rounded-xl text-sm font-black border",
+                            templateResult.overall_score >= 80 ? "bg-green-500/10 text-green-400 border-green-500/20"
+                            : templateResult.overall_score >= 50 ? "bg-amber-500/10 text-amber-400 border-amber-500/20"
+                            : "bg-red-500/10 text-red-400 border-red-500/20"
+                          )}>
+                            {templateResult.overall_score.toFixed(1)}/100
+                          </span>
+                        )}
                       </div>
                     )}
-                    {/* Answers */}
-                    {(templateResult.answers || []).map((answer: any, idx: number) => {
+
+                    {/* Sections */}
+                    {sections.map((section: any, sectionIdx: number) => {
+                      const sectionKey = `${templateResult.template_id}||${section.section_id || sectionIdx}`;
+                      const isSectionExpanded = expandedSection === sectionKey;
+                      const passCount = (section.answers || []).filter((a: any) => String(a.answer || '').toLowerCase() === 'yes').length;
+                      const totalCount = section.answers?.length || 0;
+
+                      return (
+                      <div key={section.section_id || sectionIdx} className="rounded-2xl border border-blue-400/15 bg-blue-950/15 overflow-hidden">
+                        {/* Section accordion header */}
+                        <button
+                          onClick={() => toggleSection(sectionKey)}
+                          className="w-full flex items-center gap-4 px-5 py-4 hover:bg-blue-950/25 transition-colors text-left"
+                        >
+                          <div className={cn(
+                            "p-2 rounded-xl shrink-0",
+                            templateResult.template_id === 'custom_questions' ? "bg-purple-50 text-purple-600" : "bg-blue-500/10 text-[#4A7FA7]"
+                          )}>
+                            {templateResult.template_id === 'custom_questions'
+                              ? <HelpCircle className="w-4 h-4" />
+                              : <FileSearch className="w-4 h-4" />}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-3 flex-wrap">
+                              {section.title && (
+                                <h5 className="text-sm font-[850] text-[#F6FAFD] tracking-tight">{section.title}</h5>
+                              )}
+                              <span className="text-[10px] font-black text-[#B3CFE5]/50 uppercase tracking-widest">
+                                {totalCount} questions
+                              </span>
+                            </div>
+                          </div>
+                          {/* Pass/fail mini stats */}
+                          <div className="flex items-center gap-2 shrink-0">
+                            <span className="flex items-center gap-1 text-[10px] font-black text-green-400">
+                              <div className="w-1.5 h-1.5 rounded-full bg-green-500" />{passCount}
+                            </span>
+                            <span className="text-[#B3CFE5]/30 text-[10px]">/</span>
+                            <span className="text-[10px] font-black text-[#B3CFE5]/60">{totalCount}</span>
+                          </div>
+                          <ChevronDown className={cn("w-4 h-4 text-[#B3CFE5]/40 shrink-0 transition-transform duration-200", isSectionExpanded && "rotate-180")} />
+                        </button>
+
+                        {/* Section body — answers */}
+                        {isSectionExpanded && (
+                        <div className="px-3 pb-3 space-y-2 border-t border-blue-400/10">
+                        {(section.answers || []).map((answer: any, idx: number) => {
                       // Get original question text for custom questions or from answer.question_text
                       const questionText = answer.question_text ||
                         (templateResult.template_id === 'custom_questions' && safeData.custom_questions
@@ -652,7 +729,7 @@ export function ResultsPanel({ data, isHydrating = false }: { data: ResultData, 
                               : 'bg-red-500 text-white shadow-red-500/20';
 
                       return (
-                        <div key={idx} className="group bg-blue-950/25 rounded-2xl border border-blue-400/15 shadow-sm shadow-[#0A1931]/50 overflow-hidden hover:border-[#4A7FA7]/50 transition-colors">
+                        <div key={idx} className="group bg-blue-950/25 rounded-2xl border border-blue-400/15 shadow-sm shadow-[#0A1931]/50 hover:border-[#4A7FA7]/50 transition-colors">
 
                           {/* ── Accordion Header (always visible) ── */}
                           <button
@@ -671,19 +748,30 @@ export function ResultsPanel({ data, isHydrating = false }: { data: ResultData, 
                             {/* Question info */}
                             <div className="flex-1 min-w-0 space-y-1">
                               <div className="flex items-center gap-2 flex-wrap">
-                                <span className="text-[11px] font-black text-[#B3CFE5] uppercase tracking-[0.2em]">{answer.question_id}</span>
-                                {answer.evidence_quality && (
-                                  <span className={cn(
-                                    "px-2 py-0.5 text-[9px] font-black uppercase tracking-wider rounded-md border",
-                                    String(answer.evidence_quality).toUpperCase() === 'DIRECT'
-                                      ? "bg-green-50 text-green-700 border-green-200"
-                                      : String(answer.evidence_quality).toUpperCase() === 'PARTIAL'
-                                        ? "bg-amber-50 text-amber-700 border-amber-200"
-                                        : "bg-gray-50 text-gray-500 border-gray-200"
-                                  )}>
-                                    {answer.evidence_quality}
-                                  </span>
-                                )}
+                                {answer.evidence_quality && (() => {
+                                  const eq = String(answer.evidence_quality).toUpperCase();
+                                  const tooltipText =
+                                    eq === 'DIRECT'  ? "Direct evidence — a clear, explicit quote supports this answer" :
+                                    eq === 'PARTIAL' ? "Partial evidence — some supporting context found but not conclusive" :
+                                    eq === 'NONE'    ? "No evidence — answer is inferred with no supporting quote" :
+                                    `Evidence quality: ${answer.evidence_quality}`;
+                                  return (
+                                    <span className="relative group/eq cursor-help">
+                                      <span className={cn(
+                                        "px-2 py-0.5 text-[9px] font-black uppercase tracking-wider rounded-md border",
+                                        eq === 'DIRECT'  ? "bg-green-50 text-green-700 border-green-200" :
+                                        eq === 'PARTIAL' ? "bg-amber-50 text-amber-700 border-amber-200" :
+                                                           "bg-gray-50 text-gray-500 border-gray-200"
+                                      )}>
+                                        {answer.evidence_quality}
+                                      </span>
+                                      <span className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-56 px-3 py-2 rounded-lg bg-[#0A1931] border border-blue-400/20 text-[11px] font-medium text-[#B3CFE5] leading-snug shadow-xl opacity-0 group-hover/eq:opacity-100 transition-opacity duration-150 z-[999] whitespace-normal text-center">
+                                        {tooltipText}
+                                        <span className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-[#0A1931]" />
+                                      </span>
+                                    </span>
+                                  );
+                                })()}
                                 {answer.weight != null && (
                                   <span className="px-2 py-0.5 text-[9px] font-black uppercase tracking-wider rounded-md border bg-blue-950/30 text-[#B3CFE5] border-blue-400/20">
                                     Weight: {answer.weight}
@@ -859,9 +947,15 @@ export function ResultsPanel({ data, isHydrating = false }: { data: ResultData, 
                           )}
                         </div>
                       );
+                        })}
+                        </div>
+                        )}
+                      </div>
+                      );
                     })}
                   </div>
-                ))
+                  );
+                })
               )}
             </div>
           </section>
@@ -1611,13 +1705,9 @@ function InterventionModal({ modal, onClose, onSubmit, existingEdit, onRemove }:
   );
 }
 
-function MetricCard({ label, value, icon: Icon, color, isPending = false, className }: { label: string, value: string, icon: any, color: 'green' | 'red' | 'neutral', isPending?: boolean, className?: string }) {
-  return (
-    <div className={cn(
-      "p-6 rounded-[2rem] bg-blue-950/25 apple-shadow border border-blue-400/15 group hover:scale-[1.03] transition-colors",
-      isPending && "animate-pulse",
-      className
-    )}>
+function MetricCard({ label, value, icon: Icon, color, isPending = false, className, href }: { label: string, value: string, icon: any, color: 'green' | 'red' | 'neutral', isPending?: boolean, className?: string, href?: string }) {
+  const inner = (
+    <>
       <div className="flex items-start justify-between mb-4">
         <div className="p-2.5 rounded-xl bg-blue-950/20 text-[#4A7FA7]">
           <Icon className={cn("w-5 h-5 stroke-[1.5px]", isPending && "animate-spin-slow")} />
@@ -1632,8 +1722,21 @@ function MetricCard({ label, value, icon: Icon, color, isPending = false, classN
         "text-[18px] font-[850] text-[#F6FAFD] tracking-tight truncate",
         isPending && "text-[#B3CFE5]/40"
       )}>{value}</h5>
-    </div>
+    </>
   );
+
+  const baseClass = cn(
+    "p-6 rounded-[2rem] bg-blue-950/25 apple-shadow border border-blue-400/15 group hover:scale-[1.03] transition-colors",
+    isPending && "animate-pulse",
+    href && "cursor-pointer hover:border-[#4A7FA7]/50",
+    className
+  );
+
+  if (href) {
+    return <a href={href} className={baseClass}>{inner}</a>;
+  }
+
+  return <div className={baseClass}>{inner}</div>;
 }
 
 // ─── LLM Cost Breakdown ──────────────────────────────────

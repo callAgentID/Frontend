@@ -13,6 +13,7 @@ import {
   ChevronDown,
   Loader2,
   AlertCircle,
+  AlertTriangle,
   X,
   Upload,
   FileText,
@@ -63,6 +64,8 @@ function ScriptsPageContent() {
     inputMode: "text" as "file" | "text"
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState<{ id: string; title: string } | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [mounted, setMounted] = useState(false);
   useEffect(() => { setMounted(true); }, []);
 
@@ -152,16 +155,14 @@ function ScriptsPageContent() {
     }
   };
 
-  const handleDeleteScript = async (scriptId: string) => {
-    if (!confirm("Are you sure you want to delete this script? This action cannot be undone.")) return;
-
+  const handleDeleteScript = async () => {
+    if (!deleteConfirm) return;
+    setIsDeleting(true);
     try {
-      const res = await apiFetch(`/api/v1/scripts/${scriptId}`, {
-        method: "DELETE"
-      });
-
+      const res = await apiFetch(`/api/v1/scripts/${deleteConfirm.id}`, { method: "DELETE" });
       if (res.ok || res.status === 204) {
         toast("Script deleted", "success");
+        setDeleteConfirm(null);
         fetchScripts();
       } else {
         const errorData = await res.json().catch(() => ({}));
@@ -169,6 +170,8 @@ function ScriptsPageContent() {
       }
     } catch (err: any) {
       toast(err.message || "Failed to delete script. Please try again.", "error");
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -297,7 +300,7 @@ function ScriptsPageContent() {
                   </div>
                   <Tooltip content={tt("deleteScript")} placement="top">
                     <button
-                      onClick={(e) => { e.stopPropagation(); handleDeleteScript(script.id); }}
+                      onClick={(e) => { e.stopPropagation(); setDeleteConfirm({ id: script.id, title: script.title }); }}
                       className="w-10 h-10 rounded-xl bg-red-500/20 hover:bg-red-500 hover:text-white text-red-500 flex items-center justify-center transition-colors opacity-0 group-hover:opacity-100"
                     >
                       <Trash2 className="w-4 h-4" />
@@ -329,6 +332,42 @@ function ScriptsPageContent() {
           ))
         )}
       </div>
+
+      {/* Delete Confirm Modal */}
+      {mounted && deleteConfirm && createPortal(
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-6 bg-black/60 animate-in fade-in duration-150">
+          <div className="w-full max-w-md bg-[#0D1F3C] border border-red-500/30 rounded-3xl shadow-2xl overflow-hidden animate-in fade-in duration-150">
+            <div className="p-6 border-b border-red-500/20 bg-red-500/10 flex items-center gap-4">
+              <AlertTriangle className="w-6 h-6 text-red-400 shrink-0" />
+              <div>
+                <h3 className="text-base font-black text-[#F6FAFD]">Delete Script</h3>
+                <p className="text-sm text-red-400 mt-0.5">This action cannot be undone.</p>
+              </div>
+            </div>
+            <div className="p-6 space-y-4">
+              <p className="text-sm text-[#B3CFE5]">
+                Are you sure you want to delete <span className="font-bold text-[#F6FAFD]">"{deleteConfirm.title}"</span>?
+              </p>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setDeleteConfirm(null)}
+                  className="flex-1 h-11 bg-blue-950/40 hover:bg-blue-950/60 text-[#B3CFE5] hover:text-[#F6FAFD] rounded-xl font-bold text-sm uppercase tracking-wider transition-colors border border-blue-400/12"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleDeleteScript}
+                  disabled={isDeleting}
+                  className="flex-1 h-11 bg-red-500 hover:bg-red-600 disabled:opacity-50 text-white rounded-xl font-bold text-sm uppercase tracking-wider transition-colors flex items-center justify-center gap-2"
+                >
+                  {isDeleting ? <><Loader2 className="w-4 h-4 animate-spin" /> Deleting...</> : <><Trash2 className="w-4 h-4" /> Delete</>}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
 
       {/* Create Script Modal */}
       {mounted && isCreateModalOpen && createPortal(

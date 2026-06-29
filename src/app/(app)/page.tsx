@@ -7,7 +7,8 @@ import { useApi } from "@/lib/useApi";
 import {
   Zap,
   Play,
-  RotateCcw
+  RotateCcw,
+  PlusCircle
 } from "lucide-react";
 import { InputSection } from "@/components/InputSection";
 import { ResultsPanel } from "@/components/ResultsPanel";
@@ -65,11 +66,7 @@ function HomeContent() {
   };
 
   const resetPipeline = () => {
-    setPipelineState("input");
-    setAnalysisResult(null);
-
-    // Clear URL
-    router.push('/', { scroll: false });
+    window.location.href = '/';
   };
 
   return (
@@ -132,7 +129,7 @@ function HomeContent() {
                 onClick={resetPipeline}
                 className="flex items-center gap-2.5 px-6 py-3 bg-blue-950/25 hover:bg-[#4A7FA7]/40 text-[#B3CFE5] hover:text-[#F6FAFD] rounded-2xl font-bold text-xs uppercase tracking-widest transition-colors glow active:scale-95 border border-blue-400/15"
               >
-                <RotateCcw className="w-4 h-4" /> {t('resetFramework')}
+                <PlusCircle className="w-4 h-4" /> New Analysis
               </button>
             </div>
             <ResultsPanel
