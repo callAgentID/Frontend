@@ -104,7 +104,7 @@ function ScriptsPageContent() {
   }, []);
 
   const handleCreateScript = async () => {
-    if (!createForm.title || (!createForm.text.trim() && !createForm.file)) return;
+    if (!createForm.title || !createForm.campaign_id || (!createForm.text.trim() && !createForm.file)) return;
 
     setIsSubmitting(true);
     try {
@@ -403,13 +403,13 @@ function ScriptsPageContent() {
 
               {/* Campaign */}
               <div className="space-y-1.5">
-                <label className="text-[10px] font-black uppercase tracking-[0.15em] text-[#B3CFE5]">{t('campaign')}</label>
+                <label className="text-[10px] font-black uppercase tracking-[0.15em] text-[#B3CFE5]">Campaign *</label>
                 <select
                   value={createForm.campaign_id}
                   onChange={(e) => setCreateForm({ ...createForm, campaign_id: e.target.value })}
                   className="w-full h-11 px-4 rounded-xl text-sm font-medium text-[#F6FAFD] bg-blue-950/40 border border-blue-400/18 outline-none appearance-none cursor-pointer focus:border-[#4A7FA7] transition-colors"
                 >
-                  <option value="" style={{ background: '#0D1F3C' }}>{t('noCampaign')}</option>
+                  <option value="" style={{ background: '#0D1F3C' }}>Select a campaign…</option>
                   {campaigns.map(c => (
                     <option key={c.id || c._id} value={c.id || c._id} style={{ background: '#0D1F3C' }}>{c.name}</option>
                   ))}
@@ -503,7 +503,7 @@ function ScriptsPageContent() {
               </button>
               <button
                 onClick={handleCreateScript}
-                disabled={isSubmitting || !createForm.title || (!createForm.text.trim() && !createForm.file)}
+                disabled={isSubmitting || !createForm.title || !createForm.campaign_id || (!createForm.text.trim() && !createForm.file)}
                 className="flex-1 h-11 bg-gradient-to-r from-[#4A7FA7] to-[#1A3D63] text-white rounded-xl font-bold text-sm uppercase tracking-wider hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2 glow transition-opacity"
               >
                 {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Plus className="w-4 h-4" /> {t('createScript')}</>}
