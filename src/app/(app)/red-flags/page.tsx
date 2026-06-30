@@ -49,6 +49,7 @@ interface RedFlagDetail {
   score: number;
   has_critical_issues: boolean;
   requires_immediate_attention: boolean;
+  flags_count?: number;
   full_result: any;
   file_name?: string;
   created_at: string;
@@ -89,6 +90,7 @@ function RedFlagsPageContent() {
   const [detailData, setDetailData] = useState<RedFlagDetail | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
   const [playingSegment, setPlayingSegment] = useState<string | null>(null);
+  const [detailFlagsCount, setDetailFlagsCount] = useState<number | null>(null);
 
   // Batch intervention state
   const [pendingEdits, setPendingEdits] = useState<Map<string, {
@@ -144,6 +146,13 @@ function RedFlagsPageContent() {
   useEffect(() => {
     if (rawRedFlags.length > 0) setRedFlags(sortData(rawRedFlags, sortBy));
   }, [sortBy]);
+
+  // Backfill detail flags count from list whenever list loads or selected call changes
+  useEffect(() => {
+    if (!selectedCallId || rawRedFlags.length === 0) return;
+    const match = rawRedFlags.find(f => f.call_id === selectedCallId);
+    if (match != null) setDetailFlagsCount(match.flags_count);
+  }, [rawRedFlags, selectedCallId]);
 
   // Fetch red flags list with filters
   const fetchRedFlags = async () => {
@@ -209,6 +218,8 @@ function RedFlagsPageContent() {
 
       if (response.ok) {
         const data = await response.json();
+        // Use flags_count from detail response if present, otherwise keep list value
+        if (data.flags_count != null) setDetailFlagsCount(data.flags_count);
         setDetailData(data);
       } else if (response.status === 404) {
         alert("Red flag analysis not found for this call. It may not have been processed yet.");
@@ -228,6 +239,7 @@ function RedFlagsPageContent() {
   const closeDetail = () => {
     setSelectedCallId(null);
     setDetailData(null);
+    setDetailFlagsCount(null);
     setPlayingSegment(null);
     setPendingEdits(new Map());
     setEditingQuestionId(null);
@@ -437,23 +449,42 @@ function RedFlagsPageContent() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="p-6 rounded-2xl glass">
-                  <p className="text-[10px] font-black uppercase tracking-widest text-[#B3CFE5] mb-2">Risk Score</p>
-                  <p className="text-3xl font-[850] text-[#F6FAFD]">{detailData.score.toFixed(1)}</p>
-                </div>
-                <div className="p-6 rounded-2xl glass">
-                  <p className="text-[10px] font-black uppercase tracking-widest text-[#B3CFE5] mb-2">Created</p>
-                  <p className="text-sm font-bold text-[#F6FAFD]">{new Date(detailData.created_at).toLocaleString()}</p>
-                </div>
-                {detailData.reviewed_at && (
-                  <div className="p-6 rounded-2xl bg-[#4A7FA7]/20 border border-blue-400/15">
-                    <p className="text-[10px] font-black uppercase tracking-widest text-[#4A7FA7] mb-2">Reviewed By</p>
-                    <p className="text-sm font-bold text-[#F6FAFD]">{detailData.reviewed_by}</p>
-                    <p className="text-xs text-[#B3CFE5] mt-1">{new Date(detailData.reviewed_at).toLocaleString()}</p>
+              {(() => {
+                const flagged = detailFlagsCount ?? detailData.flags_count ?? 0;
+                const total = detailData.full_result?.answers?.length ?? 0;
+                return (
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                    <div className="p-6 rounded-2xl glass">
+                      <p className="text-[10px] font-black uppercase tracking-widest text-[#B3CFE5] mb-2">Risk Score</p>
+                      <p className="text-3xl font-[850] text-[#F6FAFD]">{detailData.score.toFixed(1)}</p>
+                    </div>
+                    <div className={cn("p-6 rounded-2xl border", flagged > 0 ? "border-red-500/30 bg-red-500/10" : "border-green-500/30 bg-green-500/10")}>
+                      <div className="flex items-center gap-2 mb-2">
+                        <AlertCircle className={cn("w-3.5 h-3.5", flagged > 0 ? "text-red-400" : "text-green-400")} />
+                        <p className={cn("text-[10px] font-black uppercase tracking-widest", flagged > 0 ? "text-red-400" : "text-green-400")}>Red Flags</p>
+                      </div>
+                      <p className={cn("text-3xl font-[850]", flagged > 0 ? "text-red-300" : "text-green-300")}>{flagged}</p>
+                      {total > 0 && <p className="text-[9px] font-bold text-[#B3CFE5]/50 mt-1">of {total} checks</p>}
+                    </div>
+                    <div className="p-6 rounded-2xl glass">
+                      <p className="text-[10px] font-black uppercase tracking-widest text-[#B3CFE5] mb-2">Created</p>
+                      <p className="text-sm font-bold text-[#F6FAFD]">{new Date(detailData.created_at).toLocaleString()}</p>
+                    </div>
+                    {detailData.reviewed_at ? (
+                      <div className="p-6 rounded-2xl bg-[#4A7FA7]/20 border border-blue-400/15">
+                        <p className="text-[10px] font-black uppercase tracking-widest text-[#4A7FA7] mb-2">Reviewed By</p>
+                        <p className="text-sm font-bold text-[#F6FAFD]">{detailData.reviewed_by}</p>
+                        <p className="text-xs text-[#B3CFE5] mt-1">{new Date(detailData.reviewed_at).toLocaleString()}</p>
+                      </div>
+                    ) : (
+                      <div className="p-6 rounded-2xl border border-amber-500/20 bg-amber-500/5">
+                        <p className="text-[10px] font-black uppercase tracking-widest text-amber-400 mb-2">Review Status</p>
+                        <p className="text-sm font-bold text-amber-300">Pending</p>
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
+                );
+              })()}
             </div>
 
             {/* Audio Player - Check if audio is available */}

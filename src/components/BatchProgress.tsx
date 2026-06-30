@@ -171,6 +171,15 @@ export function BatchProgress({ batchId, batchName, initialErrors = [], onClose 
 
         {/* Actions */}
         <div className="flex items-center gap-1.5 shrink-0">
+          {isComplete && (
+            <button
+              onClick={() => { window.location.href = '/'; }}
+              className="flex items-center gap-1.5 h-8 px-3 rounded-lg bg-[#4A7FA7]/20 hover:bg-[#4A7FA7]/40 text-[#B3CFE5] hover:text-[#F6FAFD] text-[10px] font-black uppercase tracking-widest transition-colors border border-blue-400/15"
+              title="Start a new analysis"
+            >
+              + New Analysis
+            </button>
+          )}
           {batch && (
             <button
               onClick={() => setCallsExpanded(!callsExpanded)}

@@ -67,6 +67,7 @@ interface ResultData {
   questionnaire_name?: string | null;
   script_name?: string | null;
   batch_id?: string | null;
+  risk_flags_count?: number | null;
   human_intervention_count?: number;
   human_interventions?: Array<{
     timestamp: string;
@@ -248,8 +249,8 @@ export function ResultsPanel({ data, isHydrating = false }: { data: ResultData, 
   const sentimentLabel = safeData.analytics?.sentiment?.overall?.label || (isHydrating ? 'analyzing...' : 'neutral');
   const isNeutral = sentimentLabel === 'neutral';
   const isPositive = sentimentLabel === 'positive';
-  const redFlagsCount = safeData.analytics?.red_flags?.flags?.length || 0;
-  const hasRedFlags = !!safeData.analytics?.red_flags?.has_red_flags;
+  const redFlagsCount = safeData.risk_flags_count ?? safeData.analytics?.red_flags?.flags?.length ?? 0;
+  const hasRedFlags = redFlagsCount > 0 || !!safeData.analytics?.red_flags?.has_red_flags;
 
   // Check if audio is available (not from manual upload)
   const hasAudio = safeData.transcript?.provider_metadata?.provider !== 'manual_upload';
@@ -556,7 +557,7 @@ export function ResultsPanel({ data, isHydrating = false }: { data: ResultData, 
             label="Risk Flags"
             value={hasRedFlags ? redFlagsCount.toString() : "Clean"}
             icon={ShieldAlert}
-            color={hasRedFlags ? 'red' : 'green'}
+            color={safeData.analytics?.red_flags?.has_red_flags ? 'red' : 'green'}
             isPending={isHydrating && !safeData.analytics?.red_flags}
             href={`/red-flags?callId=${safeData.call_id}`}
           />

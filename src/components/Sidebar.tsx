@@ -177,7 +177,13 @@ export function Sidebar() {
                 <Link
                   key={item.href}
                   href={item.href}
-                  onClick={() => setIsMobileOpen(false)}
+                  onClick={(e) => {
+                    setIsMobileOpen(false);
+                    if (item.href === '/') {
+                      e.preventDefault();
+                      window.location.href = '/';
+                    }
+                  }}
                   title={isCollapsed ? t(item.name as any) : undefined}
                   className={cn(
                     "sidebar-nav-item flex items-center rounded-2xl text-[13px] font-medium relative overflow-hidden",
