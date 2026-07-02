@@ -33,6 +33,91 @@
   --border: 210 30% 100% / 0.10;
 }
 
+/* ─── Light mode overrides ────────────────────────── */
+html.light {
+  --water-deep:   #F0F4FA;
+  --accent:       #1A6FD4;
+  --accent-soft:  rgba(26, 111, 212, 0.14);
+  --accent-glow:  rgba(26, 111, 212, 0.30);
+
+  --glass-bg:       rgba(255, 255, 255, 0.70);
+  --glass-border:   rgba(26, 111, 212, 0.14);
+  --glass-hover:    rgba(26, 111, 212, 0.08);
+  --glass-active:   rgba(26, 111, 212, 0.16);
+  --glass-sidebar:  rgba(240, 244, 250, 0.92);
+
+  --text-primary:   #0D1B2E;
+  --text-secondary: rgba(20, 50, 100, 0.65);
+  --text-tertiary:  rgba(20, 50, 100, 0.38);
+
+  --background: 215 40% 96%;
+  --foreground: 215 50% 10%;
+  --muted: 215 20% 85%;
+  --muted-foreground: 215 20% 40%;
+  --primary: 215 80% 50%;
+  --primary-foreground: 0 0% 100%;
+  --border: 215 30% 20% / 0.12;
+}
+
+html.light body {
+  background: var(--water-deep);
+  color: var(--text-primary);
+}
+
+html.light body::before {
+  background:
+    radial-gradient(ellipse 65% 55% at -5% 30%,  rgba(100, 160, 255, 0.18) 0%, transparent 60%),
+    radial-gradient(ellipse 55% 60% at 105% 20%, rgba(80, 140, 230, 0.14)  0%, transparent 60%),
+    radial-gradient(ellipse 50% 50% at 50% 110%, rgba(60, 120, 200, 0.10)  0%, transparent 55%),
+    radial-gradient(ellipse 40% 35% at 65% -5%,  rgba(120, 180, 255, 0.10) 0%, transparent 55%),
+    #F0F4FA;
+}
+
+html.light .water-caustics {
+  background:
+    radial-gradient(ellipse 25% 18% at 22% 25%, rgba(80, 140, 255, 0.06) 0%, transparent 60%),
+    radial-gradient(ellipse 20% 15% at 78% 70%, rgba(60, 120, 220, 0.05) 0%, transparent 60%),
+    radial-gradient(ellipse 18% 12% at 55% 45%, rgba(70, 130, 240, 0.04) 0%, transparent 60%);
+}
+
+html.light .glass {
+  background: rgba(255, 255, 255, 0.72);
+  border-color: rgba(26, 111, 212, 0.14);
+}
+html.light .glass-blur {
+  background: rgba(255, 255, 255, 0.72);
+  border-color: rgba(26, 111, 212, 0.14);
+}
+html.light .glass-heavy {
+  background: rgba(240, 244, 250, 0.85);
+  border-color: rgba(26, 111, 212, 0.10);
+}
+html.light .glass-card {
+  background: rgba(255, 255, 255, 0.80);
+  border-color: rgba(26, 111, 212, 0.12);
+  box-shadow: 0 2px 16px rgba(26, 111, 212, 0.08);
+}
+html.light .glass-tinted {
+  background: rgba(26, 111, 212, 0.10);
+  border-color: rgba(26, 111, 212, 0.18);
+}
+html.light .glass-active {
+  background: rgba(26, 111, 212, 0.14);
+  border-color: rgba(26, 111, 212, 0.28);
+  box-shadow: 0 0 12px rgba(26, 111, 212, 0.12);
+}
+html.light .glow        { box-shadow: 0 0 12px rgba(26, 111, 212, 0.16); }
+html.light .glow-strong { box-shadow: 0 0 20px rgba(26, 111, 212, 0.28); }
+html.light .apple-shadow { box-shadow: 0 4px 20px rgba(26, 111, 212, 0.12); }
+html.light .subtle-grid {
+  background-image:
+    linear-gradient(rgba(26, 111, 212, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(26, 111, 212, 0.04) 1px, transparent 1px);
+  background-size: 48px 48px;
+}
+html.light ::-webkit-scrollbar-thumb { background: rgba(26, 111, 212, 0.20); }
+html.light ::-webkit-scrollbar-thumb:hover { background: rgba(26, 111, 212, 0.40); }
+
 /* ─── Base body ────────────────────────────────────── */
 /* Promote background layers to own compositor layers */
 html {
