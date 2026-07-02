@@ -193,7 +193,7 @@ export function InputSection({
   const isAudioFile = (f: File) =>
     f.type.startsWith("audio/") || f.type.startsWith("video/mpeg") || AUDIO_EXTENSIONS.test(f.name);
 
-  const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100 MB
+  const MAX_FILE_SIZE = 2 * 1024 * 1024 * 1024; // 2 GB (S3 direct upload — no API Gateway limit)
 
   const isDuplicate = (file: File, existing: File[]) =>
     existing.some(f => f.name === file.name && f.size === file.size);
@@ -204,7 +204,7 @@ export function InputSection({
 
     const oversized = files.filter(f => f.size > MAX_FILE_SIZE);
     if (oversized.length > 0) {
-      setFileSizeError(`File${oversized.length > 1 ? 's' : ''} too large: ${oversized.map(f => `"${f.name}" (${(f.size / (1024 * 1024)).toFixed(1)} MB)`).join(', ')}. Maximum allowed size is 100 MB.`);
+      setFileSizeError(`File${oversized.length > 1 ? 's' : ''} too large: ${oversized.map(f => `"${f.name}" (${(f.size / (1024 * 1024)).toFixed(1)} MB)`).join(', ')}. Maximum allowed size is 2 GB.`);
       if (fileInputRef.current) fileInputRef.current.value = "";
       return;
     }
@@ -230,7 +230,7 @@ export function InputSection({
 
     const oversized = newFiles.filter(f => f.size > MAX_FILE_SIZE);
     if (oversized.length > 0) {
-      setFileSizeError(`File${oversized.length > 1 ? 's' : ''} too large: ${oversized.map(f => `"${f.name}" (${(f.size / (1024 * 1024)).toFixed(1)} MB)`).join(', ')}. Maximum allowed size is 100 MB.`);
+      setFileSizeError(`File${oversized.length > 1 ? 's' : ''} too large: ${oversized.map(f => `"${f.name}" (${(f.size / (1024 * 1024)).toFixed(1)} MB)`).join(', ')}. Maximum allowed size is 2 GB.`);
       if (addMoreRef.current) addMoreRef.current.value = "";
       return;
     }
@@ -339,56 +339,56 @@ export function InputSection({
     setProcessingStatus("uploading");
 
     try {
-      const formData = new FormData();
-      formData.append("file", audioFile);
-      formData.append("campaign_id", selectedCampaignId);
-      formData.append("processing_profile_id", selectedProfileId);
-
       const selectedCampaign = campaigns.find(c => (c.id === selectedCampaignId || c._id === selectedCampaignId));
       const campaignTemplateId = selectedCampaign?.questionnaire_template_id;
-
       const globalIds = Array.from(new Set([
         ...(campaignTemplateId ? [campaignTemplateId] : []),
         ...selectedOtherIds
       ]));
-
       const highPriorityValue = selectedRedFlagIds.length > 0
         ? (selectedRedFlagIds.length > 1 ? JSON.stringify(selectedRedFlagIds) : selectedRedFlagIds[0])
         : (campaignTemplateId || globalIds[0]);
-
       if (!highPriorityValue) throw new Error("Misconfiguration: No audit frameworks selected.");
-
-      // high_priority must also be included in questionnaire_template_ids array
       const allIds = Array.from(new Set([highPriorityValue, ...globalIds]));
-      formData.append("high_priority_questionnaire_template_id", highPriorityValue);
-      formData.append("questionnaire_template_ids", JSON.stringify(allIds));
-      formData.append("language", "en");
 
-      // New optional fields
-      if (metaTags.length > 0) {
-        formData.append("meta_tags", JSON.stringify(metaTags));
-      }
-      if (customQuestions.length > 0) {
-        formData.append("custom_questions", JSON.stringify(customQuestions));
-      }
-      formData.append("scoring_method", selectedScoringMethod);
-
-      const response = await apiFetch("/api/v1/calls/", {
+      // Step 1: Initialize call — JSON payload, get presigned URL
+      const initRes = await apiFetch("/api/v1/calls/init", {
         method: "POST",
-        headers: { "Accept": "application/json" },
-        body: formData,
+        body: JSON.stringify({
+          filename: audioFile.name,
+          content_type: audioFile.type || "audio/mpeg",
+          campaign_id: selectedCampaignId,
+          processing_profile_id: selectedProfileId,
+          high_priority_questionnaire_template_id: highPriorityValue,
+          questionnaire_template_ids: allIds,
+          language: "en",
+          ...(metaTags.length > 0 && { meta_tags: metaTags }),
+          ...(customQuestions.length > 0 && { custom_questions: customQuestions }),
+          scoring_method: selectedScoringMethod,
+        }),
       });
+      if (!initRes.ok) throw new Error("Failed to initialize call");
+      const { call_id, s3_key, presigned_url } = await initRes.json();
 
-      if (!response.ok) throw new Error("Audio ingestion failed");
+      // Step 2: Upload file directly to S3
+      const s3Res = await fetch(presigned_url, {
+        method: "PUT",
+        headers: { "Content-Type": audioFile.type || "audio/mpeg" },
+        body: audioFile,
+      });
+      if (!s3Res.ok) throw new Error("S3 upload failed");
 
-      const data = await response.json();
-      console.log("Audio Analysis Queued:", data);
+      // Step 3: Start processing pipeline
+      const startRes = await apiFetch(`/api/v1/calls/${call_id}/start`, {
+        method: "POST",
+        body: JSON.stringify({
+          s3_key,
+          content_type: audioFile.type || "audio/mpeg",
+        }),
+      });
+      if (!startRes.ok) throw new Error("Failed to start processing pipeline");
 
-      if (data.call_id) {
-        await pollForTranscript(data.call_id);
-      } else {
-        throw new Error("No call_id returned from audio ingestion");
-      }
+      await pollForTranscript(call_id);
     } catch (error: any) {
       console.error("Audio API Error:", error);
       alert(error.message || "Failed to connect to the analysis engine. Please check your connection.");
@@ -406,43 +406,62 @@ export function InputSection({
     setBatchIngestErrors([]);
 
     try {
-      const formData = new FormData();
-      audioFiles.forEach(f => formData.append("files", f));
-      formData.append("campaign_id", selectedCampaignId);
-      formData.append("processing_profile_id", selectedProfileId);
-
       const selectedCampaign = campaigns.find(c => (c.id === selectedCampaignId || c._id === selectedCampaignId));
       const campaignTemplateId = selectedCampaign?.questionnaire_template_id;
       const globalIds = Array.from(new Set([...(campaignTemplateId ? [campaignTemplateId] : []), ...selectedOtherIds]));
       const highPriorityValue = selectedRedFlagIds.length > 0
         ? (selectedRedFlagIds.length > 1 ? JSON.stringify(selectedRedFlagIds) : selectedRedFlagIds[0])
         : (campaignTemplateId || globalIds[0]);
-
       if (!highPriorityValue) throw new Error("Misconfiguration: No audit frameworks selected.");
-
-      // high_priority must also be included in questionnaire_template_ids array
       const allIds = Array.from(new Set([highPriorityValue, ...globalIds]));
-      formData.append("high_priority_questionnaire_template_id", highPriorityValue);
-      formData.append("questionnaire_template_ids", JSON.stringify(allIds));
-      formData.append("language", "en");
-      if (batchName.trim()) formData.append("name", batchName.trim());
-      if (metaTags.length > 0) formData.append("meta_tags", JSON.stringify(metaTags));
-      if (customQuestions.length > 0) formData.append("custom_questions", JSON.stringify(customQuestions));
-      formData.append("scoring_method", selectedScoringMethod);
 
-      const response = await apiFetch("/api/v1/batches/", {
+      // Step 1: Initialize batch — JSON payload, get presigned URLs for all files
+      const initRes = await apiFetch("/api/v1/batches/init", {
         method: "POST",
-        headers: { "Accept": "application/json" },
-        body: formData,
+        body: JSON.stringify({
+          files: audioFiles.map(f => ({ filename: f.name, content_type: f.type || "audio/mpeg" })),
+          campaign_id: selectedCampaignId,
+          processing_profile_id: selectedProfileId,
+          high_priority_questionnaire_template_id: highPriorityValue,
+          questionnaire_template_ids: allIds,
+          language: "en",
+          ...(batchName.trim() && { name: batchName.trim() }),
+          ...(metaTags.length > 0 && { meta_tags: metaTags }),
+          ...(customQuestions.length > 0 && { custom_questions: customQuestions }),
+          scoring_method: selectedScoringMethod,
+        }),
       });
+      if (!initRes.ok) throw new Error("Failed to initialize batch");
+      const batchData = await initRes.json();
+      const { batch_id, calls } = batchData;
 
-      if (!response.ok) throw new Error("Batch ingestion failed");
+      // Step 2: Upload all files concurrently to S3
+      await Promise.all(
+        (calls as Array<{ call_id: string; s3_key: string; presigned_url: string; file_name: string }>).map(callInfo => {
+          const file = audioFiles.find(f => f.name === callInfo.file_name) ?? audioFiles[calls.indexOf(callInfo)];
+          return fetch(callInfo.presigned_url, {
+            method: "PUT",
+            headers: { "Content-Type": file.type || "audio/mpeg" },
+            body: file,
+          });
+        })
+      );
 
-      const data = await response.json();
-      console.log("Batch Queued:", data);
+      // Step 3: Start batch pipeline
+      const startRes = await apiFetch(`/api/v1/batches/${batch_id}/start`, {
+        method: "POST",
+        body: JSON.stringify({
+          files: (calls as Array<{ call_id: string; s3_key: string; file_name: string }>).map(c => {
+            const file = audioFiles.find(f => f.name === c.file_name);
+            return { call_id: c.call_id, s3_key: c.s3_key, content_type: file?.type || "audio/mpeg" };
+          }),
+        }),
+      });
+      if (!startRes.ok) throw new Error("Failed to start batch pipeline");
+      const startData = await startRes.json();
 
-      if (data.errors?.length > 0) setBatchIngestErrors(data.errors);
-      if (data.batch_id) setBatchId(data.batch_id);
+      if (startData.errors?.length > 0) setBatchIngestErrors(startData.errors);
+      setBatchId(batch_id);
 
       setIsProcessing(false);
       setProcessingStatus("idle");
@@ -642,7 +661,7 @@ export function InputSection({
                   <div className="text-center">
                     <p className="text-lg font-extrabold text-[#F6FAFD] group-hover:translate-y-[-2px] transition-transform">{t('uploadSignalFile')}</p>
                     <p className="text-xs font-bold text-[#B3CFE5] uppercase tracking-widest mt-1.5">
-                      MP3, M4A, WAV, FLAC, AAC, OGG and more · Max 100 MB · Select multiple for batch
+                      MP3, M4A, WAV, FLAC, AAC, OGG and more · Select multiple for batch
                     </p>
                   </div>
                   <input
