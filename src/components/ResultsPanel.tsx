@@ -34,6 +34,7 @@ import {
   Layers
 } from "lucide-react";
 import { cn } from "../lib/utils";
+import { Tooltip } from "./Tooltip";
 import { formatLLMCost, formatTokens } from "../lib/formatters";
 import { useApi } from "../lib/useApi";
 import { Bar } from "react-chartjs-2";
@@ -405,12 +406,14 @@ export function ResultsPanel({ data, isHydrating = false }: { data: ResultData, 
               {isHydrating ? 'Hydrating Signal...' : 'Audit Ready'}
             </span>
             {safeData.call_success !== null && (
-              <span className={cn(
-                "px-2 sm:px-3 py-1 text-[8px] sm:text-[10px] uppercase font-[900] tracking-widest rounded-lg whitespace-nowrap",
-                safeData.call_success ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
-              )}>
-                {safeData.call_success ? '✅ Success' : '❌ Failed'}
-              </span>
+              <Tooltip content="AI Result">
+                <span className={cn(
+                  "px-2 sm:px-3 py-1 text-[8px] sm:text-[10px] uppercase font-[900] tracking-widest rounded-lg whitespace-nowrap cursor-default",
+                  safeData.call_success ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
+                )}>
+                  {safeData.call_success ? '✅ Success' : '❌ Failed'}
+                </span>
+              </Tooltip>
             )}
             <span className={cn(
               "px-2 sm:px-3 py-1 text-[8px] sm:text-[10px] uppercase font-[900] tracking-widest rounded-lg flex items-center gap-1.5 whitespace-nowrap",
@@ -506,7 +509,7 @@ export function ResultsPanel({ data, isHydrating = false }: { data: ResultData, 
           {safeData.call_success !== null && safeData.call_success_reason && (
             <div className="mt-6">
               <h5 className="text-xs font-black uppercase tracking-widest text-[#B3CFE5] mb-3 px-1">
-                Call Success/Failure Summary
+                AI Call Evaluation
               </h5>
               <div className="p-5 rounded-2xl border bg-blue-950/20 border-blue-400/15">
                 <p className="text-sm font-bold leading-relaxed text-[#F6FAFD]">
@@ -641,320 +644,320 @@ export function ResultsPanel({ data, isHydrating = false }: { data: ResultData, 
                       : [{ section_id: 'default', title: templateResult.template_id === 'custom_questions' ? 'Custom Questions' : '', answers: templateResult.answers || [] }];
 
                   return (
-                  <div key={templateIdx} className="space-y-8">
-                    {/* Template-level summary / overall score */}
-                    {(templateResult.overall_score != null || templateResult.summary) && (
-                      <div className="flex items-center justify-between px-1 py-3 border-b border-blue-400/10">
-                        {templateResult.summary && (
-                          <p className="text-sm font-medium text-[#B3CFE5] italic flex-1 pr-6">"{templateResult.summary}"</p>
-                        )}
-                        {templateResult.overall_score != null && (
-                          <span className={cn(
-                            "shrink-0 px-3 py-1.5 rounded-xl text-sm font-black border",
-                            templateResult.overall_score >= 80 ? "bg-green-500/10 text-green-400 border-green-500/20"
-                            : templateResult.overall_score >= 50 ? "bg-amber-500/10 text-amber-400 border-amber-500/20"
-                            : "bg-red-500/10 text-red-400 border-red-500/20"
-                          )}>
-                            {templateResult.overall_score.toFixed(1)}/100
-                          </span>
-                        )}
-                      </div>
-                    )}
-
-                    {/* Sections */}
-                    {sections.map((section: any, sectionIdx: number) => {
-                      const sectionKey = `${templateResult.template_id}||${section.section_id || sectionIdx}`;
-                      const isSectionExpanded = expandedSection === sectionKey;
-                      const passCount = (section.answers || []).filter((a: any) => String(a.answer || '').toLowerCase() === 'yes').length;
-                      const totalCount = section.answers?.length || 0;
-
-                      return (
-                      <div key={section.section_id || sectionIdx} className="rounded-2xl border border-blue-400/15 bg-blue-950/15 overflow-hidden">
-                        {/* Section accordion header */}
-                        <button
-                          onClick={() => toggleSection(sectionKey)}
-                          className="w-full flex items-center gap-4 px-5 py-4 hover:bg-blue-950/25 transition-colors text-left"
-                        >
-                          <div className={cn(
-                            "p-2 rounded-xl shrink-0",
-                            templateResult.template_id === 'custom_questions' ? "bg-purple-50 text-purple-600" : "bg-blue-500/10 text-[#4A7FA7]"
-                          )}>
-                            {templateResult.template_id === 'custom_questions'
-                              ? <HelpCircle className="w-4 h-4" />
-                              : <FileSearch className="w-4 h-4" />}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-3 flex-wrap">
-                              {section.title && (
-                                <h5 className="text-sm font-[850] text-[#F6FAFD] tracking-tight">{section.title}</h5>
-                              )}
-                              <span className="text-[10px] font-black text-[#B3CFE5]/50 uppercase tracking-widest">
-                                {totalCount} questions
-                              </span>
-                            </div>
-                          </div>
-                          {/* Pass/fail mini stats */}
-                          <div className="flex items-center gap-2 shrink-0">
-                            <span className="flex items-center gap-1 text-[10px] font-black text-green-400">
-                              <div className="w-1.5 h-1.5 rounded-full bg-green-500" />{passCount}
+                    <div key={templateIdx} className="space-y-8">
+                      {/* Template-level summary / overall score */}
+                      {(templateResult.overall_score != null || templateResult.summary) && (
+                        <div className="flex items-center justify-between px-1 py-3 border-b border-blue-400/10">
+                          {templateResult.summary && (
+                            <p className="text-sm font-medium text-[#B3CFE5] italic flex-1 pr-6">"{templateResult.summary}"</p>
+                          )}
+                          {templateResult.overall_score != null && (
+                            <span className={cn(
+                              "shrink-0 px-3 py-1.5 rounded-xl text-sm font-black border",
+                              templateResult.overall_score >= 80 ? "bg-green-500/10 text-green-400 border-green-500/20"
+                                : templateResult.overall_score >= 50 ? "bg-amber-500/10 text-amber-400 border-amber-500/20"
+                                  : "bg-red-500/10 text-red-400 border-red-500/20"
+                            )}>
+                              {templateResult.overall_score.toFixed(1)}/100
                             </span>
-                            <span className="text-[#B3CFE5]/30 text-[10px]">/</span>
-                            <span className="text-[10px] font-black text-[#B3CFE5]/60">{totalCount}</span>
-                          </div>
-                          <ChevronDown className={cn("w-4 h-4 text-[#B3CFE5]/40 shrink-0 transition-transform duration-200", isSectionExpanded && "rotate-180")} />
-                        </button>
+                          )}
+                        </div>
+                      )}
 
-                        {/* Section body — answers */}
-                        {isSectionExpanded && (
-                        <div className="px-3 pb-3 space-y-2 border-t border-blue-400/10">
-                        {(section.answers || []).map((answer: any, idx: number) => {
-                      // Get original question text for custom questions or from answer.question_text
-                      const questionText = answer.question_text ||
-                        (templateResult.template_id === 'custom_questions' && safeData.custom_questions
-                          ? safeData.custom_questions[parseInt(answer.question_id.replace('custom_', '')) - 1]?.text
-                          : null);
+                      {/* Sections */}
+                      {sections.map((section: any, sectionIdx: number) => {
+                        const sectionKey = `${templateResult.template_id}||${section.section_id || sectionIdx}`;
+                        const isSectionExpanded = expandedSection === sectionKey;
+                        const passCount = (section.answers || []).filter((a: any) => String(a.answer || '').toLowerCase() === 'yes').length;
+                        const totalCount = section.answers?.length || 0;
 
-                      const answerKey = `${templateResult.template_id}||${answer.question_id}`;
-                      const isExpanded = expandedAnswer === answerKey;
-                      const isCustomFreeText = templateResult.template_id === 'custom_questions' && answer.answer && answer.answer !== 'yes' && answer.answer !== 'no';
-                      const isYes = String(answer.answer || '').toLowerCase() === 'yes';
-                      const isPartial = !isYes && !answer.skipped && String(answer.evidence_quality || '').toUpperCase() === 'PARTIAL';
-                      const iconBgClass = isCustomFreeText
-                        ? 'bg-blue-500 text-white shadow-blue-500/20'
-                        : isYes
-                          ? 'bg-green-500 text-white shadow-green-500/20'
-                          : answer.skipped
-                            ? 'bg-gray-400 text-white shadow-gray-400/20'
-                            : isPartial
-                              ? 'bg-amber-500 text-white shadow-amber-500/20'
-                              : 'bg-red-500 text-white shadow-red-500/20';
-
-                      return (
-                        <div key={idx} className="group bg-blue-950/25 rounded-2xl border border-blue-400/15 shadow-sm shadow-[#0A1931]/50 hover:border-[#4A7FA7]/50 transition-colors">
-
-                          {/* ── Accordion Header (always visible) ── */}
-                          <button
-                            onClick={() => toggleAnswer(answerKey)}
-                            className="w-full flex items-center gap-4 px-6 py-4 text-left hover:bg-blue-950/20 transition-colors"
-                          >
-                            {/* Status icon */}
-                            <div className={cn("w-9 h-9 rounded-xl flex items-center justify-center shrink-0 shadow-md", iconBgClass)}>
-                              {isCustomFreeText ? <CheckCircle2 className="w-5 h-5" />
-                                : isYes ? <ShieldCheck className="w-5 h-5" />
-                                : answer.skipped ? <MinusCircle className="w-5 h-5" />
-                                : isPartial ? <MinusCircle className="w-5 h-5" />
-                                : <XCircle className="w-5 h-5" />}
-                            </div>
-
-                            {/* Question info */}
-                            <div className="flex-1 min-w-0 space-y-1">
-                              <div className="flex items-center gap-2 flex-wrap">
-                                {answer.evidence_quality && (() => {
-                                  const eq = String(answer.evidence_quality).toUpperCase();
-                                  const tooltipText =
-                                    eq === 'DIRECT'  ? "Direct evidence — a clear, explicit quote supports this answer" :
-                                    eq === 'PARTIAL' ? "Partial evidence — some supporting context found but not conclusive" :
-                                    eq === 'NONE'    ? "No evidence — answer is inferred with no supporting quote" :
-                                    `Evidence quality: ${answer.evidence_quality}`;
-                                  return (
-                                    <span className="relative group/eq cursor-help">
-                                      <span className={cn(
-                                        "px-2 py-0.5 text-[9px] font-black uppercase tracking-wider rounded-md border",
-                                        eq === 'DIRECT'  ? "bg-green-50 text-green-700 border-green-200" :
-                                        eq === 'PARTIAL' ? "bg-amber-50 text-amber-700 border-amber-200" :
-                                                           "bg-gray-50 text-gray-500 border-gray-200"
-                                      )}>
-                                        {answer.evidence_quality}
-                                      </span>
-                                      <span className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-56 px-3 py-2 rounded-lg bg-[#0A1931] border border-blue-400/20 text-[11px] font-medium text-[#B3CFE5] leading-snug shadow-xl opacity-0 group-hover/eq:opacity-100 transition-opacity duration-150 z-[999] whitespace-normal text-center">
-                                        {tooltipText}
-                                        <span className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-[#0A1931]" />
-                                      </span>
-                                    </span>
-                                  );
-                                })()}
-                                {answer.weight != null && (
-                                  <span className="px-2 py-0.5 text-[9px] font-black uppercase tracking-wider rounded-md border bg-blue-950/30 text-[#B3CFE5] border-blue-400/20">
-                                    Weight: {answer.weight}
-                                  </span>
-                                )}
-                                {(answer.is_edited || safeData.human_interventions?.some(
-                                  (i: any) => i.question_id === answer.question_id && i.template_id === templateResult.template_id
-                                )) && (
-                                  <span className="px-2 py-0.5 text-[9px] font-black uppercase tracking-wider bg-green-100 text-green-700 rounded-md border border-green-200 flex items-center gap-1">
-                                    <CheckCircle2 className="w-3 h-3" />
-                                    Human Verified
-                                  </span>
-                                )}
-                                {getPendingEdit(templateResult.template_id, answer.question_id) && (
-                                  <span className="px-2 py-0.5 text-[9px] font-black uppercase tracking-wider bg-orange-100 text-orange-700 rounded-md border border-orange-200">
-                                    Pending Edit
-                                  </span>
-                                )}
+                        return (
+                          <div key={section.section_id || sectionIdx} className="rounded-2xl border border-blue-400/15 bg-blue-950/15 overflow-hidden">
+                            {/* Section accordion header */}
+                            <button
+                              onClick={() => toggleSection(sectionKey)}
+                              className="w-full flex items-center gap-4 px-5 py-4 hover:bg-blue-950/25 transition-colors text-left"
+                            >
+                              <div className={cn(
+                                "p-2 rounded-xl shrink-0",
+                                templateResult.template_id === 'custom_questions' ? "bg-purple-50 text-purple-600" : "bg-blue-500/10 text-[#4A7FA7]"
+                              )}>
+                                {templateResult.template_id === 'custom_questions'
+                                  ? <HelpCircle className="w-4 h-4" />
+                                  : <FileSearch className="w-4 h-4" />}
                               </div>
-                              {questionText && (
-                                <p className="text-sm font-semibold text-[#F6FAFD] truncate">{questionText}</p>
-                              )}
-                            </div>
-
-                            {/* Chevron */}
-                            <ChevronDown className={cn("w-4 h-4 text-[#B3CFE5]/50 shrink-0 transition-transform duration-200", isExpanded && "rotate-180")} />
-                          </button>
-
-                          {/* ── Accordion Body (expanded details) ── */}
-                          {isExpanded && (
-                            <div className="px-6 pb-6 space-y-6 border-t border-blue-400/10 pt-5">
-                              {/* Edit button */}
-                              {!isRecalculating && !answer.skipped && (
-                                <div className="flex justify-end">
-                                  <button
-                                    onClick={() => setEditingQuestionId(`${templateResult.template_id}||${answer.question_id}`)}
-                                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg border border-blue-200 transition-colors"
-                                    title="Edit this answer and provide human correction"
-                                  >
-                                    <Edit className="w-3 h-3" />
-                                    Edit
-                                  </button>
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-3 flex-wrap">
+                                  {section.title && (
+                                    <h5 className="text-sm font-[850] text-[#F6FAFD] tracking-tight">{section.title}</h5>
+                                  )}
+                                  <span className="text-[10px] font-black text-[#B3CFE5]/50 uppercase tracking-widest">
+                                    {totalCount} questions
+                                  </span>
                                 </div>
-                              )}
+                              </div>
+                              {/* Pass/fail mini stats */}
+                              <div className="flex items-center gap-2 shrink-0">
+                                <span className="flex items-center gap-1 text-[10px] font-black text-green-400">
+                                  <div className="w-1.5 h-1.5 rounded-full bg-green-500" />{passCount}
+                                </span>
+                                <span className="text-[#B3CFE5]/30 text-[10px]">/</span>
+                                <span className="text-[10px] font-black text-[#B3CFE5]/60">{totalCount}</span>
+                              </div>
+                              <ChevronDown className={cn("w-4 h-4 text-[#B3CFE5]/40 shrink-0 transition-transform duration-200", isSectionExpanded && "rotate-180")} />
+                            </button>
 
-                              {/* Reasoning */}
-                              {templateResult.template_id === 'custom_questions' && answer.answer && answer.answer !== 'yes' && answer.answer !== 'no' ? (
-                                <div className="space-y-2">
-                                  <h5 className="text-[19px] font-[850] text-[#F6FAFD] tracking-tight leading-snug">{answer.answer}</h5>
-                                  <p className="text-sm text-[#B3CFE5] font-medium">{answer.reasoning_summary}</p>
-                                </div>
-                              ) : (
-                                <h5 className="text-[17px] font-[850] text-[#F6FAFD] tracking-tight leading-snug">{answer.reasoning_summary}</h5>
-                              )}
+                            {/* Section body — answers */}
+                            {isSectionExpanded && (
+                              <div className="px-3 pb-3 space-y-2 border-t border-blue-400/10">
+                                {(section.answers || []).map((answer: any, idx: number) => {
+                                  // Get original question text for custom questions or from answer.question_text
+                                  const questionText = answer.question_text ||
+                                    (templateResult.template_id === 'custom_questions' && safeData.custom_questions
+                                      ? safeData.custom_questions[parseInt(answer.question_id.replace('custom_', '')) - 1]?.text
+                                      : null);
 
-                              {answer.extracted_info && (
-                                <div className="p-4 rounded-xl bg-blue-50 border border-blue-200">
-                                  <p className="text-sm font-semibold text-blue-900">{answer.extracted_info}</p>
-                                </div>
-                              )}
+                                  const answerKey = `${templateResult.template_id}||${answer.question_id}`;
+                                  const isExpanded = expandedAnswer === answerKey;
+                                  const isCustomFreeText = templateResult.template_id === 'custom_questions' && answer.answer && answer.answer !== 'yes' && answer.answer !== 'no';
+                                  const isYes = String(answer.answer || '').toLowerCase() === 'yes';
+                                  const isPartial = !isYes && !answer.skipped && String(answer.evidence_quality || '').toUpperCase() === 'PARTIAL';
+                                  const iconBgClass = isCustomFreeText
+                                    ? 'bg-blue-500 text-white shadow-blue-500/20'
+                                    : isYes
+                                      ? 'bg-green-500 text-white shadow-green-500/20'
+                                      : answer.skipped
+                                        ? 'bg-gray-400 text-white shadow-gray-400/20'
+                                        : isPartial
+                                          ? 'bg-amber-500 text-white shadow-amber-500/20'
+                                          : 'bg-red-500 text-white shadow-red-500/20';
 
-                              {/* Human intervention */}
-                              {safeData.human_interventions && (() => {
-                                const interventions = safeData.human_interventions.filter(
-                                  (i: any) => i.question_id === answer.question_id && i.template_id === templateResult.template_id
-                                );
-                                if (interventions.length === 0) return null;
-                                const latest = interventions[interventions.length - 1];
-                                return (
-                                  <div className="p-4 rounded-xl bg-green-50 border border-green-200 space-y-2">
-                                    <div className="flex items-center justify-between">
-                                      <div className="flex items-center gap-2">
-                                        <Clock className="w-4 h-4 text-green-600" />
-                                        <p className="text-xs font-bold text-green-900">Last edited: {new Date(latest.timestamp).toLocaleString()}</p>
-                                      </div>
-                                      {interventions.length > 1 && (
-                                        <button
-                                          onClick={() => setViewHistoryFor({ template_id: templateResult.template_id, question_id: answer.question_id })}
-                                          className="flex items-center gap-1 px-2 py-1 text-[10px] font-bold text-green-700 hover:text-green-900 hover:bg-green-100 rounded-md transition-colors"
-                                        >
-                                          <History className="w-3 h-3" />
-                                          View History ({interventions.length})
-                                        </button>
-                                      )}
-                                    </div>
-                                    <p className="text-xs font-medium text-green-700 italic">"{latest.corrected_reasoning}"</p>
-                                    <div className="flex items-center gap-4 pt-2 border-t border-green-200">
-                                      <div>
-                                        <p className="text-[9px] font-black uppercase tracking-wider text-green-600">Answer</p>
-                                        <p className="text-sm font-bold text-green-900">{latest.corrected_answer}</p>
-                                      </div>
-                                      <div>
-                                        <p className="text-[9px] font-black uppercase tracking-wider text-green-600">Score</p>
-                                        <p className="text-sm font-bold text-green-900">{latest.corrected_score}</p>
-                                      </div>
-                                    </div>
-                                  </div>
-                                );
-                              })()}
+                                  return (
+                                    <div key={idx} className="group bg-blue-950/25 rounded-2xl border border-blue-400/15 shadow-sm shadow-[#0A1931]/50 hover:border-[#4A7FA7]/50 transition-colors">
 
-                              {/* Evidence */}
-                              {(answer.evidence?.length || 0) > 0 && (() => {
-                                const evidence = answer.evidence[0];
-                                const segmentId = `${answer.question_id}_${evidence?.start_ms}`;
-                                const isPlaying = playingSegment === segmentId;
-                                return (
-                                  <div
-                                    onClick={() => {
-                                      if (!hasAudio) return;
-                                      const player = document.getElementById('call-audio-player') as HTMLAudioElement;
-                                      if (!player || !evidence) return;
-                                      if (isPlaying) {
-                                        player.pause();
-                                        setPlayingSegment(null);
-                                      } else {
-                                        const startTime = (evidence.start_ms || 0) / 1000;
-                                        const endTime = (evidence.end_ms || evidence.start_ms || 0) / 1000;
-                                        player.currentTime = startTime;
-                                        player.play();
-                                        setPlayingSegment(segmentId);
-                                        let rafId: number;
-                                        const checkTime = () => {
-                                          if (player.currentTime >= endTime) {
-                                            player.pause();
-                                            setPlayingSegment(null);
-                                          } else {
-                                            rafId = requestAnimationFrame(checkTime);
-                                          }
-                                        };
-                                        rafId = requestAnimationFrame(checkTime);
-                                        const cancel = () => cancelAnimationFrame(rafId);
-                                        player.addEventListener('pause', cancel, { once: true });
-                                        player.addEventListener('ended', cancel, { once: true });
-                                      }
-                                    }}
-                                    className={cn(
-                                      "p-6 rounded-2xl glass transition-colors relative group/evidence",
-                                      hasAudio && "cursor-pointer hover:bg-blue-950/25",
-                                      isPlaying && "border-[#4A7FA7] bg-blue-950/25"
-                                    )}
-                                  >
-                                    <div className="flex items-center justify-between mb-3">
-                                      <div className="flex items-center gap-2">
-                                        <MessageSquareQuote className="w-4 h-4 text-[#B3CFE5]" />
-                                        <span className="text-[11px] font-black uppercase tracking-widest text-[#B3CFE5]">Evidence Trace</span>
-                                      </div>
-                                      {hasAudio && (
-                                        <div className={cn(
-                                          "flex items-center gap-1 text-[9px] font-black uppercase tracking-widest transition-colors",
-                                          isPlaying ? "text-[#4A7FA7]" : "text-[#B3CFE5] group-hover/evidence:text-[#4A7FA7]"
-                                        )}>
-                                          {isPlaying ? <><Pause className="w-2.5 h-2.5 fill-current" /> Pause</> : <><Play className="w-2.5 h-2.5 fill-current" /> Play Segment</>}
+                                      {/* ── Accordion Header (always visible) ── */}
+                                      <button
+                                        onClick={() => toggleAnswer(answerKey)}
+                                        className="w-full flex items-center gap-4 px-6 py-4 text-left hover:bg-blue-950/20 transition-colors"
+                                      >
+                                        {/* Status icon */}
+                                        <div className={cn("w-9 h-9 rounded-xl flex items-center justify-center shrink-0 shadow-md", iconBgClass)}>
+                                          {isCustomFreeText ? <CheckCircle2 className="w-5 h-5" />
+                                            : isYes ? <ShieldCheck className="w-5 h-5" />
+                                              : answer.skipped ? <MinusCircle className="w-5 h-5" />
+                                                : isPartial ? <MinusCircle className="w-5 h-5" />
+                                                  : <XCircle className="w-5 h-5" />}
+                                        </div>
+
+                                        {/* Question info */}
+                                        <div className="flex-1 min-w-0 space-y-1">
+                                          <div className="flex items-center gap-2 flex-wrap">
+                                            {answer.evidence_quality && (() => {
+                                              const eq = String(answer.evidence_quality).toUpperCase();
+                                              const tooltipText =
+                                                eq === 'DIRECT' ? "Direct evidence — a clear, explicit quote supports this answer" :
+                                                  eq === 'PARTIAL' ? "Partial evidence — some supporting context found but not conclusive" :
+                                                    eq === 'NONE' ? "No evidence — answer is inferred with no supporting quote" :
+                                                      `Evidence quality: ${answer.evidence_quality}`;
+                                              return (
+                                                <span className="relative group/eq cursor-help">
+                                                  <span className={cn(
+                                                    "px-2 py-0.5 text-[9px] font-black uppercase tracking-wider rounded-md border",
+                                                    eq === 'DIRECT' ? "bg-green-50 text-green-700 border-green-200" :
+                                                      eq === 'PARTIAL' ? "bg-amber-50 text-amber-700 border-amber-200" :
+                                                        "bg-gray-50 text-gray-500 border-gray-200"
+                                                  )}>
+                                                    {answer.evidence_quality}
+                                                  </span>
+                                                  <span className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-56 px-3 py-2 rounded-lg bg-[#0A1931] border border-blue-400/20 text-[11px] font-medium text-[#B3CFE5] leading-snug shadow-xl opacity-0 group-hover/eq:opacity-100 transition-opacity duration-150 z-[999] whitespace-normal text-center">
+                                                    {tooltipText}
+                                                    <span className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-[#0A1931]" />
+                                                  </span>
+                                                </span>
+                                              );
+                                            })()}
+                                            {answer.weight != null && (
+                                              <span className="px-2 py-0.5 text-[9px] font-black uppercase tracking-wider rounded-md border bg-blue-950/30 text-[#B3CFE5] border-blue-400/20">
+                                                Weight: {answer.weight}
+                                              </span>
+                                            )}
+                                            {(answer.is_edited || safeData.human_interventions?.some(
+                                              (i: any) => i.question_id === answer.question_id && i.template_id === templateResult.template_id
+                                            )) && (
+                                                <span className="px-2 py-0.5 text-[9px] font-black uppercase tracking-wider bg-green-100 text-green-700 rounded-md border border-green-200 flex items-center gap-1">
+                                                  <CheckCircle2 className="w-3 h-3" />
+                                                  Human Verified
+                                                </span>
+                                              )}
+                                            {getPendingEdit(templateResult.template_id, answer.question_id) && (
+                                              <span className="px-2 py-0.5 text-[9px] font-black uppercase tracking-wider bg-orange-100 text-orange-700 rounded-md border border-orange-200">
+                                                Pending Edit
+                                              </span>
+                                            )}
+                                          </div>
+                                          {questionText && (
+                                            <p className="text-sm font-semibold text-[#F6FAFD] truncate">{questionText}</p>
+                                          )}
+                                        </div>
+
+                                        {/* Chevron */}
+                                        <ChevronDown className={cn("w-4 h-4 text-[#B3CFE5]/50 shrink-0 transition-transform duration-200", isExpanded && "rotate-180")} />
+                                      </button>
+
+                                      {/* ── Accordion Body (expanded details) ── */}
+                                      {isExpanded && (
+                                        <div className="px-6 pb-6 space-y-6 border-t border-blue-400/10 pt-5">
+                                          {/* Edit button */}
+                                          {!isRecalculating && !answer.skipped && (
+                                            <div className="flex justify-end">
+                                              <button
+                                                onClick={() => setEditingQuestionId(`${templateResult.template_id}||${answer.question_id}`)}
+                                                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg border border-blue-200 transition-colors"
+                                                title="Edit this answer and provide human correction"
+                                              >
+                                                <Edit className="w-3 h-3" />
+                                                Edit
+                                              </button>
+                                            </div>
+                                          )}
+
+                                          {/* Reasoning */}
+                                          {templateResult.template_id === 'custom_questions' && answer.answer && answer.answer !== 'yes' && answer.answer !== 'no' ? (
+                                            <div className="space-y-2">
+                                              <h5 className="text-[19px] font-[850] text-[#F6FAFD] tracking-tight leading-snug">{answer.answer}</h5>
+                                              <p className="text-sm text-[#B3CFE5] font-medium">{answer.reasoning_summary}</p>
+                                            </div>
+                                          ) : (
+                                            <h5 className="text-[17px] font-[850] text-[#F6FAFD] tracking-tight leading-snug">{answer.reasoning_summary}</h5>
+                                          )}
+
+                                          {answer.extracted_info && (
+                                            <div className="p-4 rounded-xl bg-blue-50 border border-blue-200">
+                                              <p className="text-sm font-semibold text-blue-900">{answer.extracted_info}</p>
+                                            </div>
+                                          )}
+
+                                          {/* Human intervention */}
+                                          {safeData.human_interventions && (() => {
+                                            const interventions = safeData.human_interventions.filter(
+                                              (i: any) => i.question_id === answer.question_id && i.template_id === templateResult.template_id
+                                            );
+                                            if (interventions.length === 0) return null;
+                                            const latest = interventions[interventions.length - 1];
+                                            return (
+                                              <div className="p-4 rounded-xl bg-green-50 border border-green-200 space-y-2">
+                                                <div className="flex items-center justify-between">
+                                                  <div className="flex items-center gap-2">
+                                                    <Clock className="w-4 h-4 text-green-600" />
+                                                    <p className="text-xs font-bold text-green-900">Last edited: {new Date(latest.timestamp).toLocaleString()}</p>
+                                                  </div>
+                                                  {interventions.length > 1 && (
+                                                    <button
+                                                      onClick={() => setViewHistoryFor({ template_id: templateResult.template_id, question_id: answer.question_id })}
+                                                      className="flex items-center gap-1 px-2 py-1 text-[10px] font-bold text-green-700 hover:text-green-900 hover:bg-green-100 rounded-md transition-colors"
+                                                    >
+                                                      <History className="w-3 h-3" />
+                                                      View History ({interventions.length})
+                                                    </button>
+                                                  )}
+                                                </div>
+                                                <p className="text-xs font-medium text-green-700 italic">"{latest.corrected_reasoning}"</p>
+                                                <div className="flex items-center gap-4 pt-2 border-t border-green-200">
+                                                  <div>
+                                                    <p className="text-[9px] font-black uppercase tracking-wider text-green-600">Answer</p>
+                                                    <p className="text-sm font-bold text-green-900">{latest.corrected_answer}</p>
+                                                  </div>
+                                                  <div>
+                                                    <p className="text-[9px] font-black uppercase tracking-wider text-green-600">Score</p>
+                                                    <p className="text-sm font-bold text-green-900">{latest.corrected_score}</p>
+                                                  </div>
+                                                </div>
+                                              </div>
+                                            );
+                                          })()}
+
+                                          {/* Evidence */}
+                                          {(answer.evidence?.length || 0) > 0 && (() => {
+                                            const evidence = answer.evidence[0];
+                                            const segmentId = `${answer.question_id}_${evidence?.start_ms}`;
+                                            const isPlaying = playingSegment === segmentId;
+                                            return (
+                                              <div
+                                                onClick={() => {
+                                                  if (!hasAudio) return;
+                                                  const player = document.getElementById('call-audio-player') as HTMLAudioElement;
+                                                  if (!player || !evidence) return;
+                                                  if (isPlaying) {
+                                                    player.pause();
+                                                    setPlayingSegment(null);
+                                                  } else {
+                                                    const startTime = (evidence.start_ms || 0) / 1000;
+                                                    const endTime = (evidence.end_ms || evidence.start_ms || 0) / 1000;
+                                                    player.currentTime = startTime;
+                                                    player.play();
+                                                    setPlayingSegment(segmentId);
+                                                    let rafId: number;
+                                                    const checkTime = () => {
+                                                      if (player.currentTime >= endTime) {
+                                                        player.pause();
+                                                        setPlayingSegment(null);
+                                                      } else {
+                                                        rafId = requestAnimationFrame(checkTime);
+                                                      }
+                                                    };
+                                                    rafId = requestAnimationFrame(checkTime);
+                                                    const cancel = () => cancelAnimationFrame(rafId);
+                                                    player.addEventListener('pause', cancel, { once: true });
+                                                    player.addEventListener('ended', cancel, { once: true });
+                                                  }
+                                                }}
+                                                className={cn(
+                                                  "p-6 rounded-2xl glass transition-colors relative group/evidence",
+                                                  hasAudio && "cursor-pointer hover:bg-blue-950/25",
+                                                  isPlaying && "border-[#4A7FA7] bg-blue-950/25"
+                                                )}
+                                              >
+                                                <div className="flex items-center justify-between mb-3">
+                                                  <div className="flex items-center gap-2">
+                                                    <MessageSquareQuote className="w-4 h-4 text-[#B3CFE5]" />
+                                                    <span className="text-[11px] font-black uppercase tracking-widest text-[#B3CFE5]">Evidence Trace</span>
+                                                  </div>
+                                                  {hasAudio && (
+                                                    <div className={cn(
+                                                      "flex items-center gap-1 text-[9px] font-black uppercase tracking-widest transition-colors",
+                                                      isPlaying ? "text-[#4A7FA7]" : "text-[#B3CFE5] group-hover/evidence:text-[#4A7FA7]"
+                                                    )}>
+                                                      {isPlaying ? <><Pause className="w-2.5 h-2.5 fill-current" /> Pause</> : <><Play className="w-2.5 h-2.5 fill-current" /> Play Segment</>}
+                                                    </div>
+                                                  )}
+                                                </div>
+                                                <p className="text-[15px] font-bold text-[#B3CFE5] italic leading-relaxed">
+                                                  "{evidence?.quote || 'No specific quote provided'}"
+                                                </p>
+                                                <div className="mt-3 text-[10px] font-black text-[#B3CFE5] uppercase tracking-tighter">
+                                                  {evidence?.start_ms && evidence?.end_ms ? (
+                                                    <>
+                                                      {(evidence.start_ms / 1000).toFixed(1)}s - {(evidence.end_ms / 1000).toFixed(1)}s
+                                                      <span className="ml-2 text-[#B3CFE5]/40">({((evidence.end_ms - evidence.start_ms) / 1000).toFixed(1)}s duration)</span>
+                                                    </>
+                                                  ) : (
+                                                    <>Starts at {((evidence?.start_ms || 0) / 1000).toFixed(1)}s</>
+                                                  )}
+                                                </div>
+                                              </div>
+                                            );
+                                          })()}
                                         </div>
                                       )}
                                     </div>
-                                    <p className="text-[15px] font-bold text-[#B3CFE5] italic leading-relaxed">
-                                      "{evidence?.quote || 'No specific quote provided'}"
-                                    </p>
-                                    <div className="mt-3 text-[10px] font-black text-[#B3CFE5] uppercase tracking-tighter">
-                                      {evidence?.start_ms && evidence?.end_ms ? (
-                                        <>
-                                          {(evidence.start_ms / 1000).toFixed(1)}s - {(evidence.end_ms / 1000).toFixed(1)}s
-                                          <span className="ml-2 text-[#B3CFE5]/40">({((evidence.end_ms - evidence.start_ms) / 1000).toFixed(1)}s duration)</span>
-                                        </>
-                                      ) : (
-                                        <>Starts at {((evidence?.start_ms || 0) / 1000).toFixed(1)}s</>
-                                      )}
-                                    </div>
-                                  </div>
-                                );
-                              })()}
-                            </div>
-                          )}
-                        </div>
-                      );
-                        })}
-                        </div>
-                        )}
-                      </div>
-                      );
-                    })}
-                  </div>
+                                  );
+                                })}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
                   );
                 })
               )}
@@ -996,42 +999,42 @@ export function ResultsPanel({ data, isHydrating = false }: { data: ResultData, 
                         </div>
                       </div>
 
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between p-3 rounded-xl bg-black/25 border border-blue-400/10">
-                        <span className="text-[10px] font-black uppercase tracking-widest text-[#B3CFE5]">Turn Count</span>
-                        <span className="text-lg font-[850] text-[#F6FAFD]">{speaker.turn_count}</span>
-                      </div>
-
-                      <div className="flex items-center justify-between p-3 rounded-xl bg-black/25 border border-blue-400/10">
-                        <span className="text-[10px] font-black uppercase tracking-widest text-[#B3CFE5]">Avg Sentiment</span>
-                        <div className="flex items-center gap-2">
-                          {speaker.avg_sentiment_label && (
-                            <span className={cn(
-                              "px-2 py-0.5 text-[9px] font-black uppercase tracking-wider rounded-md border",
-                              speaker.avg_sentiment_label === 'positive' ? "bg-green-50 text-green-700 border-green-200" :
-                              speaker.avg_sentiment_label === 'negative' ? "bg-red-50 text-red-700 border-red-200" :
-                              "bg-gray-50 text-gray-700 border-gray-200"
-                            )}>
-                              {speaker.avg_sentiment_label}
-                            </span>
-                          )}
-                          <span className={cn(
-                            "text-lg font-[850]",
-                            (speaker.avg_sentiment || 0) > 0 ? "text-green-400" : (speaker.avg_sentiment || 0) < 0 ? "text-red-400" : "text-[#B3CFE5]"
-                          )}>
-                            {(speaker.avg_sentiment !== undefined && speaker.avg_sentiment !== null) ? speaker.avg_sentiment.toFixed(2) : '0.00'}
-                          </span>
-                        </div>
-                      </div>
-
-                      {speaker.talk_time_ms !== undefined && speaker.talk_time_ms !== null && (
+                      <div className="space-y-2">
                         <div className="flex items-center justify-between p-3 rounded-xl bg-black/25 border border-blue-400/10">
-                          <span className="text-[10px] font-black uppercase tracking-widest text-[#B3CFE5]">Talk Time</span>
-                          <span className="text-lg font-[850] text-[#F6FAFD]">{(speaker.talk_time_ms / 1000).toFixed(1)}s</span>
+                          <span className="text-[10px] font-black uppercase tracking-widest text-[#B3CFE5]">Turn Count</span>
+                          <span className="text-lg font-[850] text-[#F6FAFD]">{speaker.turn_count}</span>
                         </div>
-                      )}
+
+                        <div className="flex items-center justify-between p-3 rounded-xl bg-black/25 border border-blue-400/10">
+                          <span className="text-[10px] font-black uppercase tracking-widest text-[#B3CFE5]">Avg Sentiment</span>
+                          <div className="flex items-center gap-2">
+                            {speaker.avg_sentiment_label && (
+                              <span className={cn(
+                                "px-2 py-0.5 text-[9px] font-black uppercase tracking-wider rounded-md border",
+                                speaker.avg_sentiment_label === 'positive' ? "bg-green-50 text-green-700 border-green-200" :
+                                  speaker.avg_sentiment_label === 'negative' ? "bg-red-50 text-red-700 border-red-200" :
+                                    "bg-gray-50 text-gray-700 border-gray-200"
+                              )}>
+                                {speaker.avg_sentiment_label}
+                              </span>
+                            )}
+                            <span className={cn(
+                              "text-lg font-[850]",
+                              (speaker.avg_sentiment || 0) > 0 ? "text-green-400" : (speaker.avg_sentiment || 0) < 0 ? "text-red-400" : "text-[#B3CFE5]"
+                            )}>
+                              {(speaker.avg_sentiment !== undefined && speaker.avg_sentiment !== null) ? speaker.avg_sentiment.toFixed(2) : '0.00'}
+                            </span>
+                          </div>
+                        </div>
+
+                        {speaker.talk_time_ms !== undefined && speaker.talk_time_ms !== null && (
+                          <div className="flex items-center justify-between p-3 rounded-xl bg-black/25 border border-blue-400/10">
+                            <span className="text-[10px] font-black uppercase tracking-widest text-[#B3CFE5]">Talk Time</span>
+                            <span className="text-lg font-[850] text-[#F6FAFD]">{(speaker.talk_time_ms / 1000).toFixed(1)}s</span>
+                          </div>
+                        )}
+                      </div>
                     </div>
-                  </div>
                   );
                 })}
               </div>
@@ -1138,85 +1141,85 @@ export function ResultsPanel({ data, isHydrating = false }: { data: ResultData, 
                   ))
                 ) : (
                   (safeData.transcript?.utterances || [])
-                  .filter(utt => !transcriptSearch || utt.text.toLowerCase().includes(transcriptSearch.toLowerCase()))
-                  .map((utt, i, arr) => {
-                    // Determine if this is agent or customer
-                    // Try multiple detection methods:
-                    // 1. Check if speaker_id is "user_1" (Agent) or "user_2" (Customer)
-                    // 2. Check numeric IDs: speaker 0 = Agent, speaker 1 = Customer
-                    // 3. Fallback: alternate based on index and check for speaker changes
+                    .filter(utt => !transcriptSearch || utt.text.toLowerCase().includes(transcriptSearch.toLowerCase()))
+                    .map((utt, i, arr) => {
+                      // Determine if this is agent or customer
+                      // Try multiple detection methods:
+                      // 1. Check if speaker_id is "user_1" (Agent) or "user_2" (Customer)
+                      // 2. Check numeric IDs: speaker 0 = Agent, speaker 1 = Customer
+                      // 3. Fallback: alternate based on index and check for speaker changes
 
-                    let isAgent = false;
+                      let isAgent = false;
 
-                    if (utt.speaker_id === "user_1" || utt.speaker_id === "0" || utt.speaker_id === "speaker_0") {
-                      isAgent = true;
-                    } else if (utt.speaker_id === "user_2" || utt.speaker_id === "1" || utt.speaker_id === "speaker_1") {
-                      isAgent = false;
-                    } else {
-                      // Fallback: detect speaker changes
-                      if (i === 0) {
-                        isAgent = true; // First utterance is usually agent
+                      if (utt.speaker_id === "user_1" || utt.speaker_id === "0" || utt.speaker_id === "speaker_0") {
+                        isAgent = true;
+                      } else if (utt.speaker_id === "user_2" || utt.speaker_id === "1" || utt.speaker_id === "speaker_1") {
+                        isAgent = false;
                       } else {
-                        // If speaker_id changed from previous, alternate
-                        isAgent = arr[i - 1].speaker_id !== utt.speaker_id ? !isAgent : isAgent;
+                        // Fallback: detect speaker changes
+                        if (i === 0) {
+                          isAgent = true; // First utterance is usually agent
+                        } else {
+                          // If speaker_id changed from previous, alternate
+                          isAgent = arr[i - 1].speaker_id !== utt.speaker_id ? !isAgent : isAgent;
+                        }
                       }
-                    }
 
-                    return (
-                      <div key={i} className={cn(
-                        "flex gap-8 max-w-[85%]",
-                        isAgent ? "mr-auto" : "ml-auto flex-row-reverse text-right"
-                      )}>
-                        <div className={cn(
-                          "w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 font-black text-sm",
-                          isAgent ? "bg-gradient-to-br from-[#4A7FA7] to-[#1A3D63] text-[#F6FAFD] shadow-lg shadow-[#4A7FA7]/20" : "bg-blue-950/25 text-[#F6FAFD]"
+                      return (
+                        <div key={i} className={cn(
+                          "flex gap-8 max-w-[85%]",
+                          isAgent ? "mr-auto" : "ml-auto flex-row-reverse text-right"
                         )}>
-                          {isAgent ? "A" : "C"}
-                        </div>
-                        <div className="space-y-2">
-                          <p className={cn(
-                            "text-[15px] font-[650] leading-relaxed p-6 rounded-[2rem]",
-                            isAgent
-                              ? "bg-[#4A7FA7]/30 border border-blue-400/10 text-[#F6FAFD] shadow-sm"
-                              : "bg-blue-950/25 text-[#F6FAFD] shadow-sm shadow-[#0A1931]/50"
-                          )}>
-                            {utt.text}
-                          </p>
-
-                          {/* Sentiment and Emotion badges */}
                           <div className={cn(
-                            "flex flex-wrap items-center gap-2 px-1",
-                            isAgent ? "justify-start" : "justify-end"
+                            "w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 font-black text-sm",
+                            isAgent ? "bg-gradient-to-br from-[#4A7FA7] to-[#1A3D63] text-[#F6FAFD] shadow-lg shadow-[#4A7FA7]/20" : "bg-blue-950/25 text-[#F6FAFD]"
                           )}>
-                            {utt.sentiment && (
-                              <span
-                                className={cn(
-                                  "px-2 py-1 text-[9px] font-black uppercase tracking-wider rounded-md border",
-                                  utt.sentiment === 'positive' ? "bg-green-50 text-green-700 border-green-200" :
-                                  utt.sentiment === 'negative' ? "bg-red-50 text-red-700 border-red-200" :
-                                  "bg-gray-50 text-gray-700 border-gray-200"
-                                )}
-                                title={`Sentiment: ${utt.sentiment}`}
-                              >
-                                {utt.sentiment}
+                            {isAgent ? "A" : "C"}
+                          </div>
+                          <div className="space-y-2">
+                            <p className={cn(
+                              "text-[15px] font-[650] leading-relaxed p-6 rounded-[2rem]",
+                              isAgent
+                                ? "bg-[#4A7FA7]/30 border border-blue-400/10 text-[#F6FAFD] shadow-sm"
+                                : "bg-blue-950/25 text-[#F6FAFD] shadow-sm shadow-[#0A1931]/50"
+                            )}>
+                              {utt.text}
+                            </p>
+
+                            {/* Sentiment and Emotion badges */}
+                            <div className={cn(
+                              "flex flex-wrap items-center gap-2 px-1",
+                              isAgent ? "justify-start" : "justify-end"
+                            )}>
+                              {utt.sentiment && (
+                                <span
+                                  className={cn(
+                                    "px-2 py-1 text-[9px] font-black uppercase tracking-wider rounded-md border",
+                                    utt.sentiment === 'positive' ? "bg-green-50 text-green-700 border-green-200" :
+                                      utt.sentiment === 'negative' ? "bg-red-50 text-red-700 border-red-200" :
+                                        "bg-gray-50 text-gray-700 border-gray-200"
+                                  )}
+                                  title={`Sentiment: ${utt.sentiment}`}
+                                >
+                                  {utt.sentiment}
+                                </span>
+                              )}
+                              {utt.emotion && (
+                                <span
+                                  className="px-2 py-1 text-[9px] font-black uppercase tracking-wider rounded-md border bg-purple-50 text-purple-700 border-purple-200"
+                                  title={`Emotion: ${utt.emotion}`}
+                                >
+                                  {utt.emotion}
+                                </span>
+                              )}
+                              <span className="text-[11px] font-extrabold text-[#B3CFE5] uppercase tracking-widest">
+                                At {(utt.start_ms / 1000).toFixed(1)}s
                               </span>
-                            )}
-                            {utt.emotion && (
-                              <span
-                                className="px-2 py-1 text-[9px] font-black uppercase tracking-wider rounded-md border bg-purple-50 text-purple-700 border-purple-200"
-                                title={`Emotion: ${utt.emotion}`}
-                              >
-                                {utt.emotion}
-                              </span>
-                            )}
-                            <span className="text-[11px] font-extrabold text-[#B3CFE5] uppercase tracking-widest">
-                              At {(utt.start_ms / 1000).toFixed(1)}s
-                            </span>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    );
-                  })
+                      );
+                    })
                 )}
               </div>
             </div>
@@ -1878,7 +1881,7 @@ function LLMCostBreakdown({ llm }: {
         <div className="grid grid-cols-2 gap-3">
           {[
             { label: "Monthly Projection", value: monthlyCost, sub: "est. per month" },
-            { label: "Yearly Projection",  value: yearlyCost,  sub: "est. per year"  },
+            { label: "Yearly Projection", value: yearlyCost, sub: "est. per year" },
           ].map(({ label, value, sub }) => (
             <div key={label} className="w-full rounded-xl bg-blue-950/20 border border-[#4A7FA7]/25 overflow-hidden">
               <div className="px-4 py-2 bg-black/20 border-b border-blue-400/10">
