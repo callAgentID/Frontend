@@ -7,10 +7,8 @@ import { usePathname } from "next/navigation";
 import { useTranslations } from 'next-intl';
 import {
   LayoutDashboard, BarChart3, Layers, FileSearch, FileCode,
-  ShieldAlert, Settings, Users, LogOut, ChevronLeft, Menu, X, Package,
-  Sun, Moon
+  ShieldAlert, Settings, Users, LogOut, ChevronLeft, Menu, X, Package
 } from "lucide-react";
-import { useTheme } from "@/lib/useTheme";
 import { cn } from "../lib/utils";
 import { LanguageSwitcher } from "./LanguageSwitcher";
 import { useClerk, useUser } from "@clerk/nextjs";
@@ -55,7 +53,6 @@ export function Sidebar() {
   const pathname = usePathname();
   const t = useTranslations('nav');
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const { theme, toggle: toggleTheme } = useTheme();
 
   const toggleCollapse = () => {
     setIsCollapsed(v => {
@@ -210,25 +207,6 @@ export function Sidebar() {
 
           {/* Bottom */}
           <div className="mt-4 space-y-2">
-            {/* Theme toggle */}
-            <button
-              onClick={toggleTheme}
-              title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
-              className={cn(
-                "flex items-center rounded-2xl border border-white/[0.07] bg-white/[0.04] hover:bg-white/[0.07] transition-colors",
-                isCollapsed ? "justify-center p-2.5 w-full" : "gap-3 px-3 py-2.5 w-full"
-              )}
-            >
-              {theme === 'dark'
-                ? <Sun className="w-4 h-4 shrink-0 text-[var(--text-secondary)]" />
-                : <Moon className="w-4 h-4 shrink-0 text-[var(--text-secondary)]" />}
-              {!isCollapsed && (
-                <span className="text-[13px] font-medium text-[var(--text-secondary)]">
-                  {theme === 'dark' ? 'Light Mode' : 'Dark Mode'}
-                </span>
-              )}
-            </button>
-
             {!isCollapsed && <LanguageSwitcher />}
 
             <Link
