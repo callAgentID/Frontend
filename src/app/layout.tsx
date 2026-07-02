@@ -35,6 +35,8 @@ export default async function RootLayout({
     >
       <head>
         <meta name="google" content="notranslate" />
+        {/* Apply theme class before first paint to prevent dark flash */}
+        <script dangerouslySetInnerHTML={{ __html: `(function(){try{var t=localStorage.getItem('theme');if(t==='light')document.documentElement.classList.add('light');}catch(e){}})();` }} />
       </head>
       <body className="h-screen overflow-hidden flex relative" style={{ background: 'var(--water-deep, #060E1A)', color: 'var(--text-primary, #F2F6FF)' }}>
         <ClerkProvider>

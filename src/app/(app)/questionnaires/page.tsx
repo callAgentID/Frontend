@@ -774,8 +774,8 @@ function QuestionnairesPageContent() {
         )}
       </div>
 
-      {isCreateModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/50 animate-in fade-in duration-150 duration-150">
+      {mounted && isCreateModalOpen && createPortal(
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-6 bg-black/50 animate-in fade-in duration-150 duration-150">
            <div className="bg-[#1A3D63]/95 glow w-full max-w-5xl max-h-[90vh] rounded-[2.5rem] shadow-2xl border border-blue-400/15 overflow-hidden animate-in fade-in duration-150 duration-150 flex flex-col">
               <div className="p-8 border-b border-blue-400/15 bg-blue-950/18 flex items-center justify-between shrink-0">
                  <div>
@@ -935,7 +935,8 @@ function QuestionnairesPageContent() {
                 </button>
               </div>
            </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {isEditModalOpen && editingQuestionnaire && mounted && createPortal(

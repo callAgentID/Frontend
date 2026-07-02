@@ -3,22 +3,21 @@
 import { Search, Bell, Plus } from "lucide-react";
 import { useTranslations } from 'next-intl';
 
-const NAVBAR_STYLE = {
-  background: 'rgba(4, 12, 30, 0.90)', // high opacity = blur barely needed
-  backdropFilter: 'blur(6px)',          // was 16px
-  WebkitBackdropFilter: 'blur(6px)',
-  border: '1px solid rgba(255,255,255,0.07)',
-  borderRadius: 16,
-  margin: '10px 10px 0 10px',
-  contain: 'layout style',
-} as const;
-
 export function Navbar() {
   const t = useTranslations('common');
 
   return (
     <>
       <style>{`
+        .navbar-root {
+          background: rgba(4, 12, 30, 0.90);
+          backdrop-filter: blur(6px);
+          -webkit-backdrop-filter: blur(6px);
+          border: 1px solid rgba(255,255,255,0.07);
+          border-radius: 16px;
+          margin: 10px 10px 0 10px;
+          color: #EEF4FF;
+        }
         .navbar-btn {
           background: rgba(255,255,255,0.05);
           border: 1px solid rgba(255,255,255,0.08);
@@ -42,11 +41,33 @@ export function Navbar() {
           outline: none;
         }
         .navbar-search::placeholder { color: var(--text-tertiary); }
+
+        /* Light mode overrides */
+        html.light .navbar-root {
+          background: rgba(230,238,250,0.94);
+          border-color: rgba(26,111,212,0.12);
+          color: #0D1B2E;
+        }
+        html.light .navbar-btn {
+          background: rgba(26,111,212,0.06);
+          border-color: rgba(26,111,212,0.14);
+        }
+        html.light .navbar-btn:hover {
+          background: rgba(26,111,212,0.14);
+          border-color: rgba(26,111,212,0.28);
+        }
+        html.light .navbar-search {
+          background: rgba(255,255,255,0.80);
+          border-color: rgba(26,111,212,0.14);
+        }
+        html.light .navbar-search:focus {
+          background: rgba(255,255,255,0.95);
+          border-color: rgba(26,111,212,0.35);
+        }
       `}</style>
 
       <header
-        className="h-12 flex items-center justify-between px-4 relative overflow-hidden flex-shrink-0"
-        style={NAVBAR_STYLE}
+        className="navbar-root h-12 flex items-center justify-between px-4 relative overflow-hidden flex-shrink-0"
       >
         {/* Top glint */}
         <div className="absolute top-0 inset-x-0 h-px bg-white/[0.08] pointer-events-none rounded-t-2xl" />

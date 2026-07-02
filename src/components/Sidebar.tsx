@@ -7,28 +7,14 @@ import { usePathname } from "next/navigation";
 import { useTranslations } from 'next-intl';
 import {
   LayoutDashboard, BarChart3, Layers, FileSearch, FileCode,
-  ShieldAlert, Settings, Users, LogOut, ChevronLeft, Menu, X, Package
+  ShieldAlert, Settings, Users, LogOut, ChevronLeft, Menu, X, Package,
+  Sun, Moon
 } from "lucide-react";
 import { cn } from "../lib/utils";
 import { LanguageSwitcher } from "./LanguageSwitcher";
 import { useClerk, useUser } from "@clerk/nextjs";
 import { useCurrentUser } from "@/lib/useCurrentUser";
-
-// Static styles defined outside component — never recreated on render
-const SIDEBAR_STYLE = {
-  background: 'rgba(4, 12, 30, 0.88)', // more opaque = cheaper blur needed
-  backdropFilter: 'blur(8px)',          // was 20px — 8px is ~4x cheaper
-  WebkitBackdropFilter: 'blur(8px)',
-  borderColor: 'rgba(255, 255, 255, 0.06)',
-  borderRightWidth: '1px',
-  contain: 'layout style',             // isolate layout from rest of page
-} as const;
-
-const NAV_ACTIVE_STYLE = {
-  background: 'rgba(44, 143, 255, 0.16)',
-  border: '1px solid rgba(44, 143, 255, 0.28)',
-  color: '#E8F3FF',
-} as const;
+import { useTheme } from "@/lib/useTheme";
 
 const NAV_INACTIVE_STYLE = {
   border: '1px solid transparent',
@@ -53,6 +39,33 @@ export function Sidebar() {
   const pathname = usePathname();
   const t = useTranslations('nav');
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const { theme, toggle: toggleTheme } = useTheme();
+
+  const SIDEBAR_STYLE = theme === 'light' ? {
+    background: 'rgba(230,238,250,0.96)',
+    backdropFilter: 'blur(8px)',
+    WebkitBackdropFilter: 'blur(8px)',
+    borderColor: 'rgba(26,111,212,0.10)',
+    borderRightWidth: '1px',
+    contain: 'layout style',
+  } as const : {
+    background: 'rgba(4, 12, 30, 0.88)',
+    backdropFilter: 'blur(8px)',
+    WebkitBackdropFilter: 'blur(8px)',
+    borderColor: 'rgba(255, 255, 255, 0.06)',
+    borderRightWidth: '1px',
+    contain: 'layout style',
+  } as const;
+
+  const NAV_ACTIVE_STYLE = theme === 'light' ? {
+    background: 'rgba(26, 111, 212, 0.14)',
+    border: '1px solid rgba(26, 111, 212, 0.28)',
+    color: '#0D1B2E',
+  } as const : {
+    background: 'rgba(44, 143, 255, 0.16)',
+    border: '1px solid rgba(44, 143, 255, 0.28)',
+    color: '#E8F3FF',
+  } as const;
 
   const toggleCollapse = () => {
     setIsCollapsed(v => {
@@ -119,7 +132,9 @@ export function Sidebar() {
         style={{
           ...SIDEBAR_STYLE,
           borderRadius: 20,
-          border: '1px solid rgba(255,255,255,0.07)',
+          border: theme === 'light'
+            ? '1px solid rgba(26,111,212,0.12)'
+            : '1px solid rgba(255,255,255,0.07)',
         }}
       >
         {/* Top glint */}
@@ -132,11 +147,11 @@ export function Sidebar() {
             <div className={cn("flex items-center", isCollapsed && "justify-center w-full")}>
               {isCollapsed ? (
                 <div style={{ borderRadius: 12, padding: '4px', boxShadow: '0 0 18px rgba(255,255,255,0.28), 0 2px 8px rgba(0,0,0,0.28)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                  <Image src="/CallBlick-Logo.png" alt="CallBlick" width={30} height={30} loading="eager" className="object-contain" style={{ width: 30, height: 'auto', display: 'block' }} />
+                  <Image src={theme === 'light' ? '/CallBlickdark.png' : '/CallBlick-Logo.png'} alt="CallBlick" width={30} height={30} loading="eager" className="object-contain" style={{ width: 30, height: 'auto', display: 'block' }} />
                 </div>
               ) : (
                 <div style={{ borderRadius: 12, padding: '6px 2.7rem', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, width: 'full' }}>
-                  <Image src="/CallBlick-Logo-Final.png" alt="CallBlick" width={150} height={32} loading="eager" className="object-contain" style={{ width: 120, height: 'auto', display: 'block' }} />
+                  <Image src={theme === 'light' ? '/CallBlick Logo-Dark.png' : '/CallBlick-Logo-Final.png'} alt="CallBlick" width={150} height={32} loading="eager" className="object-contain" style={{ width: 120, height: 'auto', display: 'block' }} />
                 </div>
               )}
             </div>
@@ -207,6 +222,24 @@ export function Sidebar() {
 
           {/* Bottom */}
           <div className="mt-4 space-y-2">
+            <button
+              onClick={toggleTheme}
+              title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+              className={cn(
+                "w-full flex items-center rounded-2xl border border-white/[0.07] bg-white/[0.04] hover:bg-white/[0.07] transition-colors",
+                isCollapsed ? "justify-center p-2.5" : "gap-3 px-3 py-2.5"
+              )}
+            >
+              {theme === 'dark'
+                ? <Sun className="w-4 h-4 shrink-0 text-[var(--text-secondary)]" />
+                : <Moon className="w-4 h-4 shrink-0 text-[var(--text-secondary)]" />}
+              {!isCollapsed && (
+                <span className="text-[13px] font-medium text-[var(--text-secondary)]">
+                  {theme === 'dark' ? 'Light Mode' : 'Dark Mode'}
+                </span>
+              )}
+            </button>
+
             {!isCollapsed && <LanguageSwitcher />}
 
             <Link

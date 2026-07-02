@@ -1512,9 +1512,12 @@ export function ResultsPanel({ data, isHydrating = false }: { data: ResultData, 
         const separatorIdx = editingQuestionId.indexOf('||');
         const templateId = editingQuestionId.slice(0, separatorIdx);
         const questionId = editingQuestionId.slice(separatorIdx + 2);
-        // Find the answer data
+        // Find the answer data — search flat answers[] OR sections[].answers[]
         const templateResult = (safeData.qa_result?.results || []).find((r: any) => r.template_id === templateId);
-        const answer = templateResult?.answers?.find((a: any) => a.question_id === questionId);
+        const allAnswers = templateResult?.answers?.length
+          ? templateResult.answers
+          : (templateResult?.sections || []).flatMap((s: any) => s.answers || []);
+        const answer = allAnswers.find((a: any) => a.question_id === questionId);
 
         if (!answer) return null;
 
@@ -1919,14 +1922,14 @@ function LLMCostBreakdown({ llm }: {
 function DynamicStat({ label, value, sub }: { label: string, value: string, sub: string }) {
   return (
     <div className="space-y-1">
-      <div className="flex justify-between items-center text-white/60 mb-1">
+      <div className="flex justify-between items-center text-[#B3CFE5] mb-1">
         <span className="text-[11px] font-black uppercase tracking-[0.2em]">{label}</span>
-        <span className="text-[15px] font-[850] text-white">{value}</span>
+        <span className="text-[15px] font-[850] text-[#F6FAFD]">{value}</span>
       </div>
       <div className="h-1.5 w-full bg-white/10 rounded-full overflow-hidden">
-        <div className="h-full bg-white/40 rounded-full" style={{ width: value.includes('%') ? value : '50%' }} />
+        <div className="h-full bg-[#4A7FA7] rounded-full" style={{ width: value.includes('%') ? value : '50%' }} />
       </div>
-      <p className="text-[11px] font-bold text-white/50 tracking-tight mt-1.5">{sub}</p>
+      <p className="text-[11px] font-bold text-[#B3CFE5] tracking-tight mt-1.5">{sub}</p>
     </div>
   );
 }
