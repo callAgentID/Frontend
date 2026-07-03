@@ -738,9 +738,30 @@ function QuestionnairesPageContent() {
                                   </div>
                                   <div className="flex-1 space-y-1">
                                     <p className="text-sm font-bold text-[#F6FAFD] leading-tight">{question.text}</p>
-                                    <div className="flex items-center gap-3">
-                                       <span className="text-[9px] font-black uppercase tracking-tighter text-[#B3CFE5]">{question.type}</span>
-                                       {question.required && <span className="text-[9px] font-black uppercase tracking-tighter text-red-400">Required</span>}
+                                    <div className="flex items-center gap-2 flex-wrap mt-1">
+                                      <Tooltip content="Question Type — the UI input style used in the form" placement="top">
+                                        <span className="flex items-center gap-1 cursor-help">
+                                          <span className="text-[8px] font-black uppercase tracking-wider text-[#B3CFE5]/60">Q Type</span>
+                                          <span className="px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wider rounded bg-blue-950/40 text-[#B3CFE5] border border-blue-400/15">
+                                            {question.type.replace(/_/g, " ")}
+                                          </span>
+                                        </span>
+                                      </Tooltip>
+                                      {question.answer_type && (
+                                        <Tooltip content="Answer Type — constrains how the AI must format its answer for this question" placement="top">
+                                          <span className="flex items-center gap-1 cursor-help">
+                                            <span className="text-[8px] font-black uppercase tracking-wider text-[#B3CFE5]/60">Ans Type</span>
+                                            <span className="px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wider rounded bg-[#4A7FA7]/20 text-[#4A7FA7] border border-[#4A7FA7]/25">
+                                              {question.answer_type.replace(/_/g, " ")}
+                                            </span>
+                                          </span>
+                                        </Tooltip>
+                                      )}
+                                      {question.required && (
+                                        <span className="px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wider rounded bg-red-500/10 text-red-400 border border-red-500/20">
+                                          Required
+                                        </span>
+                                      )}
                                     </div>
                                   </div>
                                 </div>

@@ -32,6 +32,7 @@ export interface Question {
   question_id: string;
   text: string;
   type: "yes_no" | "single_choice" | "multi_choice" | "scale" | "text";
+  answer_type: "yes_no" | "text" | "multiple_choice" | "multi_select" | "number";
   required: boolean;
   weight: number;
   options?: string[] | QuestionOption;
@@ -126,6 +127,7 @@ export function InlineQuestionnaireEditor({ sections: initialSections, onSave, o
       question_id: `${sectionId}_q${section.questions.length + 1}`,
       text: te("newQuestion"),
       type: "yes_no",
+      answer_type: "yes_no",
       required: false,
       weight: 10,
       options: [],
@@ -479,6 +481,21 @@ function QuestionEditor({
                 className="w-full h-9 bg-blue-950/25 border border-blue-400/10 rounded-lg px-2 text-xs font-semibold text-[#F6FAFD] outline-none focus:border-[#4A7FA7] transition-colors"
               />
             </div>
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-[9px] font-black uppercase tracking-wider text-[#B3CFE5]">Answer Format (AI Constraint)</label>
+            <select
+              value={question.answer_type ?? "yes_no"}
+              onChange={(e) => onUpdate({ answer_type: e.target.value as Question["answer_type"] })}
+              className="w-full h-9 bg-blue-950/25 border border-blue-400/10 rounded-lg px-2 text-xs font-semibold text-[#F6FAFD] outline-none focus:border-[#4A7FA7] transition-colors"
+            >
+              <option value="yes_no">Yes / No</option>
+              <option value="text">Free Text</option>
+              <option value="multiple_choice">Multiple Choice (single)</option>
+              <option value="multi_select">Multi Select</option>
+              <option value="number">Number</option>
+            </select>
           </div>
 
           <div className="flex items-center gap-3 p-2 bg-blue-950/25 border border-blue-400/10 rounded-lg">

@@ -37,17 +37,20 @@ import { cn } from "../lib/utils";
 import { Tooltip } from "./Tooltip";
 import { formatLLMCost, formatTokens } from "../lib/formatters";
 import { useApi } from "../lib/useApi";
-import { Bar } from "react-chartjs-2";
+import { Bar, Line } from "react-chartjs-2";
 import {
   Chart as ChartJS,
   CategoryScale,
   LinearScale,
   BarElement,
+  LineElement,
+  PointElement,
+  Filler,
   Tooltip as ChartTooltip,
   Legend as ChartLegend
 } from "chart.js";
-ChartJS.register(CategoryScale, LinearScale, BarElement, ChartTooltip, ChartLegend);
-import { useState, useEffect } from "react";
+ChartJS.register(CategoryScale, LinearScale, BarElement, LineElement, PointElement, Filler, ChartTooltip, ChartLegend);
+import { useState, useEffect, useRef } from "react";
 import { createPortal } from 'react-dom';
 
 interface ResultData {
@@ -202,6 +205,7 @@ export function ResultsPanel({ data, isHydrating = false }: { data: ResultData, 
   const [isMarkingReviewed, setIsMarkingReviewed] = useState(false);
   const [reviewStatus, setReviewStatus] = useState(data?.review_status || 'unreviewed');
   const [playingSegment, setPlayingSegment] = useState<string | null>(null);
+  const segmentCleanupRef = useRef<(() => void) | null>(null);
 
   // Batch intervention state
   const [pendingEdits, setPendingEdits] = useState<Map<string, {
@@ -594,7 +598,7 @@ export function ResultsPanel({ data, isHydrating = false }: { data: ResultData, 
           <audio
             id="call-audio-player"
             controls
-            preload="metadata"
+            preload="auto"
             className="w-full md:w-2/3 h-10 accent-[#4A7FA7] bg-blue-950/20 rounded-xl"
             src={`${BASE_URL}/api/v1/media/calls/${safeData.call_id}/audio`}
           >
@@ -719,7 +723,9 @@ export function ResultsPanel({ data, isHydrating = false }: { data: ResultData, 
 
                                   const answerKey = `${templateResult.template_id}||${answer.question_id}`;
                                   const isExpanded = expandedAnswer === answerKey;
-                                  const isCustomFreeText = templateResult.template_id === 'custom_questions' && answer.answer && answer.answer !== 'yes' && answer.answer !== 'no';
+                                  const answerType: string = answer.answer_type ?? '';
+                                  const isFreeTextType = answerType === 'text' || answerType === 'number';
+                                  const isCustomFreeText = isFreeTextType || (templateResult.template_id === 'custom_questions' && answer.answer && answer.answer !== 'yes' && answer.answer !== 'no');
                                   const isYes = String(answer.answer || '').toLowerCase() === 'yes';
                                   const isPartial = !isYes && !answer.skipped && String(answer.evidence_quality || '').toUpperCase() === 'PARTIAL';
                                   const iconBgClass = isCustomFreeText
@@ -780,6 +786,22 @@ export function ResultsPanel({ data, isHydrating = false }: { data: ResultData, 
                                               <span className="px-2 py-0.5 text-[9px] font-black uppercase tracking-wider rounded-md border bg-blue-950/30 text-[#B3CFE5] border-blue-400/20">
                                                 Weight: {answer.weight}
                                               </span>
+                                            )}
+                                            {answerType && (
+                                              <Tooltip content={`Answer Type: ${answerType.replace(/_/g, " ")} — constrains how the AI must format its answer`} placement="top">
+                                                <span className={cn(
+                                                  "px-2 py-0.5 text-[9px] font-black uppercase tracking-wider rounded-md border cursor-help flex items-center gap-1",
+                                                  answerType === 'yes_no' ? (isYes ? "bg-green-50 text-green-700 border-green-200" : "bg-red-50 text-red-600 border-red-200") :
+                                                    answerType === 'text' ? "bg-purple-50 text-purple-700 border-purple-200" :
+                                                      answerType === 'number' ? "bg-sky-50 text-sky-700 border-sky-200" :
+                                                        answerType === 'multiple_choice' ? "bg-amber-50 text-amber-700 border-amber-200" :
+                                                          answerType === 'multi_select' ? "bg-orange-50 text-orange-700 border-orange-200" :
+                                                            "bg-blue-950/30 text-[#B3CFE5] border-blue-400/20"
+                                                )}>
+                                                  <span className="opacity-60 text-[8px]">ANS</span>
+                                                  {answerType.replace(/_/g, " ")}
+                                                </span>
+                                              </Tooltip>
                                             )}
                                             {(answer.is_edited || safeData.human_interventions?.some(
                                               (i: any) => i.question_id === answer.question_id && i.template_id === templateResult.template_id
@@ -887,28 +909,68 @@ export function ResultsPanel({ data, isHydrating = false }: { data: ResultData, 
                                                   if (!hasAudio) return;
                                                   const player = document.getElementById('call-audio-player') as HTMLAudioElement;
                                                   if (!player || !evidence) return;
+
+                                                  segmentCleanupRef.current?.();
+                                                  segmentCleanupRef.current = null;
+
                                                   if (isPlaying) {
                                                     player.pause();
                                                     setPlayingSegment(null);
-                                                  } else {
-                                                    const startTime = (evidence.start_ms || 0) / 1000;
-                                                    const endTime = (evidence.end_ms || evidence.start_ms || 0) / 1000;
+                                                    return;
+                                                  }
+
+                                                  // Resolve precise timestamps from transcript utterances.
+                                                  // Evidence timestamps from the AI are approximate — the utterance
+                                                  // record has the exact start/end the STT engine produced.
+                                                  const utterances: any[] = safeData.transcript?.utterances || [];
+                                                  const utt = evidence.utterance_id
+                                                    ? utterances.find((u: any) => u.utterance_id === evidence.utterance_id)
+                                                    : null;
+
+                                                  const startTime = (utt?.start_ms ?? evidence.start_ms ?? 0) / 1000;
+                                                  const endTime   = (utt?.end_ms   ?? evidence.end_ms   ?? evidence.start_ms ?? 0) / 1000;
+
+                                                  setPlayingSegment(segmentId);
+                                                  let cancelled = false;
+
+                                                  const onTimeUpdate = () => {
+                                                    if (cancelled) return;
+                                                    if (player.currentTime >= endTime) {
+                                                      player.pause();
+                                                      player.removeEventListener('timeupdate', onTimeUpdate);
+                                                      setPlayingSegment(null);
+                                                      segmentCleanupRef.current = null;
+                                                    }
+                                                  };
+
+                                                  const cleanup = () => {
+                                                    cancelled = true;
+                                                    player.removeEventListener('timeupdate', onTimeUpdate);
+                                                    player.removeEventListener('seeked', onSeeked);
+                                                    player.removeEventListener('loadedmetadata', onMeta);
+                                                  };
+                                                  segmentCleanupRef.current = cleanup;
+
+                                                  const onSeeked = () => {
+                                                    if (cancelled) return;
+                                                    player.addEventListener('timeupdate', onTimeUpdate);
+                                                    player.play().catch(() => {
+                                                      setPlayingSegment(null);
+                                                      segmentCleanupRef.current = null;
+                                                    });
+                                                  };
+
+                                                  const onMeta = () => {
+                                                    if (cancelled) return;
+                                                    player.addEventListener('seeked', onSeeked, { once: true });
                                                     player.currentTime = startTime;
-                                                    player.play();
-                                                    setPlayingSegment(segmentId);
-                                                    let rafId: number;
-                                                    const checkTime = () => {
-                                                      if (player.currentTime >= endTime) {
-                                                        player.pause();
-                                                        setPlayingSegment(null);
-                                                      } else {
-                                                        rafId = requestAnimationFrame(checkTime);
-                                                      }
-                                                    };
-                                                    rafId = requestAnimationFrame(checkTime);
-                                                    const cancel = () => cancelAnimationFrame(rafId);
-                                                    player.addEventListener('pause', cancel, { once: true });
-                                                    player.addEventListener('ended', cancel, { once: true });
+                                                  };
+
+                                                  if (player.readyState === 0) {
+                                                    player.addEventListener('loadedmetadata', onMeta, { once: true });
+                                                  } else {
+                                                    player.addEventListener('seeked', onSeeked, { once: true });
+                                                    player.currentTime = startTime;
                                                   }
                                                 }}
                                                 className={cn(
@@ -1086,6 +1148,126 @@ export function ResultsPanel({ data, isHydrating = false }: { data: ResultData, 
               </div>
             </div>
           </section>
+
+          {/* Sentiment Timeline */}
+          {(safeData.transcript?.utterances?.length || 0) > 0 && (() => {
+            const utts: any[] = safeData.transcript.utterances;
+            // Build one data point per utterance, using midpoint time for x-axis
+            const points = utts.map((u: any) => ({
+              x: parseFloat(((u.start_ms + u.end_ms) / 2000).toFixed(2)),
+              y: u.sentiment_score ?? 0,
+              label: u.sentiment_score > 0 ? 'positive' : u.sentiment_score < 0 ? 'negative' : 'neutral',
+              speaker: u.speaker_id,
+              text: u.text,
+            }));
+
+            const lineData = {
+              labels: points.map(p => `${p.x}s`),
+              datasets: [
+                {
+                  label: 'Sentiment',
+                  data: points.map(p => p.y),
+                  fill: false,
+                  tension: 0.45,
+                  borderWidth: 2.5,
+                  borderColor: '#22c55e',
+                  segment: {
+                    // Use whichever endpoint has larger magnitude — yellow only when both are exactly 0
+                    borderColor: (ctx: any) => {
+                      const v0 = ctx.p0?.parsed?.y ?? 0;
+                      const v1 = ctx.p1?.parsed?.y ?? 0;
+                      const v = Math.abs(v0) >= Math.abs(v1) ? v0 : v1;
+                      if (v > 0) return '#22c55e';
+                      if (v < 0) return '#ef4444';
+                      return '#eab308';
+                    },
+                  },
+                  pointRadius: 0,
+                  pointHoverRadius: 4,
+                  pointHoverBackgroundColor: '#fff',
+                },
+              ],
+            };
+
+            const lineOptions: any = {
+              responsive: true,
+              maintainAspectRatio: false,
+              animation: { duration: 600 },
+              plugins: {
+                legend: { display: false },
+                tooltip: {
+                  backgroundColor: 'rgba(4,12,32,0.92)',
+                  borderColor: 'rgba(44,143,255,0.20)',
+                  borderWidth: 1,
+                  padding: 10,
+                  titleColor: 'rgba(180,215,255,0.55)',
+                  bodyColor: '#EEF4FF',
+                  titleFont: { size: 10, weight: '700' },
+                  bodyFont: { size: 11 },
+                  callbacks: {
+                    title: (items: any[]) => {
+                      const i = items[0].dataIndex;
+                      return `${points[i].x}s · ${points[i].label.toUpperCase()} · Speaker ${points[i].speaker}`;
+                    },
+                    label: (item: any) => {
+                      const p = points[item.dataIndex];
+                      const text = p.text.length > 55 ? p.text.slice(0, 55) + '…' : p.text;
+                      return [`Score: ${item.raw}`, `"${text}"`];
+                    },
+                  },
+                },
+              },
+              scales: {
+                x: {
+                  ticks: {
+                    color: 'rgba(180,215,255,0.40)',
+                    font: { size: 9, weight: '700' },
+                    maxTicksLimit: 10,
+                    maxRotation: 0,
+                  },
+                  grid: { color: 'rgba(255,255,255,0.04)' },
+                  border: { color: 'rgba(255,255,255,0.06)' },
+                },
+                y: {
+                  min: -1.1,
+                  max: 1.1,
+                  ticks: {
+                    color: 'rgba(180,215,255,0.40)',
+                    font: { size: 9, weight: '700' },
+                    stepSize: 0.5,
+                    callback: (v: any) => v === 1 ? '😊 +1' : v === 0 ? '😐 0' : v === -1 ? '😟 −1' : v,
+                  },
+                  grid: {
+                    color: (ctx: any) =>
+                      ctx.tick.value === 0
+                        ? 'rgba(255,255,255,0.14)'
+                        : 'rgba(255,255,255,0.04)',
+                  },
+                  border: { color: 'rgba(255,255,255,0.06)' },
+                },
+              },
+            };
+
+            return (
+              <section className="space-y-4">
+                <div className="flex items-center justify-between px-1">
+                  <h4 className="text-xl font-[850] text-[#F6FAFD] tracking-tight flex items-center gap-3">
+                    <TrendingUp className="w-5 h-5 text-[#4A7FA7]" /> Sentiment Timeline
+                  </h4>
+                  <div className="flex items-center gap-3 text-[10px] font-black uppercase tracking-widest text-[#B3CFE5]">
+                    <span className="flex items-center gap-1.5"><span className="w-5 h-0.5 rounded-full bg-green-500" />Positive</span>
+                    <span className="flex items-center gap-1.5"><span className="w-5 h-0.5 rounded-full bg-yellow-400" />Neutral</span>
+                    <span className="flex items-center gap-1.5"><span className="w-5 h-0.5 rounded-full bg-red-500" />Negative</span>
+                  </div>
+                </div>
+                <div className="p-6 rounded-[1.5rem] glass-card">
+                  <div style={{ height: 200 }}>
+                    <Line data={lineData} options={lineOptions} />
+                  </div>
+                </div>
+              </section>
+            );
+          })()}
 
           {/* New Conversational Transcript */}
           <section className="space-y-6">
