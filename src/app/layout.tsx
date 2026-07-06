@@ -18,6 +18,20 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "CallBlick",
   description: "Advanced intelligence for conversation analysis",
+  openGraph: {
+    title: "CallBlick",
+    description: "Advanced intelligence for conversation analysis",
+    url: "https://app.callblick.com",
+    siteName: "CallBlick",
+    images: [{ url: "/opengraph-image.png", width: 1200, height: 630, alt: "CallBlick" }],
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "CallBlick",
+    description: "Advanced intelligence for conversation analysis",
+    images: ["/opengraph-image.png"],
+  },
 };
 
 export default async function RootLayout({
