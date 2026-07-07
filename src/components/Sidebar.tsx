@@ -7,7 +7,7 @@ import { usePathname } from "next/navigation";
 import { useTranslations } from 'next-intl';
 import {
   LayoutDashboard, BarChart3, Layers, FileSearch, FileCode,
-  ShieldAlert, Settings, LogOut, ChevronLeft, Menu, X, Package,
+  ShieldAlert, Settings, Users, LogOut, ChevronLeft, Menu, X, Package,
   Sun, Moon
 } from "lucide-react";
 import { cn } from "../lib/utils";
@@ -21,10 +21,11 @@ const NAV_INACTIVE_STYLE = {
   color: 'var(--text-secondary)',
 } as const;
 
-type NavRole = "all" | "admin" | "admin_manager";
+type NavRole = "all" | "admin" | "admin_manager" | "super_admin_only";
 
 const NAV_ITEMS: { name: string; href: string; icon: any; roles: NavRole }[] = [
-  { name: "admin", href: "/admin", icon: Settings, roles: "admin" },
+  { name: "admin", href: "/admin", icon: Settings, roles: "super_admin_only" },
+  { name: "users", href: "/users", icon: Users, roles: "super_admin_only" },
   { name: "analysis", href: "/", icon: LayoutDashboard, roles: "all" },
   { name: "callAnalytics", href: "/analytics", icon: BarChart3, roles: "all" },
   { name: "batches", href: "/batches", icon: Package, roles: "all" },
@@ -88,6 +89,7 @@ export function Sidebar() {
   const role = currentRole ?? "user";
 
   const canSee = (itemRoles: NavRole) => {
+    if (itemRoles === "super_admin_only") return isSuperAdmin;
     if (isSuperAdmin) return true;
     if (itemRoles === "all") return true;
     if (itemRoles === "admin") return role === "admin";
