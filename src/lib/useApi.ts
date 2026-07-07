@@ -1,28 +1,35 @@
 "use client";
 
 import { useAuth } from "@clerk/nextjs";
-import { useCallback, useRef } from "react";
+import { useCallback, useRef, useEffect } from "react";
 
 const BASE_URL =
   process.env.NEXT_PUBLIC_BASE_URL ||
   "https://zk1354qz0k.execute-api.eu-central-1.amazonaws.com";
 
-// Cache token for 3 minutes — conservative to avoid near-expiry failures
 const TOKEN_TTL = 3 * 60 * 1000;
 
 export function useApi() {
-  const { getToken } = useAuth();
+  const { getToken, orgId } = useAuth();
 
-  const tokenCache = useRef<{ token: string | null; expiresAt: number }>({
+  const tokenCache = useRef<{ token: string | null; expiresAt: number; orgId: string | null }>({
     token: null,
     expiresAt: 0,
+    orgId: null,
   });
+
+  // Bust cache whenever the active organization changes
+  useEffect(() => {
+    if (tokenCache.current.orgId !== orgId) {
+      tokenCache.current = { token: null, expiresAt: 0, orgId: orgId ?? null };
+    }
+  }, [orgId]);
 
   const getFreshToken = useCallback(async (): Promise<string | null> => {
     const token = await getToken();
-    tokenCache.current = { token, expiresAt: Date.now() + TOKEN_TTL };
+    tokenCache.current = { token, expiresAt: Date.now() + TOKEN_TTL, orgId: orgId ?? null };
     return token;
-  }, [getToken]);
+  }, [getToken, orgId]);
 
   const buildHeaders = (token: string | null, init: RequestInit): Record<string, string> => {
     const headers: Record<string, string> = {
@@ -38,10 +45,10 @@ export function useApi() {
 
   const apiFetch = useCallback(
     async (path: string, init: RequestInit = {}): Promise<Response> => {
-      // Use cached token if still valid
       let token: string | null;
-      if (tokenCache.current.token && Date.now() < tokenCache.current.expiresAt) {
-        token = tokenCache.current.token;
+      const cache = tokenCache.current;
+      if (cache.token && Date.now() < cache.expiresAt && cache.orgId === (orgId ?? null)) {
+        token = cache.token;
       } else {
         token = await getFreshToken();
       }
@@ -51,10 +58,9 @@ export function useApi() {
         headers: buildHeaders(token, init),
       });
 
-      // On 401/403 — cached token expired before TTL (clock skew / early revocation)
-      // Clear cache, fetch a brand-new token, and retry ONCE
+      // On 401/403 — bust cache and retry once with a fresh token
       if (response.status === 401 || response.status === 403) {
-        tokenCache.current = { token: null, expiresAt: 0 }; // bust cache
+        tokenCache.current = { token: null, expiresAt: 0, orgId: orgId ?? null };
         const freshToken = await getFreshToken();
 
         return fetch(`${BASE_URL}${path}`, {
@@ -65,7 +71,7 @@ export function useApi() {
 
       return response;
     },
-    [getFreshToken]
+    [getFreshToken, orgId]
   );
 
   return { apiFetch, BASE_URL };

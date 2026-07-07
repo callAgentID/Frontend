@@ -1,17 +1,25 @@
 "use client";
 
-import { useUser } from "@clerk/nextjs";
+import { useAuth, useUser } from "@clerk/nextjs";
 
-export type UserRole = "Admin" | "Super_admin" | "manager" | "user" | null;
+export type UserRole = "Admin" | "Super_admin" | "Manager" | "User" | null;
 
 export function useCurrentUser() {
   const { user, isLoaded } = useUser();
+  const { orgId } = useAuth();
 
-  // Normalize to capitalized regardless of how backend stores it
   const raw = user?.publicMetadata?.role as string | undefined;
   const role: UserRole = raw
     ? ((raw.charAt(0).toUpperCase() + raw.slice(1).toLowerCase()) as UserRole)
     : null;
 
-  return { role, isLoading: !isLoaded };
+  const isSuperAdmin = raw?.toLowerCase() === "super_admin";
+
+  return {
+    role,
+    isSuperAdmin,
+    orgId: orgId ?? null,
+    hasOrg: !!orgId,
+    isLoading: !isLoaded,
+  };
 }

@@ -2,6 +2,7 @@
 
 import { Search, Bell, Plus } from "lucide-react";
 import { useTranslations } from 'next-intl';
+import { OrganizationSwitcher } from "@clerk/nextjs";
 
 export function Navbar() {
   const t = useTranslations('common');
@@ -64,6 +65,44 @@ export function Navbar() {
           background: rgba(255,255,255,0.95);
           border-color: rgba(26,111,212,0.35);
         }
+
+        /* Clerk OrganizationSwitcher overrides */
+        .cl-organizationSwitcherTrigger {
+          background: rgba(255,255,255,0.05) !important;
+          border: 1px solid rgba(255,255,255,0.08) !important;
+          border-radius: 10px !important;
+          color: var(--text-primary) !important;
+          font-size: 12px !important;
+          font-weight: 600 !important;
+          height: 32px !important;
+          padding: 0 10px !important;
+          gap: 6px !important;
+        }
+        .cl-organizationSwitcherTrigger:hover {
+          background: rgba(44,143,255,0.12) !important;
+          border-color: rgba(44,143,255,0.22) !important;
+        }
+        html.light .cl-organizationSwitcherTrigger {
+          background: rgba(26,111,212,0.06) !important;
+          border-color: rgba(26,111,212,0.14) !important;
+          color: #0D1B2E !important;
+        }
+        .cl-organizationPreviewTextContainer { color: inherit !important; }
+        .cl-organizationPreviewMainIdentifier { font-size: 12px !important; font-weight: 600 !important; }
+        .cl-organizationSwitcherPopoverCard {
+          background: #0A1931 !important;
+          border: 1px solid rgba(255,255,255,0.09) !important;
+          border-radius: 16px !important;
+          box-shadow: 0 20px 60px rgba(0,0,0,0.5) !important;
+        }
+        html.light .cl-organizationSwitcherPopoverCard {
+          background: #ffffff !important;
+          border-color: rgba(26,111,212,0.15) !important;
+        }
+        .cl-organizationSwitcherPopoverActionButton {
+          border-radius: 10px !important;
+          font-size: 12px !important;
+        }
       `}</style>
 
       <header
@@ -85,6 +124,16 @@ export function Navbar() {
 
         {/* Actions */}
         <div className="flex items-center gap-2">
+          {/* Organization switcher */}
+          <div className="hidden sm:block">
+            <OrganizationSwitcher
+              hidePersonal={true}
+              afterCreateOrganizationUrl="/"
+              afterSelectOrganizationUrl="/"
+              afterLeaveOrganizationUrl="/"
+            />
+          </div>
+
           <div className="relative hidden sm:block">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[var(--text-tertiary)] pointer-events-none" />
             <input
