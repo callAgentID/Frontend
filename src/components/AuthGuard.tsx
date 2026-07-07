@@ -10,6 +10,7 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
   const { user } = useUser();
   const router = useRouter();
 
+  // Super admin is determined by global profile metadata (they don't need an org)
   const isSuperAdmin = (user?.publicMetadata?.role as string | undefined)?.toLowerCase() === "super_admin";
 
   useEffect(() => {
@@ -28,7 +29,7 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
 
   if (!isSignedIn) return null;
 
-  // Non-super-admins must have an active organization
+  // Non-super-admins must have an active organization selected
   if (!isSuperAdmin && !orgId) {
     return (
       <div className="flex h-screen w-full items-center justify-center" style={{ background: '#020912' }}>

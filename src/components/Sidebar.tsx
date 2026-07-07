@@ -7,8 +7,8 @@ import { usePathname } from "next/navigation";
 import { useTranslations } from 'next-intl';
 import {
   LayoutDashboard, BarChart3, Layers, FileSearch, FileCode,
-  ShieldAlert, Settings, Users, LogOut, ChevronLeft, Menu, X, Package,
-  Sun, Moon, Building2
+  ShieldAlert, Settings, LogOut, ChevronLeft, Menu, X, Package,
+  Sun, Moon
 } from "lucide-react";
 import { cn } from "../lib/utils";
 import { LanguageSwitcher } from "./LanguageSwitcher";
@@ -25,8 +25,6 @@ type NavRole = "all" | "admin" | "admin_manager";
 
 const NAV_ITEMS: { name: string; href: string; icon: any; roles: NavRole }[] = [
   { name: "admin", href: "/admin", icon: Settings, roles: "admin" },
-  { name: "organization", href: "/settings/organization", icon: Building2, roles: "admin" },
-  { name: "users", href: "/users", icon: Users, roles: "admin_manager" },
   { name: "analysis", href: "/", icon: LayoutDashboard, roles: "all" },
   { name: "callAnalytics", href: "/analytics", icon: BarChart3, roles: "all" },
   { name: "batches", href: "/batches", icon: Package, roles: "all" },
@@ -78,7 +76,7 @@ export function Sidebar() {
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const { signOut } = useClerk();
   const { user } = useUser();
-  const { role: backendRole } = useCurrentUser();
+  const { role: currentRole, isSuperAdmin } = useCurrentUser();
 
   const initials = user
     ? (((user.firstName?.[0] ?? "") + (user.lastName?.[0] ?? "")).toUpperCase()
@@ -87,10 +85,10 @@ export function Sidebar() {
   const displayName = user
     ? (user.fullName || user.emailAddresses[0]?.emailAddress || "User")
     : "User";
-  const role = backendRole?.toLowerCase() ?? "user"; // "admin" | "manager" | "user"
+  const role = currentRole ?? "user";
 
   const canSee = (itemRoles: NavRole) => {
-    if (role === "super_admin") return true;
+    if (isSuperAdmin) return true;
     if (itemRoles === "all") return true;
     if (itemRoles === "admin") return role === "admin";
     if (itemRoles === "admin_manager") return role === "admin" || role === "manager";
@@ -243,14 +241,11 @@ export function Sidebar() {
 
             {!isCollapsed && <LanguageSwitcher />}
 
-            <Link
-              href="/users"
-              onClick={() => setIsMobileOpen(false)}
+            <div
               className={cn(
                 "flex items-center rounded-2xl overflow-hidden border border-white/[0.07]",
-                "bg-white/[0.04] hover:bg-white/[0.07]",
-                isCollapsed ? "justify-center p-2.5" : "gap-3 px-3 py-3",
-                pathname === "/users" && "bg-blue-500/15 border-blue-400/25"
+                "bg-white/[0.04]",
+                isCollapsed ? "justify-center p-2.5" : "gap-3 px-3 py-3"
               )}
             >
               {user?.imageUrl ? (
@@ -273,7 +268,7 @@ export function Sidebar() {
                   <div className="flex-1 min-w-0">
                     <p className="text-[13px] font-medium truncate leading-tight text-[var(--text-primary)]">{displayName}</p>
                     <p className="text-[10px] uppercase tracking-wider truncate mt-0.5 text-[var(--text-tertiary)]">
-                      {backendRole ?? "Member"}
+                      {currentRole ?? "Member"}
                     </p>
                   </div>
                   <button
@@ -295,7 +290,7 @@ export function Sidebar() {
                   <LogOut className="w-3.5 h-3.5" />
                 </button>
               )}
-            </Link>
+            </div>
           </div>
         </div>
       </aside>
