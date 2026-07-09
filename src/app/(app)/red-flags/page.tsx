@@ -29,6 +29,8 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { RedFlagItemSkeleton, DetailViewSkeleton } from "@/components/Skeleton";
+import { useCurrentUser } from "@/lib/useCurrentUser";
+import { AuthenticatedAudioPlayer } from "@/components/AuthenticatedAudioPlayer";
 
 interface RedFlagSummary {
   id: string;
@@ -77,7 +79,9 @@ function RedFlagsPageContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const t = useTranslations('redFlags');
-  const { apiFetch, BASE_URL } = useApi();
+  const { apiFetch } = useApi();
+  const { role, isSuperAdmin } = useCurrentUser();
+  const isAdminOrManager = isSuperAdmin || role === "admin" || role === "manager";
 
   const [redFlags, setRedFlags] = useState<RedFlagSummary[]>([]);
   const [rawRedFlags, setRawRedFlags] = useState<RedFlagSummary[]>([]);
@@ -400,7 +404,7 @@ function RedFlagsPageContent() {
           >
             <ArrowLeft className="w-4 h-4" /> Back to Red Flags
           </button>
-          {detailData && !detailData.reviewed_at && (
+          {isAdminOrManager && detailData && !detailData.reviewed_at && (
             <button
               onClick={() => {
                 const name = prompt("Enter your name to mark this as reviewed:");
@@ -496,15 +500,12 @@ function RedFlagsPageContent() {
                   </h4>
                   <p className="text-sm font-medium text-[#F6FAFD]/80">Stream high-fidelity conversation audio with seek support.</p>
                 </div>
-                <audio
+                <AuthenticatedAudioPlayer
                   id="red-flag-audio-player"
-                  controls
+                  callId={detailData.call_id}
                   preload="metadata"
                   className="w-full md:w-2/3 h-10 accent-[#4A7FA7] bg-blue-950/18 rounded-xl"
-                  src={`${BASE_URL}/api/v1/media/calls/${detailData.call_id}/audio`}
-                >
-                  Your browser does not support audio playback.
-                </audio>
+                />
               </div>
             )}
 
@@ -559,7 +560,7 @@ function RedFlagsPageContent() {
                                 </span>
                               )}
                           </div>
-                          {!isRecalculating && !answer.skipped && (
+                          {isAdminOrManager && !isRecalculating && !answer.skipped && (
                             <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                               {getPendingEdit(templateId, questionId) && (
                                 <span className="px-2 py-1 text-[9px] font-black uppercase tracking-wider bg-orange-100 text-orange-700 rounded-md border border-orange-200">
@@ -754,7 +755,7 @@ function RedFlagsPageContent() {
             )}
 
             {/* Floating Submit Button */}
-            {pendingEdits.size > 0 && !isRecalculating && (
+            {isAdminOrManager && pendingEdits.size > 0 && !isRecalculating && (
               <div className="fixed bottom-8 right-8 z-40 animate-in slide-in-from-bottom-4 duration-300">
                 <div className="bg-white rounded-2xl shadow-2xl border border-[#1f3a3410] p-4 space-y-3">
                   <div className="flex items-center gap-3">

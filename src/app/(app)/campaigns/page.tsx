@@ -25,12 +25,15 @@ import {
 import { toast } from "@/components/Toast";
 import { cn } from "@/lib/utils";
 import { CampaignCardSkeleton, ScriptDetailSkeleton } from "@/components/Skeleton";
+import { useCurrentUser } from "@/lib/useCurrentUser";
 
 function CampaignsPageContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const t = useTranslations('campaigns');
   const { apiFetch } = useApi();
+  const { role, isSuperAdmin } = useCurrentUser();
+  const isAdminOrManager = isSuperAdmin || role === "admin" || role === "manager";
 
   const [loading, setLoading] = useState(true);
   const [mounted, setMounted] = useState(false);
@@ -323,15 +326,17 @@ function CampaignsPageContent() {
           <button onClick={fetchData} className="h-12 px-6 bg-blue-950/18 text-[#4A7FA7] rounded-2xl font-bold flex items-center gap-2 hover:bg-blue-950/25 transition-colors text-sm border border-blue-400/15">
             {t('refreshData')}
           </button>
-          <button
-            onClick={() => {
-              setModalType("campaign");
-              setIsModalOpen(true);
-            }}
-            className="h-12 px-6 bg-gradient-to-r from-[#4A7FA7] to-[#1A3D63] glow text-white rounded-2xl font-bold flex items-center gap-2 shadow-sm shadow-[#4A7FA7]/30 hover:opacity-90 active:scale-95 transition-colors text-sm"
-          >
-            <Plus className="w-5 h-5" /> {t('newAsset')}
-          </button>
+          {isAdminOrManager && (
+            <button
+              onClick={() => {
+                setModalType("campaign");
+                setIsModalOpen(true);
+              }}
+              className="h-12 px-6 bg-gradient-to-r from-[#4A7FA7] to-[#1A3D63] glow text-white rounded-2xl font-bold flex items-center gap-2 shadow-sm shadow-[#4A7FA7]/30 hover:opacity-90 active:scale-95 transition-colors text-sm"
+            >
+              <Plus className="w-5 h-5" /> {t('newAsset')}
+            </button>
+          )}
         </div>
       </div>
 
@@ -374,35 +379,37 @@ function CampaignsPageContent() {
                         <p className="text-[10px] font-black uppercase tracking-widest text-[#B3CFE5]">Mapped Assets</p>
                         <p className="font-[850] text-[#F6FAFD]">{campaignScripts.length + campaignQuestionnaires.length} Units</p>
                       </div>
-                      <div className="relative">
-                        <button
-                          onClick={(e) => { e.stopPropagation(); setOpenMenuId(openMenuId === campaign.id ? null : campaign.id); }}
-                          className="w-12 h-12 rounded-2xl bg-blue-950/18 flex items-center justify-center text-[#4A7FA7] hover:bg-gradient-to-r hover:from-[#4A7FA7] hover:to-[#1A3D63] hover:text-white transition-colors"
-                        >
-                          <MoreHorizontal className="w-6 h-6" />
-                        </button>
-                        {openMenuId === campaign.id && (
-                          <>
-                            <div className="fixed inset-0 z-[100]" onClick={() => setOpenMenuId(null)} />
-                            <div className="absolute right-0 top-14 z-[101] w-44 bg-[#0D1F3C] border border-blue-400/20 rounded-2xl shadow-2xl overflow-hidden animate-in fade-in duration-150">
-                              <button
-                                onClick={(e) => { e.stopPropagation(); setEditingCampaign(campaign); setEditForm({ name: campaign.name, code: campaign.code }); setOpenMenuId(null); }}
-                                className="w-full flex items-center gap-3 px-4 py-3 text-sm font-semibold text-[#F6FAFD] hover:bg-blue-500/15 transition-colors"
-                              >
-                                <Pencil className="w-4 h-4 text-[#4A7FA7]" /> Edit Campaign
-                              </button>
-                              <div className="h-px bg-blue-400/10" />
-                              <button
-                                onClick={(e) => { e.stopPropagation(); handleDeleteCampaign(campaign.id); }}
-                                disabled={isDeleting}
-                                className="w-full flex items-center gap-3 px-4 py-3 text-sm font-semibold text-red-400 hover:bg-red-500/10 transition-colors disabled:opacity-50"
-                              >
-                                <Trash2 className="w-4 h-4" /> Delete Campaign
-                              </button>
-                            </div>
-                          </>
-                        )}
-                      </div>
+                      {isAdminOrManager && (
+                        <div className="relative">
+                          <button
+                            onClick={(e) => { e.stopPropagation(); setOpenMenuId(openMenuId === campaign.id ? null : campaign.id); }}
+                            className="w-12 h-12 rounded-2xl bg-blue-950/18 flex items-center justify-center text-[#4A7FA7] hover:bg-gradient-to-r hover:from-[#4A7FA7] hover:to-[#1A3D63] hover:text-white transition-colors"
+                          >
+                            <MoreHorizontal className="w-6 h-6" />
+                          </button>
+                          {openMenuId === campaign.id && (
+                            <>
+                              <div className="fixed inset-0 z-[100]" onClick={() => setOpenMenuId(null)} />
+                              <div className="absolute right-0 top-14 z-[101] w-44 bg-[#0D1F3C] border border-blue-400/20 rounded-2xl shadow-2xl overflow-hidden animate-in fade-in duration-150">
+                                <button
+                                  onClick={(e) => { e.stopPropagation(); setEditingCampaign(campaign); setEditForm({ name: campaign.name, code: campaign.code }); setOpenMenuId(null); }}
+                                  className="w-full flex items-center gap-3 px-4 py-3 text-sm font-semibold text-[#F6FAFD] hover:bg-blue-500/15 transition-colors"
+                                >
+                                  <Pencil className="w-4 h-4 text-[#4A7FA7]" /> Edit Campaign
+                                </button>
+                                <div className="h-px bg-blue-400/10" />
+                                <button
+                                  onClick={(e) => { e.stopPropagation(); handleDeleteCampaign(campaign.id); }}
+                                  disabled={isDeleting}
+                                  className="w-full flex items-center gap-3 px-4 py-3 text-sm font-semibold text-red-400 hover:bg-red-500/10 transition-colors disabled:opacity-50"
+                                >
+                                  <Trash2 className="w-4 h-4" /> Delete Campaign
+                                </button>
+                              </div>
+                            </>
+                          )}
+                        </div>
+                      )}
                     </div>
                   </div>
 
@@ -414,16 +421,18 @@ function CampaignsPageContent() {
                         <FileCode className="w-5 h-5 text-[#4A7FA7]" />
                         <h3 className="font-extrabold text-[#F6FAFD] uppercase tracking-wider text-xs">Neural Scripts</h3>
                       </div>
-                      <button
-                        onClick={() => {
-                          setScriptForm(prev => ({ ...prev, campaign_id: campaign.id }));
-                          setModalType("script");
-                          setIsModalOpen(true);
-                        }}
-                        className="bg-blue-950/18 text-[#4A7FA7] text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-lg hover:bg-gradient-to-r hover:from-[#4A7FA7] hover:to-[#1A3D63] hover:text-white transition-colors border border-blue-400/15"
-                      >
-                        Add Logic
-                      </button>
+                      {isAdminOrManager && (
+                        <button
+                          onClick={() => {
+                            setScriptForm(prev => ({ ...prev, campaign_id: campaign.id }));
+                            setModalType("script");
+                            setIsModalOpen(true);
+                          }}
+                          className="bg-blue-950/18 text-[#4A7FA7] text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-lg hover:bg-gradient-to-r hover:from-[#4A7FA7] hover:to-[#1A3D63] hover:text-white transition-colors border border-blue-400/15"
+                        >
+                          Add Logic
+                        </button>
+                      )}
                     </div>
                     <div className="space-y-3">
                       {campaignScripts.map((s) => (

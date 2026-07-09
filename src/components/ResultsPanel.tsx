@@ -35,8 +35,10 @@ import {
 } from "lucide-react";
 import { cn } from "../lib/utils";
 import { Tooltip } from "./Tooltip";
+import { AuthenticatedAudioPlayer } from "./AuthenticatedAudioPlayer";
 import { formatLLMCost, formatTokens } from "../lib/formatters";
 import { useApi } from "../lib/useApi";
+import { useCurrentUser } from "../lib/useCurrentUser";
 import { Bar, Line } from "react-chartjs-2";
 import {
   Chart as ChartJS,
@@ -201,7 +203,9 @@ interface ResultData {
 }
 
 export function ResultsPanel({ data, isHydrating = false }: { data: ResultData, isHydrating?: boolean }) {
-  const { apiFetch, BASE_URL } = useApi();
+  const { apiFetch } = useApi();
+  const { role, isSuperAdmin } = useCurrentUser();
+  const isAdminOrManager = isSuperAdmin || role === "admin" || role === "manager";
   const [isMarkingReviewed, setIsMarkingReviewed] = useState(false);
   const [reviewStatus, setReviewStatus] = useState(data?.review_status || 'unreviewed');
   const [playingSegment, setPlayingSegment] = useState<string | null>(null);
@@ -477,7 +481,7 @@ export function ResultsPanel({ data, isHydrating = false }: { data: ResultData, 
           )}
 
           <div className="flex items-center gap-3 mb-6">
-            {reviewStatus !== 'reviewed' && !isHydrating && (
+            {isAdminOrManager && reviewStatus !== 'reviewed' && !isHydrating && (
               <button
                 onClick={handleMarkAsReviewed}
                 disabled={isMarkingReviewed}
@@ -595,15 +599,12 @@ export function ResultsPanel({ data, isHydrating = false }: { data: ResultData, 
             </h4>
             <p className="text-sm font-medium text-[#B3CFE5]/80">Stream high-fidelity conversation audio with seek support.</p>
           </div>
-          <audio
+          <AuthenticatedAudioPlayer
             id="call-audio-player"
-            controls
+            callId={safeData.call_id}
             preload="auto"
             className="w-full md:w-2/3 h-10 accent-[#4A7FA7] bg-blue-950/20 rounded-xl"
-            src={`${BASE_URL}/api/v1/media/calls/${safeData.call_id}/audio`}
-          >
-            Your browser does not support audio playback.
-          </audio>
+          />
         </div>
       )}
 
@@ -830,7 +831,7 @@ export function ResultsPanel({ data, isHydrating = false }: { data: ResultData, 
                                       {isExpanded && (
                                         <div className="px-6 pb-6 space-y-6 border-t border-blue-400/10 pt-5">
                                           {/* Edit button */}
-                                          {!isRecalculating && !answer.skipped && (
+                                          {isAdminOrManager && !isRecalculating && !answer.skipped && (
                                             <div className="flex justify-end">
                                               <button
                                                 onClick={() => setEditingQuestionId(`${templateResult.template_id}||${answer.question_id}`)}
@@ -1555,7 +1556,7 @@ export function ResultsPanel({ data, isHydrating = false }: { data: ResultData, 
       </div>
 
       {/* Floating Submit Button */}
-      {pendingEdits.size > 0 && !isRecalculating && (
+      {isAdminOrManager && pendingEdits.size > 0 && !isRecalculating && (
         <div className="fixed bottom-8 right-8 z-40 animate-in slide-in-from-bottom-4 duration-300">
           <div className="bg-[#1A3D63]/90 rounded-2xl shadow-2xl border border-blue-400/15 p-4 space-y-3">
             <div className="flex items-center gap-3">

@@ -34,6 +34,7 @@ import { ResultsPanel } from "@/components/ResultsPanel";
 import { CallListItemSkeleton, DetailViewSkeleton } from "@/components/Skeleton";
 import { CallFilters, CallFilterParams } from "@/components/CallFilters";
 import { toast } from "@/components/Toast";
+import { useCurrentUser } from "@/lib/useCurrentUser";
 
 function AnalyticsPageContent() {
   const searchParams = useSearchParams();
@@ -41,6 +42,8 @@ function AnalyticsPageContent() {
   const t = useTranslations('analytics');
   const tc = useTranslations('common');
   const { apiFetch } = useApi();
+  const { role, isSuperAdmin } = useCurrentUser();
+  const isAdminOrManager = isSuperAdmin || role === "admin" || role === "manager";
 
   const [calls, setCalls] = useState<any[]>([]);
   const [totalCalls, setTotalCalls] = useState<number>(0);
@@ -394,16 +397,18 @@ function AnalyticsPageContent() {
                       <p className="text-[11px] font-black text-[#B3CFE5] uppercase tracking-widest mb-1 leading-none">Silence</p>
                       <p className="text-[15px] font-[850] text-[#F6FAFD] tracking-tight">{((call.silence_ratio || 0) * 100).toFixed(0)}%</p>
                     </div>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setDeleteConfirmCallId(call.call_id);
-                      }}
-                      className="w-10 h-10 rounded-xl bg-red-500/20 text-red-500 hover:bg-red-500 hover:text-white flex items-center justify-center transition-colors opacity-0 group-hover:opacity-100"
-                      title="Delete call"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
+                    {isAdminOrManager && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setDeleteConfirmCallId(call.call_id);
+                        }}
+                        className="w-10 h-10 rounded-xl bg-red-500/20 text-red-500 hover:bg-red-500 hover:text-white flex items-center justify-center transition-colors opacity-0 group-hover:opacity-100"
+                        title="Delete call"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    )}
                     <div
                       onClick={() => viewDetail(call.call_id)}
                       className="w-11 h-11 rounded-2xl bg-blue-950/20 text-[#4A7FA7] flex items-center justify-center group-hover:bg-gradient-to-r group-hover:from-[#4A7FA7] group-hover:to-[#1A3D63] group-hover:text-white transition-colors group-hover:scale-110 shadow-sm cursor-pointer"

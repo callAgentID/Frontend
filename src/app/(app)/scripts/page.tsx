@@ -23,6 +23,7 @@ import { cn } from "@/lib/utils";
 import { ScriptCardSkeleton } from "@/components/Skeleton";
 import { Tooltip } from "@/components/Tooltip";
 import { toast } from "@/components/Toast";
+import { useCurrentUser } from "@/lib/useCurrentUser";
 
 interface Script {
   id: string;
@@ -44,6 +45,8 @@ function ScriptsPageContent() {
   const tc = useTranslations('common');
   const tt = useTranslations('tooltips');
   const { apiFetch } = useApi();
+  const { role, isSuperAdmin } = useCurrentUser();
+  const isAdminOrManager = isSuperAdmin || role === "admin" || role === "manager";
 
   const [scripts, setScripts] = useState<Script[]>([]);
   const [campaigns, setCampaigns] = useState<any[]>([]);
@@ -202,15 +205,17 @@ function ScriptsPageContent() {
           </p>
         </div>
 
-        <Tooltip content={tt("createScript")} placement="bottom">
-          <button
-            onClick={() => setIsCreateModalOpen(true)}
-            className="flex items-center gap-2 px-6 py-3.5 bg-gradient-to-r from-[#4A7FA7] to-[#1A3D63] glow text-white rounded-2xl font-bold text-sm uppercase tracking-widest transition-colors hover:opacity-90 active:scale-[0.98]"
-          >
-            <Plus className="w-5 h-5" />
-            {t('createScript')}
-          </button>
-        </Tooltip>
+        {isAdminOrManager && (
+          <Tooltip content={tt("createScript")} placement="bottom">
+            <button
+              onClick={() => setIsCreateModalOpen(true)}
+              className="flex items-center gap-2 px-6 py-3.5 bg-gradient-to-r from-[#4A7FA7] to-[#1A3D63] glow text-white rounded-2xl font-bold text-sm uppercase tracking-widest transition-colors hover:opacity-90 active:scale-[0.98]"
+            >
+              <Plus className="w-5 h-5" />
+              {t('createScript')}
+            </button>
+          </Tooltip>
+        )}
       </div>
 
       {/* Search Filter */}
@@ -298,14 +303,16 @@ function ScriptsPageContent() {
                       {new Date(script.created_at).toLocaleDateString()}
                     </div>
                   </div>
-                  <Tooltip content={tt("deleteScript")} placement="top">
-                    <button
-                      onClick={(e) => { e.stopPropagation(); setDeleteConfirm({ id: script.id, title: script.title }); }}
-                      className="w-10 h-10 rounded-xl bg-red-500/20 hover:bg-red-500 hover:text-white text-red-500 flex items-center justify-center transition-colors opacity-0 group-hover:opacity-100"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </Tooltip>
+                  {isAdminOrManager && (
+                    <Tooltip content={tt("deleteScript")} placement="top">
+                      <button
+                        onClick={(e) => { e.stopPropagation(); setDeleteConfirm({ id: script.id, title: script.title }); }}
+                        className="w-10 h-10 rounded-xl bg-red-500/20 hover:bg-red-500 hover:text-white text-red-500 flex items-center justify-center transition-colors opacity-0 group-hover:opacity-100"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </Tooltip>
+                  )}
                   <Tooltip content={expandedId === script.id ? tt("collapseScript") : tt("expandScript")} placement="top">
                     <div className="w-12 h-12 rounded-2xl bg-blue-950/18 flex items-center justify-center text-[#4A7FA7] group-hover:bg-gradient-to-r group-hover:from-[#4A7FA7] group-hover:to-[#1A3D63] group-hover:text-white transition-colors duration-150 cursor-pointer">
                       {expandedId === script.id ? <ChevronDown className="w-6 h-6" /> : <ChevronRight className="w-6 h-6" />}

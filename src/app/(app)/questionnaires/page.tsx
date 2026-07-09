@@ -31,6 +31,7 @@ import {
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { QuestionnaireCardSkeleton } from "@/components/Skeleton";
+import { useCurrentUser } from "@/lib/useCurrentUser";
 import { InlineQuestionnaireEditor, Section, Question } from "@/components/InlineQuestionnaireEditor";
 import { Tooltip } from "@/components/Tooltip";
 import { toast } from "@/components/Toast";
@@ -54,6 +55,8 @@ function QuestionnairesPageContent() {
   const t = useTranslations('questionnaires');
   const tt = useTranslations('tooltips');
   const { apiFetch } = useApi();
+  const { role, isSuperAdmin } = useCurrentUser();
+  const isAdminOrManager = isSuperAdmin || role === "admin" || role === "manager";
 
   const [questionnaires, setQuestionnaires] = useState<Questionnaire[]>([]);
   const [loading, setLoading] = useState(true);
@@ -497,20 +500,22 @@ function QuestionnairesPageContent() {
           <p className="text-[#B3CFE5] text-sm font-medium">{t('subtitle')}</p>
         </div>
 
-        <div className="flex items-center gap-3">
-          <Tooltip content={tt("uploadSchema")} placement="bottom">
-            <button onClick={() => setIsCreateModalOpen(true)} className="flex items-center gap-2 px-6 py-3.5 bg-blue-950/25 glow text-[#B3CFE5] hover:text-[#F6FAFD] border border-blue-400/15 hover:border-[#4A7FA7]/50 rounded-2xl font-bold text-sm uppercase tracking-widest transition-colors hover:opacity-90 active:scale-[0.98]">
-              <Upload className="w-5 h-5" />
-              {t('uploadSchema')}
-            </button>
-          </Tooltip>
-          <Tooltip content={tt("createSchema")} placement="bottom">
-            <button onClick={handleStartCreate} className="flex items-center gap-2 px-6 py-3.5 bg-gradient-to-r from-[#4A7FA7] to-[#1A3D63] glow text-white rounded-2xl font-bold text-sm uppercase tracking-widest transition-colors hover:opacity-90 active:scale-[0.98]">
-              <Plus className="w-5 h-5" />
-              {t('createSchema')}
-            </button>
-          </Tooltip>
-        </div>
+        {isAdminOrManager && (
+          <div className="flex items-center gap-3">
+            <Tooltip content={tt("uploadSchema")} placement="bottom">
+              <button onClick={() => setIsCreateModalOpen(true)} className="flex items-center gap-2 px-6 py-3.5 bg-blue-950/25 glow text-[#B3CFE5] hover:text-[#F6FAFD] border border-blue-400/15 hover:border-[#4A7FA7]/50 rounded-2xl font-bold text-sm uppercase tracking-widest transition-colors hover:opacity-90 active:scale-[0.98]">
+                <Upload className="w-5 h-5" />
+                {t('uploadSchema')}
+              </button>
+            </Tooltip>
+            <Tooltip content={tt("createSchema")} placement="bottom">
+              <button onClick={handleStartCreate} className="flex items-center gap-2 px-6 py-3.5 bg-gradient-to-r from-[#4A7FA7] to-[#1A3D63] glow text-white rounded-2xl font-bold text-sm uppercase tracking-widest transition-colors hover:opacity-90 active:scale-[0.98]">
+                <Plus className="w-5 h-5" />
+                {t('createSchema')}
+              </button>
+            </Tooltip>
+          </div>
+        )}
       </div>
 
       <div className="relative group">
@@ -676,22 +681,26 @@ function QuestionnairesPageContent() {
                       <Download className="w-4 h-4" />
                     </button>
                   </Tooltip>
-                  <Tooltip content={tt("editSchema")} placement="top">
-                    <button
-                      onClick={(e) => { e.stopPropagation(); handleEditInline(q.id); }}
-                      className="w-10 h-10 rounded-xl bg-[#4A7FA7]/20 hover:bg-[#4A7FA7]/30 text-[#4A7FA7] flex items-center justify-center transition-colors border border-blue-400/15"
-                    >
-                      <Edit className="w-4 h-4" />
-                    </button>
-                  </Tooltip>
-                  <Tooltip content={tt("deleteSchema")} placement="top">
-                    <button
-                      onClick={(e) => { e.stopPropagation(); setDeleteConfirm({ id: q.id, name: q.name }); }}
-                      className="w-10 h-10 rounded-xl bg-red-500/20 hover:bg-red-500/30 text-red-400 flex items-center justify-center transition-colors border border-red-500/30"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </Tooltip>
+                  {isAdminOrManager && (
+                    <>
+                      <Tooltip content={tt("editSchema")} placement="top">
+                        <button
+                          onClick={(e) => { e.stopPropagation(); handleEditInline(q.id); }}
+                          className="w-10 h-10 rounded-xl bg-[#4A7FA7]/20 hover:bg-[#4A7FA7]/30 text-[#4A7FA7] flex items-center justify-center transition-colors border border-blue-400/15"
+                        >
+                          <Edit className="w-4 h-4" />
+                        </button>
+                      </Tooltip>
+                      <Tooltip content={tt("deleteSchema")} placement="top">
+                        <button
+                          onClick={(e) => { e.stopPropagation(); setDeleteConfirm({ id: q.id, name: q.name }); }}
+                          className="w-10 h-10 rounded-xl bg-red-500/20 hover:bg-red-500/30 text-red-400 flex items-center justify-center transition-colors border border-red-500/30"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </Tooltip>
+                    </>
+                  )}
                   <Tooltip content={expandedId === q.id ? tt("collapseSchema") : tt("expandSchema")} placement="top">
                     <div
                       onClick={() => {
