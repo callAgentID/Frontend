@@ -35,6 +35,7 @@ import { useCurrentUser } from "@/lib/useCurrentUser";
 import { InlineQuestionnaireEditor, Section, Question } from "@/components/InlineQuestionnaireEditor";
 import { Tooltip } from "@/components/Tooltip";
 import { toast } from "@/components/Toast";
+import { Document, HeadingLevel, Packer, Paragraph, TextRun } from "docx";
 
 interface Questionnaire {
   id: string;
@@ -397,7 +398,7 @@ function QuestionnairesPageContent() {
     }
   };
 
-  const getQuestionnaireFileName = (q: Questionnaire, extension: "pdf" | "doc") =>
+  const getQuestionnaireFileName = (q: Questionnaire, extension: "pdf" | "docx") =>
     `${q.name.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.${extension}`;
 
   const escapeHtml = (value: string | number | boolean | null | undefined) =>
@@ -526,67 +527,43 @@ function QuestionnairesPageContent() {
     toast(`"${q.name}" downloaded as PDF`, 'success');
   };
 
-  const downloadDOC = (q: Questionnaire) => {
+  const downloadDOCX = async (q: Questionnaire) => {
     const totalQuestions = q.schema_definition?.sections?.reduce((acc, section) => acc + (section.questions?.length || 0), 0) || 0;
     const sections = q.schema_definition?.sections || [];
-    const html = `
-      <!doctype html>
-      <html>
-        <head>
-          <meta charset="utf-8" />
-          <title>${escapeHtml(q.name)}</title>
-          <style>
-            body { font-family: Arial, sans-serif; color: #102033; line-height: 1.45; }
-            h1 { font-size: 24px; margin-bottom: 6px; }
-            h2 { font-size: 18px; margin: 24px 0 10px; border-bottom: 1px solid #ccd6e2; padding-bottom: 6px; }
-            .meta { color: #54677d; font-size: 12px; margin-bottom: 18px; }
-            .question { border: 1px solid #d7e0ea; border-radius: 8px; padding: 12px; margin: 10px 0; }
-            .question-title { font-weight: 700; margin-bottom: 8px; }
-            .badge { display: inline-block; border: 1px solid #b8c5d3; border-radius: 4px; padding: 2px 6px; margin-right: 6px; font-size: 10px; text-transform: uppercase; color: #40566f; }
-            .required { border-color: #d35b5b; color: #b72f2f; }
-          </style>
-        </head>
-        <body>
-          <h1>${escapeHtml(q.name)}</h1>
-          ${q.description ? `<p>${escapeHtml(q.description)}</p>` : ""}
-          <p class="meta">
-            Version ${escapeHtml(q.version)} | ${q.active ? "Active" : "Archived"}${q.is_redflag ? " | Red Flag" : ""}${q.is_global ? " | Global" : ""} |
-            ${sections.length} sections | ${totalQuestions} questions
-          </p>
-          ${sections.map(section => `
-            <h2>${escapeHtml(section.title || "Section")}</h2>
-            ${(section.questions || []).map(question => `
-              <div class="question">
-                <div class="question-title">${escapeHtml(question.text)}</div>
-                <span class="badge">Weight ${escapeHtml(question.weight || 0)}</span>
-                <span class="badge">${escapeHtml((question.type || "yes_no").replace(/_/g, " "))}</span>
-                ${question.answer_type ? `<span class="badge">Answer ${escapeHtml(question.answer_type)}</span>` : ""}
-                ${question.required ? `<span class="badge required">Required</span>` : ""}
-              </div>
-            `).join("")}
-          `).join("")}
-        </body>
-      </html>
-    `;
-
-    const blob = new Blob([html], { type: "application/msword;charset=utf-8" });
+    const children = [
+      new Paragraph({ text: q.name, heading: HeadingLevel.TITLE }),
+      ...(q.description ? [new Paragraph(q.description)] : []),
+      new Paragraph(`Version ${q.version} | ${q.active ? "Active" : "Archived"}${q.is_redflag ? " | Red Flag" : ""}${q.is_global ? " | Global" : ""} | ${sections.length} sections | ${totalQuestions} questions`),
+    ];
+    for (const section of sections) {
+      children.push(new Paragraph({ text: section.title || "Section", heading: HeadingLevel.HEADING_1 }));
+      for (const question of section.questions || []) {
+        children.push(new Paragraph({
+          children: [
+            new TextRun({ text: question.text, bold: true }),
+            new TextRun(`\nWeight ${question.weight || 0} | ${(question.type || "yes_no").replace(/_/g, " ")}${question.answer_type ? ` | Answer ${question.answer_type}` : ""}${question.required ? " | Required" : ""}`),
+          ],
+        }));
+      }
+    }
+    const blob = await Packer.toBlob(new Document({ sections: [{ children }] }));
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.download = getQuestionnaireFileName(q, "doc");
+    link.download = getQuestionnaireFileName(q, "docx");
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
-    toast(`"${q.name}" downloaded as DOC`, "success");
+    toast(`"${q.name}" downloaded as DOCX`, "success");
   };
 
-  const handleDownload = async (q: Questionnaire, format: "pdf" | "doc") => {
+  const handleDownload = async (q: Questionnaire, format: "pdf" | "docx") => {
     setDownloadFormatFor(null);
     if (format === "pdf") {
       await downloadPDF(q);
     } else {
-      downloadDOC(q);
+      await downloadDOCX(q);
     }
   };
 
@@ -786,7 +763,7 @@ function QuestionnairesPageContent() {
                       {q.schema_definition?.sections?.reduce((acc, s) => acc + (s.questions?.length || 0), 0) || 0}
                     </div>
                   </div>
-                  <Tooltip content="Choose PDF or DOC download format" placement="top">
+                  <Tooltip content="Choose PDF or DOCX download format" placement="top">
                     <button
                       onClick={(e) => { e.stopPropagation(); setDownloadFormatFor(q); }}
                       className="w-10 h-10 rounded-xl bg-green-500/15 hover:bg-green-500/25 text-green-400 flex items-center justify-center transition-colors border border-green-500/25"
@@ -1011,7 +988,7 @@ function QuestionnairesPageContent() {
                        )}
                      >
                        <Upload className="w-4 h-4 inline-block mr-2" />
-                       Upload File (.docx/.pdf)
+                       Upload File (.doc/.docx/.pdf)
                      </button>
                      <button
                        type="button"
@@ -1036,17 +1013,31 @@ function QuestionnairesPageContent() {
                        onClick={() => {
                          const input = document.createElement("input");
                          input.type = "file";
-                         input.accept = ".docx,.pdf";
-                         input.onchange = (e: any) => {
-                           const file = e.target.files[0];
+                         input.accept = ".doc,.docx,.pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/pdf";
+                         input.onchange = (event) => {
+                           const file = (event.target as HTMLInputElement).files?.[0];
                            if (file) {
                              setCreateForm({ ...createForm, file });
                            }
                          };
                          input.click();
                        }}
-                       className="w-full h-24 border-2 border-dashed border-blue-400/15 rounded-xl flex flex-col items-center justify-center gap-3 cursor-pointer hover:bg-blue-950/18 transition-colors group"
+                       className="relative w-full h-24 border-2 border-dashed border-blue-400/15 rounded-xl flex flex-col items-center justify-center gap-3 cursor-pointer hover:bg-blue-950/18 transition-colors group"
                      >
+                       {createForm.file && (
+                         <button
+                           type="button"
+                           onClick={(event) => {
+                             event.stopPropagation();
+                             setCreateForm({ ...createForm, file: null });
+                           }}
+                           className="absolute top-3 right-3 w-8 h-8 rounded-lg bg-red-500/15 text-red-300 hover:bg-red-500 hover:text-white flex items-center justify-center transition-colors"
+                           title="Remove selected file"
+                           aria-label="Remove selected file"
+                         >
+                           <X className="w-4 h-4" />
+                         </button>
+                       )}
                        <div className="w-12 h-12 rounded-xl bg-blue-950/18 group-hover:bg-gradient-to-r group-hover:from-[#4A7FA7] group-hover:to-[#1A3D63] flex items-center justify-center text-[#4A7FA7] group-hover:text-white transition-colors">
                          <Upload className="w-6 h-6" />
                        </div>
@@ -1199,11 +1190,11 @@ function QuestionnairesPageContent() {
                 <p className="text-xs font-semibold text-[#B3CFE5] mt-1">Printable document</p>
               </button>
               <button
-                onClick={() => handleDownload(downloadFormatFor, "doc")}
+                onClick={() => handleDownload(downloadFormatFor, "docx")}
                 className="h-28 rounded-2xl bg-[#4A7FA7]/15 hover:bg-[#4A7FA7]/25 border border-blue-400/20 text-left p-5 transition-colors group"
               >
                 <FileText className="w-6 h-6 text-[#4A7FA7] mb-3 group-hover:scale-110 transition-transform" />
-                <p className="text-sm font-black text-[#F6FAFD] uppercase tracking-widest">DOC</p>
+                <p className="text-sm font-black text-[#F6FAFD] uppercase tracking-widest">DOCX</p>
                 <p className="text-xs font-semibold text-[#B3CFE5] mt-1">Editable Word file</p>
               </button>
             </div>

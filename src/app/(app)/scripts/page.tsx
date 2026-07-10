@@ -25,6 +25,7 @@ import { ScriptCardSkeleton } from "@/components/Skeleton";
 import { Tooltip } from "@/components/Tooltip";
 import { toast } from "@/components/Toast";
 import { useCurrentUser } from "@/lib/useCurrentUser";
+import { Document, HeadingLevel, Packer, Paragraph, TextRun } from "docx";
 
 interface Script {
   id: string;
@@ -186,7 +187,7 @@ function ScriptsPageContent() {
     return campaign?.name || "Unknown Campaign";
   };
 
-  const getScriptFileName = (script: Script, extension: "pdf" | "doc") =>
+  const getScriptFileName = (script: Script, extension: "pdf" | "docx") =>
     `${script.title.replace(/[^a-z0-9]/gi, "_").toLowerCase()}.${extension}`;
 
   const escapeHtml = (value: string | number | boolean | null | undefined) =>
@@ -249,51 +250,36 @@ function ScriptsPageContent() {
     toast(`"${script.title}" downloaded as PDF`, "success");
   };
 
-  const downloadScriptDOC = (script: Script) => {
-    const html = `
-      <!doctype html>
-      <html>
-        <head>
-          <meta charset="utf-8" />
-          <title>${escapeHtml(script.title)}</title>
-          <style>
-            body { font-family: Arial, sans-serif; color: #102033; line-height: 1.5; }
-            h1 { font-size: 24px; margin-bottom: 6px; }
-            .meta { color: #54677d; font-size: 12px; margin-bottom: 18px; }
-            .content { white-space: pre-wrap; border: 1px solid #d7e0ea; border-radius: 8px; padding: 14px; }
-          </style>
-        </head>
-        <body>
-          <h1>${escapeHtml(script.title)}</h1>
-          <p class="meta">
-            Campaign: ${escapeHtml(getCampaignName(script.campaign_id))}<br />
-            Version ${escapeHtml(script.version)} | ${escapeHtml(script.status)} | ${escapeHtml(script.call_direction)} |
-            Created ${escapeHtml(new Date(script.created_at).toLocaleDateString())}
-          </p>
-          <h2>Source Text</h2>
-          <div class="content">${escapeHtml(script.source_text || "")}</div>
-        </body>
-      </html>
-    `;
-
-    const blob = new Blob([html], { type: "application/msword;charset=utf-8" });
+  const downloadScriptDOCX = async (script: Script) => {
+    const docxDocument = new Document({
+      sections: [{
+        children: [
+          new Paragraph({ text: script.title, heading: HeadingLevel.TITLE }),
+          new Paragraph(`Campaign: ${getCampaignName(script.campaign_id)}`),
+          new Paragraph(`Version ${script.version} | ${script.status} | ${script.call_direction} | Created ${new Date(script.created_at).toLocaleDateString()}`),
+          new Paragraph({ text: "Source Text", heading: HeadingLevel.HEADING_1 }),
+          new Paragraph({ children: [new TextRun(script.source_text || "")] }),
+        ],
+      }],
+    });
+    const blob = await Packer.toBlob(docxDocument);
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.download = getScriptFileName(script, "doc");
+    link.download = getScriptFileName(script, "docx");
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
-    toast(`"${script.title}" downloaded as DOC`, "success");
+    toast(`"${script.title}" downloaded as DOCX`, "success");
   };
 
-  const handleDownloadScript = async (script: Script, format: "pdf" | "doc") => {
+  const handleDownloadScript = async (script: Script, format: "pdf" | "docx") => {
     setDownloadFormatFor(null);
     if (format === "pdf") {
       await downloadScriptPDF(script);
     } else {
-      downloadScriptDOC(script);
+      await downloadScriptDOCX(script);
     }
   };
 
@@ -416,7 +402,7 @@ function ScriptsPageContent() {
                       {new Date(script.created_at).toLocaleDateString()}
                     </div>
                   </div>
-                  <Tooltip content="Choose PDF or DOC download format" placement="top">
+                  <Tooltip content="Choose PDF or DOCX download format" placement="top">
                     <button
                       onClick={(e) => { e.stopPropagation(); setDownloadFormatFor(script); }}
                       className="w-10 h-10 rounded-xl bg-green-500/15 hover:bg-green-500/25 text-green-400 flex items-center justify-center transition-colors border border-green-500/25"
@@ -489,11 +475,11 @@ function ScriptsPageContent() {
                 <p className="text-xs font-semibold text-[#B3CFE5] mt-1">Printable document</p>
               </button>
               <button
-                onClick={() => handleDownloadScript(downloadFormatFor, "doc")}
+                onClick={() => handleDownloadScript(downloadFormatFor, "docx")}
                 className="h-28 rounded-2xl bg-[#4A7FA7]/15 hover:bg-[#4A7FA7]/25 border border-blue-400/20 text-left p-5 transition-colors group"
               >
                 <FileText className="w-6 h-6 text-[#4A7FA7] mb-3 group-hover:scale-110 transition-transform" />
-                <p className="text-sm font-black text-[#F6FAFD] uppercase tracking-widest">DOC</p>
+                <p className="text-sm font-black text-[#F6FAFD] uppercase tracking-widest">DOCX</p>
                 <p className="text-xs font-semibold text-[#B3CFE5] mt-1">Editable Word file</p>
               </button>
             </div>
