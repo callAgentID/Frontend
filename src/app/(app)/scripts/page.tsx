@@ -18,6 +18,7 @@ import {
   Upload,
   FileText,
   Trash2,
+  Download,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ScriptCardSkeleton } from "@/components/Skeleton";
@@ -68,6 +69,7 @@ function ScriptsPageContent() {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState<{ id: string; title: string } | null>(null);
+  const [downloadFormatFor, setDownloadFormatFor] = useState<Script | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [mounted, setMounted] = useState(false);
   useEffect(() => { setMounted(true); }, []);
@@ -182,6 +184,117 @@ function ScriptsPageContent() {
     if (!campaignId) return "No Campaign";
     const campaign = campaigns.find(c => c.id === campaignId || c._id === campaignId);
     return campaign?.name || "Unknown Campaign";
+  };
+
+  const getScriptFileName = (script: Script, extension: "pdf" | "doc") =>
+    `${script.title.replace(/[^a-z0-9]/gi, "_").toLowerCase()}.${extension}`;
+
+  const escapeHtml = (value: string | number | boolean | null | undefined) =>
+    String(value ?? "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+
+  const downloadScriptPDF = async (script: Script) => {
+    const { jsPDF } = await import("jspdf");
+    const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+    const pageW = 210;
+    const margin = 16;
+    const contentW = pageW - margin * 2;
+    let y = 20;
+
+    const addPage = () => {
+      doc.addPage();
+      y = 20;
+    };
+    const checkY = (needed: number) => {
+      if (y + needed > 280) addPage();
+    };
+
+    doc.setFillColor(10, 25, 49);
+    doc.rect(0, 0, 210, 297, "F");
+    doc.setTextColor(242, 246, 253);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(16);
+    doc.text(script.title, margin, y);
+    y += 8;
+
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(9);
+    doc.setTextColor(179, 207, 229);
+    doc.text(`Campaign: ${getCampaignName(script.campaign_id)}`, margin, y);
+    y += 6;
+    doc.text(`Version ${script.version} | ${script.status} | ${script.call_direction} | Created ${new Date(script.created_at).toLocaleDateString()}`, margin, y);
+    y += 12;
+
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(10);
+    doc.setTextColor(242, 246, 253);
+    doc.text("Source Text", margin, y);
+    y += 7;
+
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(9);
+    doc.setTextColor(210, 225, 245);
+    const lines = doc.splitTextToSize(script.source_text || "", contentW);
+    for (const line of lines) {
+      checkY(6);
+      doc.text(line, margin, y);
+      y += 5;
+    }
+
+    doc.save(getScriptFileName(script, "pdf"));
+    toast(`"${script.title}" downloaded as PDF`, "success");
+  };
+
+  const downloadScriptDOC = (script: Script) => {
+    const html = `
+      <!doctype html>
+      <html>
+        <head>
+          <meta charset="utf-8" />
+          <title>${escapeHtml(script.title)}</title>
+          <style>
+            body { font-family: Arial, sans-serif; color: #102033; line-height: 1.5; }
+            h1 { font-size: 24px; margin-bottom: 6px; }
+            .meta { color: #54677d; font-size: 12px; margin-bottom: 18px; }
+            .content { white-space: pre-wrap; border: 1px solid #d7e0ea; border-radius: 8px; padding: 14px; }
+          </style>
+        </head>
+        <body>
+          <h1>${escapeHtml(script.title)}</h1>
+          <p class="meta">
+            Campaign: ${escapeHtml(getCampaignName(script.campaign_id))}<br />
+            Version ${escapeHtml(script.version)} | ${escapeHtml(script.status)} | ${escapeHtml(script.call_direction)} |
+            Created ${escapeHtml(new Date(script.created_at).toLocaleDateString())}
+          </p>
+          <h2>Source Text</h2>
+          <div class="content">${escapeHtml(script.source_text || "")}</div>
+        </body>
+      </html>
+    `;
+
+    const blob = new Blob([html], { type: "application/msword;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = getScriptFileName(script, "doc");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    toast(`"${script.title}" downloaded as DOC`, "success");
+  };
+
+  const handleDownloadScript = async (script: Script, format: "pdf" | "doc") => {
+    setDownloadFormatFor(null);
+    if (format === "pdf") {
+      await downloadScriptPDF(script);
+    } else {
+      downloadScriptDOC(script);
+    }
   };
 
   const filtered = scripts.filter(s =>
@@ -303,6 +416,14 @@ function ScriptsPageContent() {
                       {new Date(script.created_at).toLocaleDateString()}
                     </div>
                   </div>
+                  <Tooltip content="Choose PDF or DOC download format" placement="top">
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setDownloadFormatFor(script); }}
+                      className="w-10 h-10 rounded-xl bg-green-500/15 hover:bg-green-500/25 text-green-400 flex items-center justify-center transition-colors border border-green-500/25"
+                    >
+                      <Download className="w-4 h-4" />
+                    </button>
+                  </Tooltip>
                   {isAdminOrManager && (
                     <Tooltip content={tt("deleteScript")} placement="top">
                       <button
@@ -339,6 +460,47 @@ function ScriptsPageContent() {
           ))
         )}
       </div>
+
+      {/* Download Format Modal */}
+      {mounted && downloadFormatFor && createPortal(
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-6 bg-black/60 animate-in fade-in duration-150">
+          <div className="w-full max-w-md bg-[#0D1F3C] border border-blue-400/20 rounded-[2rem] shadow-2xl overflow-hidden">
+            <div className="p-6 border-b border-blue-400/12 flex items-start justify-between gap-4">
+              <div>
+                <h3 className="text-lg font-black text-[#F6FAFD] tracking-tight">Download Script</h3>
+                <p className="text-sm text-[#B3CFE5] font-semibold mt-1">
+                  Choose a format for <span className="text-[#F6FAFD]">{downloadFormatFor.title}</span>.
+                </p>
+              </div>
+              <button
+                onClick={() => setDownloadFormatFor(null)}
+                className="w-9 h-9 rounded-xl bg-blue-950/30 hover:bg-blue-950/50 text-[#B3CFE5] hover:text-[#F6FAFD] flex items-center justify-center transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <div className="p-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <button
+                onClick={() => handleDownloadScript(downloadFormatFor, "pdf")}
+                className="h-28 rounded-2xl bg-green-500/12 hover:bg-green-500/20 border border-green-500/25 text-left p-5 transition-colors group"
+              >
+                <Download className="w-6 h-6 text-green-400 mb-3 group-hover:scale-110 transition-transform" />
+                <p className="text-sm font-black text-[#F6FAFD] uppercase tracking-widest">PDF</p>
+                <p className="text-xs font-semibold text-[#B3CFE5] mt-1">Printable document</p>
+              </button>
+              <button
+                onClick={() => handleDownloadScript(downloadFormatFor, "doc")}
+                className="h-28 rounded-2xl bg-[#4A7FA7]/15 hover:bg-[#4A7FA7]/25 border border-blue-400/20 text-left p-5 transition-colors group"
+              >
+                <FileText className="w-6 h-6 text-[#4A7FA7] mb-3 group-hover:scale-110 transition-transform" />
+                <p className="text-sm font-black text-[#F6FAFD] uppercase tracking-widest">DOC</p>
+                <p className="text-xs font-semibold text-[#B3CFE5] mt-1">Editable Word file</p>
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
 
       {/* Delete Confirm Modal */}
       {mounted && deleteConfirm && createPortal(
