@@ -1427,7 +1427,7 @@ export function ResultsPanel({ data, isHydrating = false }: { data: ResultData, 
           </div>
 
           {/* LLM Cost Breakdown Card */}
-          {data.llm_usage_summary && <LLMCostBreakdown llm={data.llm_usage_summary} />}
+          {isSuperAdmin && data.llm_usage_summary && <LLMCostBreakdown llm={data.llm_usage_summary} />}
 
           {/* Script Framework Reference */}
           <div className="p-10 rounded-[3rem] border border-blue-400/15 bg-blue-950/25 shadow-sm shadow-[#0A1931]/30 space-y-8">

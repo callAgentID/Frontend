@@ -24,7 +24,7 @@ const NAV_INACTIVE_STYLE = {
 type NavRole = "all" | "admin" | "admin_manager" | "super_admin_only";
 
 const NAV_ITEMS: { name: string; href: string; icon: any; roles: NavRole }[] = [
-  { name: "admin", href: "/admin", icon: Settings, roles: "super_admin_only" },
+  { name: "admin", href: "/admin", icon: Settings, roles: "admin_manager" },
   { name: "users", href: "/users", icon: Users, roles: "super_admin_only" },
   { name: "analysis", href: "/", icon: LayoutDashboard, roles: "all" },
   { name: "callAnalytics", href: "/analytics", icon: BarChart3, roles: "all" },

@@ -27,6 +27,7 @@ import {
 import { cn } from "@/lib/utils";
 import { formatLLMCost, formatTokens, formatCompactNumber } from "@/lib/formatters";
 import { RoleGuard } from "@/components/RoleGuard";
+import { useCurrentUser } from "@/lib/useCurrentUser";
 import {
   Chart as ChartJS,
   ArcElement,
@@ -157,6 +158,7 @@ const baseChartOptions = {
 
 export default function AdminPage() {
   const t = useTranslations('admin');
+  const { isSuperAdmin } = useCurrentUser();
   const [llmData, setLlmData] = useState<LLMAnalytics | null>(null);
   const [volumeData, setVolumeData] = useState<VolumeAnalytics | null>(null);
   const [qualityData, setQualityData] = useState<QualityAnalytics | null>(null);
@@ -342,7 +344,7 @@ export default function AdminPage() {
   } : null;
 
   return (
-    <RoleGuard allow={["admin"]}>
+    <RoleGuard allow={["admin", "manager"]}>
     <main className="p-6 md:p-8 space-y-8">
       {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -525,7 +527,7 @@ export default function AdminPage() {
           </div>
 
           {/* ── Row 5: Compliance Violations + LLM Model Cost ── */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className={cn("grid grid-cols-1 gap-6", isSuperAdmin && "lg:grid-cols-2")}>
             <ChartCard title={t('complianceViolations')} icon={ShieldAlert}>
               {violationsBarData ? (
                 <div className="h-64">
@@ -533,17 +535,19 @@ export default function AdminPage() {
                 </div>
               ) : <EmptyChart label={t('noData')} />}
             </ChartCard>
-            <ChartCard title={t('llmSpendByModel')} icon={DollarSign}>
-              {llmModelDoughnutData ? (
-                <div className="h-64 flex items-center justify-center">
-                  <Doughnut data={llmModelDoughnutData} options={{ ...baseChartOptions, scales: undefined, plugins: { ...baseChartOptions.plugins, legend: { position: "right", labels: { color: "#B3CFE5", font: { size: 9 }, boxWidth: 10, padding: 6 } } } }} />
-                </div>
-              ) : <EmptyChart label={t('noData')} />}
-            </ChartCard>
+            {isSuperAdmin && (
+              <ChartCard title={t('llmSpendByModel')} icon={DollarSign}>
+                {llmModelDoughnutData ? (
+                  <div className="h-64 flex items-center justify-center">
+                    <Doughnut data={llmModelDoughnutData} options={{ ...baseChartOptions, scales: undefined, plugins: { ...baseChartOptions.plugins, legend: { position: "right", labels: { color: "#B3CFE5", font: { size: 9 }, boxWidth: 10, padding: 6 } } } }} />
+                  </div>
+                ) : <EmptyChart label={t('noData')} />}
+              </ChartCard>
+            )}
           </div>
 
           {/* ── Row 6: Intent Distribution + LLM Campaign Table ── */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className={cn("grid grid-cols-1 gap-6", isSuperAdmin && "lg:grid-cols-2")}>
             {/* Intent Distribution */}
             <ChartCard title={t('intentDistribution')} icon={Target}>
               {interactionData && Object.keys(interactionData.intent_distribution).length > 0 ? (
@@ -561,30 +565,32 @@ export default function AdminPage() {
             </ChartCard>
 
             {/* LLM Campaign Cost Table */}
-            <ChartCard title={t('llmSpendByCampaign')} icon={DollarSign}>
-              {llmData && llmData.breakdown_by_campaign.length > 0 ? (
-                <div className="overflow-x-auto">
-                  <table className="w-full text-xs">
-                    <thead>
-                      <tr className="border-b border-blue-400/18">
-                        <th className="text-left py-2 px-2 font-black uppercase tracking-wider text-[#B3CFE5]">{t('campaign_col')}</th>
-                        <th className="text-right py-2 px-2 font-black uppercase tracking-wider text-[#B3CFE5]">{t('cost_col')}</th>
-                        <th className="text-right py-2 px-2 font-black uppercase tracking-wider text-[#B3CFE5]">{t('tokens_col')}</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-[#4A7FA7]/10">
-                      {llmData.breakdown_by_campaign.sort((a, b) => b.total_cost_usd - a.total_cost_usd).map(c => (
-                        <tr key={c.campaign_id} className="hover:bg-blue-950/20 transition-colors">
-                          <td className="py-2.5 px-2 font-semibold text-[#F6FAFD] truncate max-w-[150px]">{c.campaign_name}</td>
-                          <td className="py-2.5 px-2 text-right font-black text-[#F6FAFD]">{formatLLMCost(c.total_cost_usd)}</td>
-                          <td className="py-2.5 px-2 text-right font-semibold text-[#B3CFE5]">{formatTokens(c.total_tokens)}</td>
+            {isSuperAdmin && (
+              <ChartCard title={t('llmSpendByCampaign')} icon={DollarSign}>
+                {llmData && llmData.breakdown_by_campaign.length > 0 ? (
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-xs">
+                      <thead>
+                        <tr className="border-b border-blue-400/18">
+                          <th className="text-left py-2 px-2 font-black uppercase tracking-wider text-[#B3CFE5]">{t('campaign_col')}</th>
+                          <th className="text-right py-2 px-2 font-black uppercase tracking-wider text-[#B3CFE5]">{t('cost_col')}</th>
+                          <th className="text-right py-2 px-2 font-black uppercase tracking-wider text-[#B3CFE5]">{t('tokens_col')}</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              ) : <EmptyChart label={t('noData')} />}
-            </ChartCard>
+                      </thead>
+                      <tbody className="divide-y divide-[#4A7FA7]/10">
+                        {llmData.breakdown_by_campaign.sort((a, b) => b.total_cost_usd - a.total_cost_usd).map(c => (
+                          <tr key={c.campaign_id} className="hover:bg-blue-950/20 transition-colors">
+                            <td className="py-2.5 px-2 font-semibold text-[#F6FAFD] truncate max-w-[150px]">{c.campaign_name}</td>
+                            <td className="py-2.5 px-2 text-right font-black text-[#F6FAFD]">{formatLLMCost(c.total_cost_usd)}</td>
+                            <td className="py-2.5 px-2 text-right font-semibold text-[#B3CFE5]">{formatTokens(c.total_tokens)}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : <EmptyChart label={t('noData')} />}
+              </ChartCard>
+            )}
           </div>
 
           {/* ── Row 7: QA Stats ── */}

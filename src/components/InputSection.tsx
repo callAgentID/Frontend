@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { useApi } from "@/lib/useApi";
 import { useTranslations } from 'next-intl';
+import { useRouter } from "next/navigation";
 import {
   FileAudio,
   FileText,
@@ -48,6 +49,7 @@ export function InputSection({
   onPartialResult?: (data: any) => void;
 }) {
   const t = useTranslations('input');
+  const router = useRouter();
   const { apiFetch } = useApi();
   const [mode, setMode] = useState<InputMode>("audio");
   const [audioFile, setAudioFile] = useState<File | null>(null);
@@ -70,6 +72,7 @@ export function InputSection({
   const [selectedRedFlagIds, setSelectedRedFlagIds] = useState<string[]>([]);
   const [selectedRedFlagId, setSelectedRedFlagId] = useState<string>("");
   const [selectedOtherIds, setSelectedOtherIds] = useState<string[]>([]);
+  const [submitAttempted, setSubmitAttempted] = useState(false);
   const [isRedFlagOpen, setIsRedFlagOpen] = useState(false);
   const [isOtherOpen, setIsOtherOpen] = useState(false);
   const [isCampaignOpen, setIsCampaignOpen] = useState(false);
@@ -84,6 +87,21 @@ export function InputSection({
   // Memoized splits — computed once when questionnaires change, not on every render
   const redFlagQuestionnaires = useMemo(() => questionnaires.filter(q => q.is_redflag === true), [questionnaires]);
   const standardQuestionnaires = useMemo(() => questionnaires.filter(q => q.is_redflag === false), [questionnaires]);
+  const isRiskMissing = selectedRedFlagIds.length === 0;
+  const isQuestionnaireMissing = selectedOtherIds.length === 0;
+  const isCampaignMissing = !selectedCampaignId;
+  const showRiskError = submitAttempted && isRiskMissing;
+  const showQuestionnaireError = submitAttempted && isQuestionnaireMissing;
+  const showCampaignError = submitAttempted && isCampaignMissing;
+
+  const validateStrategicContext = () => {
+    setSubmitAttempted(true);
+    return !isRiskMissing && !isQuestionnaireMissing && !isCampaignMissing;
+  };
+
+  const navigateToCreate = (path: string) => {
+    router.push(path);
+  };
 
   // Stable callbacks — never recreated unless deps change
   const toggleRedFlagOpen = useCallback(() => setIsRedFlagOpen(v => !v), []);
@@ -333,7 +351,7 @@ export function InputSection({
   };
 
   const handleUploadSubmit = async () => {
-    if (!audioFile || !selectedCampaignId) return;
+    if (!audioFile || !validateStrategicContext()) return;
 
     setIsProcessing(true);
     setProcessingStatus("uploading");
@@ -399,7 +417,7 @@ export function InputSection({
 
   // ── Batch Upload Handler ──────────────────────────────────
   const handleBatchUploadSubmit = async () => {
-    if (audioFiles.length === 0 || !selectedCampaignId) return;
+    if (audioFiles.length === 0 || !validateStrategicContext()) return;
 
     setIsProcessing(true);
     setProcessingStatus("uploading");
@@ -475,10 +493,9 @@ export function InputSection({
 
   const [selectedScoringMethod, setSelectedScoringMethod] = useState<"v4" | "v5">("v4");
   const [showManualSuccess, setShowManualSuccess] = useState(false);
-  const [submitAttempted, setSubmitAttempted] = useState(false);
 
   const handleTranscriptSubmit = async () => {
-    if ((!manualTranscript.trim() && !manualFile) || !selectedCampaignId) return;
+    if ((!manualTranscript.trim() && !manualFile) || !validateStrategicContext()) return;
 
     setIsProcessing(true);
     setProcessingStatus("uploading");
@@ -812,7 +829,7 @@ export function InputSection({
                 <div id="red-flag-dropdown" className="relative group/select">
                   <div className="flex items-center justify-between px-1 mb-2">
                     <label className="text-[10px] font-black uppercase tracking-[0.2em] text-red-400/80">Risk / High Priority</label>
-                    {submitAttempted && selectedRedFlagIds.length === 0 && (
+                    {showRiskError && (
                       <span className="text-[10px] font-bold text-red-400 animate-in fade-in duration-150">Required</span>
                     )}
                   </div>
@@ -821,7 +838,7 @@ export function InputSection({
                     className={cn(
                       "w-full h-16 bg-red-500/10 border rounded-2xl px-14 flex items-center cursor-pointer transition-colors hover:bg-red-500/15",
                       isRedFlagOpen && "border-red-500/30 bg-[#502D55]/50 shadow-lg",
-                      submitAttempted && selectedRedFlagIds.length === 0 && !isRedFlagOpen ? "border-red-500/70" : "border-transparent"
+                      showRiskError && !isRedFlagOpen ? "border-red-500/70" : "border-transparent"
                     )}
                   >
                     <span className={cn("font-bold tracking-tight text-base truncate", selectedRedFlagId ? "text-red-400" : "text-[#F8F4E9]")}>
@@ -864,8 +881,19 @@ export function InputSection({
                         );
                       })}
                       {redFlagQuestionnaires.length === 0 && (
-                        <div className="text-center py-4 text-[#935073]/50 text-xs">
-                          No red flag questionnaires available
+                        <div className="space-y-3 py-4 text-center">
+                          <p className="text-[#F8F4E9]/60 text-xs font-bold">No red flag questionnaires available</p>
+                          <button
+                            type="button"
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              navigateToCreate("/questionnaires");
+                            }}
+                            className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-red-500/25 hover:bg-red-500/35 border border-red-400/30 text-[#F8F4E9] text-[10px] font-black uppercase tracking-widest transition-colors"
+                          >
+                            <Plus className="w-3.5 h-3.5" />
+                            Create Questionnaire
+                          </button>
                         </div>
                       )}
                     </div>
@@ -874,16 +902,22 @@ export function InputSection({
 
                 {/* Standard Audit Multi-Select */}
                 <div id="questionnaire-dropdown" className="relative group/select">
-                  <label className="text-[10px] font-black uppercase tracking-[0.2em] text-[#F8F4E9]/80 mb-2 block px-1">Questionaire</label>
+                  <div className="flex items-center justify-between px-1 mb-2">
+                    <label className="text-[10px] font-black uppercase tracking-[0.2em] text-[#F8F4E9]/80">Questionnaire</label>
+                    {showQuestionnaireError && (
+                      <span className="text-[10px] font-bold text-red-400 animate-in fade-in duration-150">Required</span>
+                    )}
+                  </div>
                   <div
                     onClick={toggleOtherOpen}
                     className={cn(
-                      "w-full h-16 bg-[#2A4A5E]/60 border border-transparent rounded-2xl px-14 flex items-center cursor-pointer transition-colors hover:bg-[#2A4A5E]/80",
-                      isOtherOpen && "border-[#5A8FB4]/40 bg-[#2A4A5E]/70 shadow-lg"
+                      "w-full h-16 bg-[#2A4A5E]/60 border rounded-2xl px-14 flex items-center cursor-pointer transition-colors hover:bg-[#2A4A5E]/80",
+                      isOtherOpen && "border-[#5A8FB4]/40 bg-[#2A4A5E]/70 shadow-lg",
+                      showQuestionnaireError && !isOtherOpen ? "border-red-500/70" : "border-transparent"
                     )}
                   >
                     <span className="font-bold tracking-tight text-base truncate text-[#F8F4E9]">
-                      {selectedOtherIds.length === 0 ? "Select Questionaire..." : `${selectedOtherIds.length} Questionaires Selected`}
+                      {selectedOtherIds.length === 0 ? "Select Questionnaire..." : `${selectedOtherIds.length} Questionnaires Selected`}
                     </span>
                   </div>
                   <FileSearch className="absolute left-5 top-[65%] -translate-y-1/2 w-5 h-5 text-[#F8F4E9]" />
@@ -907,8 +941,19 @@ export function InputSection({
                         );
                       })}
                       {standardQuestionnaires.length === 0 && (
-                        <div className="text-center py-4 text-[#5A8FB4]/50 text-xs">
-                          No questionnaires available
+                        <div className="space-y-3 py-4 text-center">
+                          <p className="text-[#F8F4E9]/60 text-xs font-bold">No questionnaires available</p>
+                          <button
+                            type="button"
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              navigateToCreate("/questionnaires");
+                            }}
+                            className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-[#5A8FB4]/25 hover:bg-[#5A8FB4]/35 border border-[#5A8FB4]/40 text-[#F8F4E9] text-[10px] font-black uppercase tracking-widest transition-colors"
+                          >
+                            <Plus className="w-3.5 h-3.5" />
+                            Create Questionnaire
+                          </button>
                         </div>
                       )}
                     </div>
@@ -919,12 +964,18 @@ export function InputSection({
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Campaign Dropdown */}
                 <div id="campaign-dropdown" className="relative group/select">
-                  <label className="text-[10px] font-black uppercase tracking-[0.2em] text-[#F8F4E9]/80 mb-2 block px-1">Campaign Name</label>
+                  <div className="flex items-center justify-between px-1 mb-2">
+                    <label className="text-[10px] font-black uppercase tracking-[0.2em] text-[#F8F4E9]/80">Campaign Name</label>
+                    {showCampaignError && (
+                      <span className="text-[10px] font-bold text-red-400 animate-in fade-in duration-150">Required</span>
+                    )}
+                  </div>
                   <div
                     onClick={toggleCampaignOpen}
                     className={cn(
-                      "w-full h-16 bg-[#2A4A5E]/60 border border-transparent rounded-2xl px-14 flex items-center cursor-pointer transition-colors hover:bg-[#2A4A5E]/80",
-                      isCampaignOpen && "border-[#5A8FB4]/40 bg-[#2A4A5E]/70 shadow-lg"
+                      "w-full h-16 bg-[#2A4A5E]/60 border rounded-2xl px-14 flex items-center cursor-pointer transition-colors hover:bg-[#2A4A5E]/80",
+                      isCampaignOpen && "border-[#5A8FB4]/40 bg-[#2A4A5E]/70 shadow-lg",
+                      showCampaignError && !isCampaignOpen ? "border-red-500/70" : "border-transparent"
                     )}
                   >
                     <span className="font-bold tracking-tight text-base truncate text-[#F8F4E9]">
@@ -956,8 +1007,19 @@ export function InputSection({
                         );
                       })}
                       {campaigns.length === 0 && (
-                        <div className="text-center py-4 text-[#5A8FB4]/50 text-xs">
-                          No campaigns available
+                        <div className="space-y-3 py-4 text-center">
+                          <p className="text-[#F8F4E9]/60 text-xs font-bold">No campaigns available</p>
+                          <button
+                            type="button"
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              navigateToCreate("/campaigns");
+                            }}
+                            className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-[#5A8FB4]/25 hover:bg-[#5A8FB4]/35 border border-[#5A8FB4]/40 text-[#F8F4E9] text-[10px] font-black uppercase tracking-widest transition-colors"
+                          >
+                            <Plus className="w-3.5 h-3.5" />
+                            Create Campaign
+                          </button>
                         </div>
                       )}
                     </div>
@@ -1191,16 +1253,18 @@ export function InputSection({
 
               <button
                 onClick={() => {
-                  setSubmitAttempted(true);
-                  if (selectedRedFlagIds.length === 0) return;
                   if (mode === "audio") {
-                    audioFiles.length > 1 ? handleBatchUploadSubmit() : handleUploadSubmit();
+                    if (audioFiles.length > 1) {
+                      handleBatchUploadSubmit();
+                    } else {
+                      handleUploadSubmit();
+                    }
                   } else {
                     handleTranscriptSubmit();
                   }
                 }}
 
-                disabled={isProcessing || !selectedCampaignId || !selectedProfileId}
+                disabled={isProcessing || !selectedProfileId}
                 className="w-full h-16 bg-gradient-to-r from-[#4A7FA7] to-[#1A3D63] hover:from-[#4A7FA7]/90 hover:to-[#1A3D63]/90 disabled:bg-[#1A3D63]/50 text-[#F6FAFD] rounded-[1.25rem] font-bold text-sm uppercase tracking-widest transition-colors apple-shadow active:scale-[0.98] flex items-center justify-center gap-3 mt-4 glow"
                 title="Submit for AI analysis"
               >
