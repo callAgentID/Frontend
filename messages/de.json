@@ -245,7 +245,7 @@
     "schemaNameRequired": "Schema-Name *",
     "inputMethodRequired": "Eingabemethode *",
     "uploadDocLabel": "Fragebogen-Dokument *",
-    "uploadDocHint": "Klicken Sie, um eine .docx- oder .pdf-Datei auszuwählen",
+    "uploadDocHint": "Klicken Sie, um eine .doc-, .docx- oder .pdf-Datei auszuwählen",
     "textLabel": "Fragebogentext *",
     "textPlaceholder": "Fügen Sie Ihren Fragebogeninhalt hier ein...",
     "statusLabel": "Status",

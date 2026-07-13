@@ -245,7 +245,7 @@
     "schemaNameRequired": "Schema Name *",
     "inputMethodRequired": "Input Method *",
     "uploadDocLabel": "Questionnaire Document *",
-    "uploadDocHint": "Click to select .docx or .pdf file",
+    "uploadDocHint": "Click to select a .doc, .docx, or .pdf file",
     "textLabel": "Questionnaire Text *",
     "textPlaceholder": "Paste your questionnaire content here...",
     "statusLabel": "Status",

@@ -185,6 +185,7 @@ export default function AdminPage() {
 
   const fetchAll = async () => {
     setIsLoading(true);
+    if (!isSuperAdmin) setLlmData(null);
     const qs = buildParams();
     const q = qs ? `?${qs}` : "";
     // For campaign-specific endpoints use first selected or nothing
@@ -196,7 +197,9 @@ export default function AdminPage() {
 
     try {
       const [llm, volume, quality, interaction, compliance, qa, camps] = await Promise.allSettled([
-        apiFetch(`/api/v1/analytics/llm-costs${q}`).then(r => r.json()),
+        isSuperAdmin
+          ? apiFetch(`/api/v1/analytics/llm-costs${q}`).then(r => r.json())
+          : Promise.resolve(null),
         apiFetch(`/api/v1/analytics/volume${campaignQs}`).then(r => r.json()),
         apiFetch(`/api/v1/analytics/quality${campaignQs}`).then(r => r.json()),
         apiFetch(`/api/v1/analytics/interaction${campaignQs}`).then(r => r.json()),
@@ -217,7 +220,7 @@ export default function AdminPage() {
     }
   };
 
-  useEffect(() => { fetchAll(); }, []);
+  useEffect(() => { fetchAll(); }, [isSuperAdmin]);
 
   // ─── Chart Datasets ───────────────────────────────────
 
@@ -443,7 +446,9 @@ export default function AdminPage() {
             <KPICard icon={Database} label={t('totalCalls')} value={volumeData?.total_calls?.toLocaleString() ?? "—"} sub={t('backlog').replace('{count}', String(volumeData?.human_review_backlog ?? 0))} color="from-[#4A7FA7] to-[#1A3D63]" />
             <KPICard icon={Target} label={t('avgScore')} value={qualityData ? `${qualityData.avg_overall_score.toFixed(1)}` : "—"} sub={t('outOf100')} color="from-[#1A3D63] to-[#4A7FA7]" />
             <KPICard icon={CheckCircle2} label={t('successRate')} value={qualityData ? `${(qualityData.call_success_rate * 100).toFixed(1)}%` : "—"} sub={t('callSuccess')} color="from-[#4A7FA7] to-[#B3CFE5]" />
-            <KPICard icon={DollarSign} label={t('llmSpend')} value={formatLLMCost(llmData?.aggregate?.total_spent_usd ?? 0)} sub={`${formatCompactNumber(llmData?.aggregate?.total_tokens_used ?? 0)} ${t('tokens_col')}`} color="from-[#B3CFE5] to-[#4A7FA7]" />
+            {isSuperAdmin && (
+              <KPICard icon={DollarSign} label={t('llmSpend')} value={formatLLMCost(llmData?.aggregate?.total_spent_usd ?? 0)} sub={`${formatCompactNumber(llmData?.aggregate?.total_tokens_used ?? 0)} ${t('tokens_col')}`} color="from-[#B3CFE5] to-[#4A7FA7]" />
+            )}
             <KPICard icon={Clock} label={t('avgProcessing')} value={volumeData ? `${Math.round(volumeData.avg_processing_time_seconds)}s` : "—"} sub={t('perCall')} color="from-[#1A3D63] to-[#0A1931]" />
             <KPICard icon={ShieldAlert} label={t('redFlagRate')} value={complianceData ? `${(complianceData.red_flag_occurrence_rate * 100).toFixed(1)}%` : "—"} sub={t('occurrenceRate')} color="from-red-900/80 to-red-700/60" />
             <KPICard icon={Users} label={t('agents')} value={qualityData ? Object.keys(qualityData.agent_performance_score).length.toString() : "—"} sub={t('activeAgents')} color="from-[#4A7FA7] to-[#1A3D63]" />

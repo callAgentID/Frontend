@@ -1,6 +1,5 @@
 "use client";
 
-import { Search, Bell, Plus } from "lucide-react";
 import { useTranslations } from 'next-intl';
 import { OrganizationSwitcher } from "@clerk/nextjs";
 
@@ -30,19 +29,6 @@ export function Navbar() {
           border-color: rgba(44,143,255,0.22);
           color: var(--text-primary);
         }
-        .navbar-search {
-          background: rgba(255,255,255,0.05);
-          border: 1px solid rgba(255,255,255,0.08);
-          color: var(--text-primary);
-          transition: background-color 0.12s ease, border-color 0.12s ease;
-        }
-        .navbar-search:focus {
-          background: rgba(44,143,255,0.10);
-          border-color: rgba(44,143,255,0.25);
-          outline: none;
-        }
-        .navbar-search::placeholder { color: var(--text-tertiary); }
-
         /* Light mode overrides */
         html.light .navbar-root {
           background: rgba(230,238,250,0.94);
@@ -57,15 +43,6 @@ export function Navbar() {
           background: rgba(26,111,212,0.14);
           border-color: rgba(26,111,212,0.28);
         }
-        html.light .navbar-search {
-          background: rgba(255,255,255,0.80);
-          border-color: rgba(26,111,212,0.14);
-        }
-        html.light .navbar-search:focus {
-          background: rgba(255,255,255,0.95);
-          border-color: rgba(26,111,212,0.35);
-        }
-
         /* Clerk OrganizationSwitcher overrides */
         .cl-organizationSwitcherTrigger {
           background: rgba(255,255,255,0.05) !important;
@@ -134,23 +111,6 @@ export function Navbar() {
             />
           </div>
 
-          <div className="relative hidden sm:block">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[var(--text-tertiary)] pointer-events-none" />
-            <input
-              type="text"
-              placeholder={t('searchIntelligence')}
-              className="navbar-search h-8 w-40 pl-8 pr-3 rounded-xl text-xs font-medium"
-            />
-          </div>
-
-          <button className="navbar-btn w-8 h-8 rounded-xl flex items-center justify-center" title="New">
-            <Plus className="w-4 h-4" />
-          </button>
-
-          <button className="navbar-btn w-8 h-8 rounded-xl flex items-center justify-center relative" title="Notifications">
-            <Bell className="w-4 h-4" />
-            <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-[var(--accent)]" />
-          </button>
         </div>
       </header>
     </>

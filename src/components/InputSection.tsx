@@ -630,7 +630,7 @@ export function InputSection({
       </div>
 
       {/* Mode Toggle Tabs */}
-      <div className="flex justify-center">
+      {/* <div className="flex justify-center">
         <div className="flex p-1.5 bg-[#1A3D63]/30 rounded-2xl border border-blue-400/10 w-full max-w-[400px]">
           <button
             onClick={() => handleModeChange("audio")}
@@ -659,7 +659,7 @@ export function InputSection({
             {t('manualEntry')}
           </button>
         </div>
-      </div>
+      </div> */}
 
       {/* Input Content Area */}
       <div className="glass-blur apple-blur bg-blue-950/18 p-8 md:p-12 rounded-[40px] apple-shadow border border-blue-400/15">

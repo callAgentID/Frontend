@@ -52,7 +52,7 @@ export default function UsersPage() {
   const t = useTranslations('users');
   const tc = useTranslations('common');
   const { apiFetch } = useApi();
-  const { isLoading: roleLoading } = useCurrentUser();
+  const { isLoading: roleLoading, isSuperAdmin } = useCurrentUser();
 
   const [users, setUsers] = useState<BackendUser[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -85,8 +85,8 @@ export default function UsersPage() {
   };
 
   useEffect(() => {
-    if (!roleLoading) fetchUsers();
-  }, [roleLoading]);
+    if (!roleLoading && isSuperAdmin) fetchUsers();
+  }, [roleLoading, isSuperAdmin]);
 
   const handleUpdateRole = async () => {
     if (!editingUser) return;
@@ -126,7 +126,7 @@ export default function UsersPage() {
   users.forEach(u => { if (u.role in counts) counts[u.role]++; });
 
   return (
-    <RoleGuard allow={["admin", "manager"]}>
+    <RoleGuard allow={[]}>
     <main className="p-6 md:p-8 space-y-8">
       {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">

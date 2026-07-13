@@ -2,8 +2,11 @@ import { Sidebar } from "@/components/Sidebar";
 import { Navbar } from "@/components/Navbar";
 import { AuthGuard } from "@/components/AuthGuard";
 import { ToastProvider } from "@/components/Toast";
+import { auth } from "@clerk/nextjs/server";
 
-export default function AppLayout({ children }: { children: React.ReactNode }) {
+export default async function AppLayout({ children }: { children: React.ReactNode }) {
+  await auth.protect();
+
   return (
     <AuthGuard>
       <ToastProvider />

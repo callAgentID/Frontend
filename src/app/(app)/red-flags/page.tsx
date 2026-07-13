@@ -30,6 +30,7 @@ import {
 import { cn } from "@/lib/utils";
 import { RedFlagItemSkeleton, DetailViewSkeleton } from "@/components/Skeleton";
 import { useCurrentUser } from "@/lib/useCurrentUser";
+import { useUser } from "@clerk/nextjs";
 import { AuthenticatedAudioPlayer } from "@/components/AuthenticatedAudioPlayer";
 
 interface RedFlagSummary {
@@ -80,6 +81,7 @@ function RedFlagsPageContent() {
   const router = useRouter();
   const t = useTranslations('redFlags');
   const { apiFetch } = useApi();
+  const { user } = useUser();
   const { role, isSuperAdmin } = useCurrentUser();
   const isAdminOrManager = isSuperAdmin || role === "admin" || role === "manager";
 
@@ -367,7 +369,8 @@ function RedFlagsPageContent() {
   };
 
   // Mark as reviewed
-  const markAsReviewed = async (callId: string, reviewedBy: string) => {
+  const markAsReviewed = async (callId: string) => {
+    const reviewedBy = user?.fullName || user?.primaryEmailAddress?.emailAddress || "Authenticated reviewer";
     try {
       const response = await apiFetch(`/api/v1/red-flags/${callId}/review?reviewed_by=${encodeURIComponent(reviewedBy)}`, {
         method: "PATCH"
@@ -407,8 +410,7 @@ function RedFlagsPageContent() {
           {isAdminOrManager && detailData && !detailData.reviewed_at && (
             <button
               onClick={() => {
-                const name = prompt("Enter your name to mark this as reviewed:");
-                if (name) markAsReviewed(selectedCallId, name);
+                markAsReviewed(selectedCallId);
               }}
               className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-[#4A7FA7] to-[#1A3D63] glow hover:opacity-90 text-white rounded-xl font-bold text-xs uppercase tracking-widest transition-colors shadow-lg shadow-[#4A7FA7]/20 active:scale-95"
               title="Mark this red flag as reviewed"

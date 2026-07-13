@@ -24,6 +24,7 @@ import { cn } from "@/lib/utils";
 import { createPortal } from "react-dom";
 import { ResultsPanel } from "@/components/ResultsPanel";
 import { toast } from "@/components/Toast";
+import { useCurrentUser } from "@/lib/useCurrentUser";
 
 interface BatchCall {
   call_id: string;
@@ -57,6 +58,8 @@ function BatchesContent() {
   const t = useTranslations('batches');
   const tc = useTranslations('common');
   const { apiFetch } = useApi();
+  const { role, isSuperAdmin } = useCurrentUser();
+  const canManageBatches = isSuperAdmin || role === "admin" || role === "manager";
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -159,12 +162,14 @@ function BatchesContent() {
           <button onClick={() => setSelectedBatch(null)} className="flex items-center gap-2 text-[#B3CFE5] hover:text-[#F6FAFD] font-bold text-xs uppercase tracking-widest transition-colors">
             <ArrowLeft className="w-4 h-4" /> {t('backToBatches')}
           </button>
-          <button
-            onClick={() => setDeleteConfirmId(selectedBatch.batch_id)}
-            className="flex items-center gap-2 px-4 py-2 bg-red-500/20 hover:bg-red-500 text-red-400 hover:text-white rounded-xl font-bold text-xs uppercase tracking-wider transition-colors"
-          >
-            <Trash2 className="w-4 h-4" /> {t('deleteBatch')}
-          </button>
+          {canManageBatches && (
+            <button
+              onClick={() => setDeleteConfirmId(selectedBatch.batch_id)}
+              className="flex items-center gap-2 px-4 py-2 bg-red-500/20 hover:bg-red-500 text-red-400 hover:text-white rounded-xl font-bold text-xs uppercase tracking-wider transition-colors"
+            >
+              <Trash2 className="w-4 h-4" /> {t('deleteBatch')}
+            </button>
+          )}
         </div>
 
         {/* Header */}
@@ -367,12 +372,14 @@ function BatchesContent() {
                       </p>
                     )}
                   </div>
-                  <button
-                    onClick={e => { e.stopPropagation(); setDeleteConfirmId(batch.batch_id); }}
-                    className="w-9 h-9 rounded-xl bg-red-500/20 hover:bg-red-500 text-red-400 hover:text-white flex items-center justify-center transition-colors opacity-0 group-hover:opacity-100"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
+                  {canManageBatches && (
+                    <button
+                      onClick={e => { e.stopPropagation(); setDeleteConfirmId(batch.batch_id); }}
+                      className="w-9 h-9 rounded-xl bg-red-500/20 hover:bg-red-500 text-red-400 hover:text-white flex items-center justify-center transition-colors opacity-0 group-hover:opacity-100"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  )}
                   <button
                     onClick={() => fetchBatchDetail(batch.batch_id)}
                     className="w-9 h-9 rounded-xl bg-blue-950/18 hover:bg-gradient-to-r hover:from-[#4A7FA7] hover:to-[#1A3D63] text-[#4A7FA7] hover:text-white flex items-center justify-center transition-colors"

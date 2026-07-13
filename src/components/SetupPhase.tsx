@@ -13,12 +13,14 @@ import {
   Globe
 } from "lucide-react";
 import { cn } from "../lib/utils";
+import { useApi } from "../lib/useApi";
 
 interface SetupPhaseProps {
   onComplete: (config: { campaign_id: string; questionnaire_id: string; profile_id: string }) => void;
 }
 
 export function SetupPhase({ onComplete }: SetupPhaseProps) {
+  const { apiFetch } = useApi();
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
 
@@ -40,13 +42,9 @@ export function SetupPhase({ onComplete }: SetupPhaseProps) {
   const handleCreateCampaign = async () => {
     setLoading(true);
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://zk1354qz0k.execute-api.eu-central-1.amazonaws.com";
-      const response = await fetch(`${baseUrl}/api/v1/campaigns/`, {
+      const response = await apiFetch("/api/v1/campaigns/", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "ngrok-skip-browser-warning": "true"
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name: campaignName,
           code: campaignCode,
@@ -71,16 +69,14 @@ export function SetupPhase({ onComplete }: SetupPhaseProps) {
     if (!scriptFile || !campaignId) return;
     setLoading(true);
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://zk1354qz0k.execute-api.eu-central-1.amazonaws.com";
       const formData = new FormData();
       formData.append("file", scriptFile);
       formData.append("campaign_id", campaignId);
       formData.append("title", `${campaignName} Script`);
       formData.append("call_direction", "outbound");
 
-      const response = await fetch(`${baseUrl}/api/v1/scripts/upload`, {
+      const response = await apiFetch("/api/v1/scripts/upload", {
         method: "POST",
-        headers: { "ngrok-skip-browser-warning": "true" },
         body: formData
       });
       if (response.ok) setStep(3);
@@ -96,15 +92,13 @@ export function SetupPhase({ onComplete }: SetupPhaseProps) {
     if (!questionnaireFile) return;
     setLoading(true);
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://zk1354qz0k.execute-api.eu-central-1.amazonaws.com";
       const formData = new FormData();
       formData.append("file", questionnaireFile);
       formData.append("name", `${campaignName} Audit`);
       formData.append("description", "Dynamic QA Audit generated from document.");
 
-      const response = await fetch(`${baseUrl}/api/v1/questionnaires/upload`, {
+      const response = await apiFetch("/api/v1/questionnaires/upload", {
         method: "POST",
-        headers: { "ngrok-skip-browser-warning": "true" },
         body: formData
       });
       const data = await response.json();
@@ -124,10 +118,7 @@ export function SetupPhase({ onComplete }: SetupPhaseProps) {
     if (step === 4) {
       const fetchProfiles = async () => {
         try {
-          const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://zk1354qz0k.execute-api.eu-central-1.amazonaws.com";
-          const response = await fetch(`${baseUrl}/api/v1/worker/profiles`, {
-            headers: { "ngrok-skip-browser-warning": "true" }
-          });
+          const response = await apiFetch("/api/v1/worker/profiles");
           const data = await response.json();
           setProfiles(Array.isArray(data) ? data : []);
         } catch (err) {

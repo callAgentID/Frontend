@@ -370,21 +370,25 @@ function AnalyticsPageContent() {
                       <span className="text-[10px] font-bold text-[#B3CFE5] uppercase tracking-widest px-2 py-0.5 bg-blue-950/20 rounded-md">
                         {call.sentiment?.label || 'N/A'}
                       </span>
-                      <span className="w-1 h-1 rounded-full bg-[#4A7FA7]/30" />
-                      <span className="flex items-center gap-1.5 px-2 py-0.5 bg-[#4A7FA7]/10 border border-blue-400/12 rounded-md">
-                        <Zap className="w-3 h-3 text-[#4A7FA7]" />
-                        <span className="text-[10px] font-black text-[#B3CFE5]/60 uppercase tracking-widest">{t('llmCost')}:</span>
-                        <span className="text-[10px] font-black text-[#F6FAFD] uppercase tracking-widest">
-                          {formatLLMCost(call.total_llm_cost_usd)}
-                        </span>
-                      </span>
-                      <span className="flex items-center gap-1.5 px-2 py-0.5 bg-[#4A7FA7]/10 border border-blue-400/12 rounded-md">
-                        <Database className="w-3 h-3 text-[#4A7FA7]" />
-                        <span className="text-[10px] font-black text-[#B3CFE5]/60 uppercase tracking-widest">{t('tokens')}:</span>
-                        <span className="text-[10px] font-black text-[#F6FAFD] uppercase tracking-widest">
-                          {formatTokens(call.total_llm_tokens)}
-                        </span>
-                      </span>
+                      {isSuperAdmin && (
+                        <>
+                          <span className="w-1 h-1 rounded-full bg-[#4A7FA7]/30" />
+                          <span className="flex items-center gap-1.5 px-2 py-0.5 bg-[#4A7FA7]/10 border border-blue-400/12 rounded-md">
+                            <Zap className="w-3 h-3 text-[#4A7FA7]" />
+                            <span className="text-[10px] font-black text-[#B3CFE5]/60 uppercase tracking-widest">{t('llmCost')}:</span>
+                            <span className="text-[10px] font-black text-[#F6FAFD] uppercase tracking-widest">
+                              {formatLLMCost(call.total_llm_cost_usd)}
+                            </span>
+                          </span>
+                          <span className="flex items-center gap-1.5 px-2 py-0.5 bg-[#4A7FA7]/10 border border-blue-400/12 rounded-md">
+                            <Database className="w-3 h-3 text-[#4A7FA7]" />
+                            <span className="text-[10px] font-black text-[#B3CFE5]/60 uppercase tracking-widest">{t('tokens')}:</span>
+                            <span className="text-[10px] font-black text-[#F6FAFD] uppercase tracking-widest">
+                              {formatTokens(call.total_llm_tokens)}
+                            </span>
+                          </span>
+                        </>
+                      )}
                     </div>
                   </div>
 

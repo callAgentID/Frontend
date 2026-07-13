@@ -3,9 +3,21 @@
 import { useAuth } from "@clerk/nextjs";
 import { useCallback, useRef, useEffect } from "react";
 
-const BASE_URL =
+const CONFIGURED_BASE_URL =
   process.env.NEXT_PUBLIC_BASE_URL ||
   "https://zk1354qz0k.execute-api.eu-central-1.amazonaws.com";
+
+function getValidatedBaseUrl() {
+  const url = new URL(CONFIGURED_BASE_URL);
+
+  if (process.env.NODE_ENV === "production" && url.protocol !== "https:") {
+    throw new Error("NEXT_PUBLIC_BASE_URL must use HTTPS in production");
+  }
+
+  return url.toString().replace(/\/$/, "");
+}
+
+const BASE_URL = getValidatedBaseUrl();
 
 const TOKEN_TTL = 3 * 60 * 1000;
 
