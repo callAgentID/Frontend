@@ -10,8 +10,13 @@ function normalizeRole(role?: string | null) {
 }
 
 export async function requireAppRole(allowedRoles: AppRole[]) {
-  const authState = await auth();
-  if (!authState.userId) redirect("/sign-in");
+  let authState;
+  try {
+    authState = await auth();
+  } catch {
+    redirect("/sign-in");
+  }
+  if (!authState?.userId) redirect("/sign-in");
   const organizationRole = normalizeRole(authState.orgRole);
 
   if (organizationRole && allowedRoles.includes(organizationRole as AppRole)) {
