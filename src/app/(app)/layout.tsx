@@ -2,17 +2,8 @@ import { Sidebar } from "@/components/Sidebar";
 import { Navbar } from "@/components/Navbar";
 import { AuthGuard } from "@/components/AuthGuard";
 import { ToastProvider } from "@/components/Toast";
-import { auth } from "@clerk/nextjs/server";
-import { redirect } from "next/navigation";
 
-export default async function AppLayout({ children }: { children: React.ReactNode }) {
-  try {
-    const { userId } = await auth();
-    if (!userId) redirect("/sign-in");
-  } catch {
-    redirect("/sign-in");
-  }
-
+export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
     <AuthGuard>
       <ToastProvider />
