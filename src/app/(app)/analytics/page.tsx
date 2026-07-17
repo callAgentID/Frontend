@@ -35,6 +35,7 @@ import { CallListItemSkeleton, DetailViewSkeleton } from "@/components/Skeleton"
 import { CallFilters, CallFilterParams } from "@/components/CallFilters";
 import { toast } from "@/components/Toast";
 import { useCurrentUser } from "@/lib/useCurrentUser";
+import { WorkerProfile, formatWorkerProfileModels } from "@/lib/workerProfiles";
 
 function AnalyticsPageContent() {
   const searchParams = useSearchParams();
@@ -52,6 +53,7 @@ function AnalyticsPageContent() {
   const [detailedResult, setDetailedResult] = useState<any>(null);
   const [isDetailLoading, setIsDetailLoading] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [profiles, setProfiles] = useState<WorkerProfile[]>([]);
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -91,6 +93,7 @@ function AnalyticsPageContent() {
     if (filters.review_status) filters.review_status.forEach(rs => params.append('review_status', rs));
     if (filters.campaign_id) filters.campaign_id.forEach(cid => params.append('campaign_id', cid));
     if (filters.questionnaire_id) filters.questionnaire_id.forEach(qid => params.append('questionnaire_id', qid));
+    if (filters.processing_profile_id) filters.processing_profile_id.forEach(pid => params.append('processing_profile_id', pid));
     if (filters.agent_id) filters.agent_id.forEach(aid => params.append('agent_id', aid));
     if (filters.customer_id) filters.customer_id.forEach(cid => params.append('customer_id', cid));
     if (filters.call_success !== undefined && filters.call_success !== null) params.append('call_success', filters.call_success.toString());
@@ -106,6 +109,22 @@ function AnalyticsPageContent() {
 
     return params.toString();
   };
+
+  useEffect(() => {
+    let cancelled = false;
+    apiFetch("/api/v1/worker/profiles?skip=0&limit=100")
+      .then(async response => {
+        if (!response.ok) throw new Error("Failed to load profiles");
+        const data = await response.json();
+        if (!cancelled && Array.isArray(data)) setProfiles(data);
+      })
+      .catch(() => {
+        if (!cancelled) setProfiles([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [apiFetch]);
 
   // Fetch historical calls with pagination and filters
   useEffect(() => {
@@ -298,6 +317,7 @@ function AnalyticsPageContent() {
         {/* Advanced Filters */}
         <CallFilters
           filters={filters}
+          profiles={profiles}
           onFiltersChange={(newFilters) => {
             setFilters(newFilters);
             setCurrentPage(1); // Reset to first page when filters change
@@ -370,6 +390,17 @@ function AnalyticsPageContent() {
                       <span className="text-[10px] font-bold text-[#B3CFE5] uppercase tracking-widest px-2 py-0.5 bg-blue-950/20 rounded-md">
                         {call.sentiment?.label || 'N/A'}
                       </span>
+                      {call.processing_profile && (
+                        <>
+                          <span className="w-1 h-1 rounded-full bg-[#4A7FA7]/30" />
+                          <span className="flex items-center gap-1.5 px-2 py-0.5 bg-[#4A7FA7]/10 border border-blue-400/12 rounded-md max-w-[280px]">
+                            <Zap className="w-3 h-3 text-[#4A7FA7] shrink-0" />
+                            <span className="text-[10px] font-black text-[#F6FAFD] uppercase tracking-widest truncate" title={formatWorkerProfileModels(call.processing_profile)}>
+                              {call.processing_profile.name}
+                            </span>
+                          </span>
+                        </>
+                      )}
                       {isSuperAdmin && (
                         <>
                           <span className="w-1 h-1 rounded-full bg-[#4A7FA7]/30" />

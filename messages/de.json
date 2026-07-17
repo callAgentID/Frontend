@@ -59,7 +59,8 @@
     "analysis": "Analyse",
     "users": "Benutzer",
     "admin": "Admin Dashboard",
-    "batches": "Stapel"
+    "batches": "Stapel",
+    "workerProfiles": "Worker-Profile"
   },
   "home": {
     "title": "Analysieren Sie Ihr Gespräch",

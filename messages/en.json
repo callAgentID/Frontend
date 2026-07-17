@@ -59,7 +59,8 @@
     "analysis": "Analysis",
     "users": "Users",
     "admin": "Admin Dashboard",
-    "batches": "Batches"
+    "batches": "Batches",
+    "workerProfiles": "Worker Profiles"
   },
   "home": {
     "title": "Analyze Your Conversation",

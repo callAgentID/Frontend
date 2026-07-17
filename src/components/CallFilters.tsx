@@ -17,10 +17,12 @@ import {
   ChevronDown
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { WorkerProfile, formatWorkerProfileModels } from "@/lib/workerProfiles";
 
 export interface CallFilterParams {
   campaign_id?: string[];
   questionnaire_id?: string[];
+  processing_profile_id?: string[];
   agent_id?: string[];
   customer_id?: string[];
   status?: string[];
@@ -42,6 +44,7 @@ interface CallFiltersProps {
   onFiltersChange: (filters: CallFilterParams) => void;
   campaigns?: Array<{ id: string; name: string }>;
   questionnaires?: Array<{ id: string; title: string }>;
+  profiles?: WorkerProfile[];
 }
 
 const STATUS_OPTIONS = [
@@ -66,7 +69,7 @@ const SENTIMENT_OPTIONS = [
   { value: "negative", label: "Negative", icon: Frown, color: "text-red-600" }
 ];
 
-export function CallFilters({ filters, onFiltersChange, campaigns = [], questionnaires = [] }: CallFiltersProps) {
+export function CallFilters({ filters, onFiltersChange, campaigns = [], questionnaires = [], profiles = [] }: CallFiltersProps) {
   const t = useTranslations('analytics');
   const [isOpen, setIsOpen] = useState(false);
   const [searchInput, setSearchInput] = useState(filters.search || "");
@@ -127,6 +130,14 @@ export function CallFilters({ filters, onFiltersChange, campaigns = [], question
       ? current.filter(id => id !== questionnaireId)
       : [...current, questionnaireId];
     onFiltersChange({ ...filters, questionnaire_id: updated.length > 0 ? updated : undefined });
+  };
+
+  const toggleProfile = (profileId: string) => {
+    const current = filters.processing_profile_id || [];
+    const updated = current.includes(profileId)
+      ? current.filter(id => id !== profileId)
+      : [...current, profileId];
+    onFiltersChange({ ...filters, processing_profile_id: updated.length > 0 ? updated : undefined });
   };
 
   const addTag = () => {
@@ -445,6 +456,31 @@ export function CallFilters({ filters, onFiltersChange, campaigns = [], question
               </div>
             )}
           </div>
+
+          {/* Intelligence Profiles */}
+          {profiles.length > 0 && (
+            <div>
+              <label className="block text-xs font-black uppercase tracking-widest text-[#B3CFE5] mb-2">
+                Intelligence Profiles
+              </label>
+              <div className="space-y-2 max-h-44 overflow-y-auto">
+                {profiles.map((profile) => (
+                  <label key={profile.id} className="flex items-start gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={filters.processing_profile_id?.includes(profile.id) || false}
+                      onChange={() => toggleProfile(profile.id)}
+                      className="mt-1 rounded border-blue-400/10"
+                    />
+                    <span className="min-w-0">
+                      <span className="block text-sm font-medium text-[#F6FAFD] truncate">{profile.name}</span>
+                      <span className="block text-[10px] font-bold text-[#B3CFE5] truncate">{formatWorkerProfileModels(profile)}</span>
+                    </span>
+                  </label>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Campaigns */}
           {campaigns.length > 0 && (

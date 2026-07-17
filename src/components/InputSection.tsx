@@ -28,6 +28,7 @@ import {
 } from "lucide-react";
 import { cn } from "../lib/utils";
 import { BatchProgress } from "./BatchProgress";
+import { WorkerProfile, formatWorkerProfileModels, profileId } from "@/lib/workerProfiles";
 
 type InputMode = "audio" | "transcript";
 
@@ -66,7 +67,7 @@ export function InputSection({
   const [generatedTranscript, setGeneratedTranscript] = useState("");
   const [callAnalytics, setCallAnalytics] = useState<CallAnalytics | null>(null);
   const [campaigns, setCampaigns] = useState<any[]>([]);
-  const [profiles, setProfiles] = useState<any[]>([]);
+  const [profiles, setProfiles] = useState<WorkerProfile[]>([]);
   const [selectedCampaignId, setSelectedCampaignId] = useState<string>("");
   const [selectedProfileId, setSelectedProfileId] = useState<string>("");
   const [selectedRedFlagIds, setSelectedRedFlagIds] = useState<string[]>([]);
@@ -90,13 +91,15 @@ export function InputSection({
   const isRiskMissing = selectedRedFlagIds.length === 0;
   const isQuestionnaireMissing = selectedOtherIds.length === 0;
   const isCampaignMissing = !selectedCampaignId;
+  const isProfileMissing = !selectedProfileId;
   const showRiskError = submitAttempted && isRiskMissing;
   const showQuestionnaireError = submitAttempted && isQuestionnaireMissing;
   const showCampaignError = submitAttempted && isCampaignMissing;
+  const showProfileError = submitAttempted && isProfileMissing;
 
   const validateStrategicContext = () => {
     setSubmitAttempted(true);
-    return !isRiskMissing && !isQuestionnaireMissing && !isCampaignMissing;
+    return !isRiskMissing && !isQuestionnaireMissing && !isCampaignMissing && !isProfileMissing;
   };
 
   const navigateToCreate = (path: string) => {
@@ -134,6 +137,33 @@ export function InputSection({
     setIsProfileOpen(false);
   }, []);
 
+  const refreshProfiles = useCallback(async () => {
+    const response = await apiFetch("/api/v1/worker/profiles?skip=0&limit=100");
+    if (!response.ok) throw new Error("Failed to load intelligence profiles");
+    const data = await response.json();
+
+    if (Array.isArray(data)) {
+      setProfiles(data);
+      setSelectedProfileId(prev => {
+        if (prev && data.some(profile => profileId(profile) === prev)) return prev;
+        return data.length > 0 ? profileId(data[0]) : "";
+      });
+      return data;
+    }
+
+    setProfiles([]);
+    setSelectedProfileId("");
+    return [];
+  }, [apiFetch]);
+
+  const readErrorMessage = async (response: Response, fallback: string) => {
+    const body = await response.json().catch(() => null);
+    if (typeof body?.detail === "string") return body.detail;
+    if (body?.detail?.message) return body.detail.message;
+    if (body?.message) return body.message;
+    return fallback;
+  };
+
   const removeMetaTag = useCallback((i: number) => setMetaTags(prev => prev.filter((_, idx) => idx !== i)), []);
   const removeCustomQ = useCallback((i: number) => setCustomQuestions(prev => prev.filter((_, idx) => idx !== i)), []);
 
@@ -161,26 +191,20 @@ export function InputSection({
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [campRes, profRes, questRes] = await Promise.all([
+        const [campRes, questRes] = await Promise.all([
           apiFetch("/api/v1/campaigns/"),
-          apiFetch("/api/v1/worker/profiles"),
           apiFetch("/api/v1/questionnaires/?skip=0&limit=100")
         ]);
+        await refreshProfiles();
 
-        const [campData, profData, questData] = await Promise.all([
+        const [campData, questData] = await Promise.all([
           campRes.json(),
-          profRes.json(),
           questRes.json()
         ]);
 
         if (Array.isArray(campData)) {
           setCampaigns(campData);
           if (campData.length > 0) setSelectedCampaignId(campData[0].id || campData[0]._id);
-        }
-
-        if (Array.isArray(profData)) {
-          setProfiles(profData);
-          if (profData.length > 0) setSelectedProfileId(profData[0].id || profData[0]._id);
         }
 
         if (Array.isArray(questData)) {
@@ -193,7 +217,7 @@ export function InputSection({
       }
     };
     fetchData();
-  }, []);
+  }, [apiFetch, refreshProfiles]);
 
   const handleModeChange = (newMode: InputMode) => {
     // Clear data from other mode upon switching
@@ -385,7 +409,10 @@ export function InputSection({
           scoring_method: selectedScoringMethod,
         }),
       });
-      if (!initRes.ok) throw new Error("Failed to initialize call");
+      if (!initRes.ok) {
+        if (initRes.status === 400) await refreshProfiles();
+        throw new Error(await readErrorMessage(initRes, "Failed to initialize call"));
+      }
       const { call_id, s3_key, presigned_url } = await initRes.json();
 
       // Step 2: Upload file directly to S3
@@ -449,7 +476,10 @@ export function InputSection({
           scoring_method: selectedScoringMethod,
         }),
       });
-      if (!initRes.ok) throw new Error("Failed to initialize batch");
+      if (!initRes.ok) {
+        if (initRes.status === 400) await refreshProfiles();
+        throw new Error(await readErrorMessage(initRes, "Failed to initialize batch"));
+      }
       const batchData = await initRes.json();
       const { batch_id, calls } = batchData;
 
@@ -550,7 +580,10 @@ export function InputSection({
         body: formData,
       });
 
-      if (!response.ok) throw new Error("Manual ingestion failed");
+      if (!response.ok) {
+        if (response.status === 400) await refreshProfiles();
+        throw new Error(await readErrorMessage(response, "Manual ingestion failed"));
+      }
 
       const data = await response.json();
       console.log("Manual Analysis Queued:", data);
@@ -1028,17 +1061,30 @@ export function InputSection({
 
                 {/* Profile Dropdown */}
                 <div id="profile-dropdown" className="relative group/select">
-                  <label className="text-[10px] font-black uppercase tracking-[0.2em] text-[#F8F4E9]/80 mb-2 block px-1">Intelligence Profile</label>
+                  <div className="flex items-center justify-between px-1 mb-2">
+                    <label className="text-[10px] font-black uppercase tracking-[0.2em] text-[#F8F4E9]/80">Intelligence Profile</label>
+                    {showProfileError && (
+                      <span className="text-[10px] font-bold text-red-400 animate-in fade-in duration-150">Required</span>
+                    )}
+                  </div>
                   <div
                     onClick={toggleProfileOpen}
                     className={cn(
-                      "w-full h-16 bg-[#2A4A5E]/60 border border-transparent rounded-2xl px-14 flex items-center cursor-pointer transition-colors hover:bg-[#2A4A5E]/80",
-                      isProfileOpen && "border-[#5A8FB4]/40 bg-[#2A4A5E]/70 shadow-lg"
+                      "w-full min-h-16 bg-[#2A4A5E]/60 border rounded-2xl pl-14 pr-12 py-3 flex items-center cursor-pointer transition-colors hover:bg-[#2A4A5E]/80",
+                      isProfileOpen && "border-[#5A8FB4]/40 bg-[#2A4A5E]/70 shadow-lg",
+                      showProfileError && !isProfileOpen ? "border-red-500/70" : "border-transparent"
                     )}
                   >
-                    <span className="font-bold tracking-tight text-base truncate text-[#F8F4E9]">
-                      {!selectedProfileId ? "Select Profile..." : profiles.find(p => (p.id || p._id) === selectedProfileId)?.name || "Profile Selected"}
-                    </span>
+                    <div className="min-w-0">
+                      <span className="block font-bold tracking-tight text-base truncate text-[#F8F4E9]">
+                        {!selectedProfileId ? "Select Profile..." : profiles.find(p => profileId(p) === selectedProfileId)?.name || "Profile Selected"}
+                      </span>
+                      {selectedProfileId && profiles.find(p => profileId(p) === selectedProfileId) && (
+                        <span className="block text-[10px] font-bold text-[#B3CFE5] truncate mt-0.5">
+                          {formatWorkerProfileModels(profiles.find(p => profileId(p) === selectedProfileId)!)}
+                        </span>
+                      )}
+                    </div>
                   </div>
                   <Zap className="absolute left-5 top-[65%] -translate-y-1/2 w-5 h-5 text-[#F8F4E9]" />
                   <ChevronRight className={cn("absolute right-5 top-[65%] -translate-y-1/2 w-5 h-5 text-[#F8F4E9] transition-transform", isProfileOpen && "-rotate-90")} />
@@ -1046,7 +1092,7 @@ export function InputSection({
                   {isProfileOpen && (
                     <div className="absolute top-[105%] left-0 right-0 bg-[#2A4A5E]/95 border border-[#5A8FB4]/40 rounded-2xl shadow-2xl p-4 z-50 space-y-1.5 animate-in fade-in duration-150 duration-150 lg:max-h-[300px] overflow-y-auto">
                       {profiles.map(p => {
-                        const pId = p.id || p._id;
+                        const pId = profileId(p);
                         const isSelected = selectedProfileId === pId;
                         return (
                           <div
@@ -1057,16 +1103,19 @@ export function InputSection({
                               isSelected ? "bg-[#5A8FB4]/30 text-[#F8F4E9]" : "hover:bg-[#5A8FB4]/20 text-[#F8F4E9]"
                             )}
                           >
-                            <div className={cn("w-4 h-4 rounded-full border-2 flex items-center justify-center", isSelected ? "border-[#5A8FB4] bg-[#5A8FB4]" : "border-[#5A8FB4]")}>
+                            <div className={cn("w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0", isSelected ? "border-[#5A8FB4] bg-[#5A8FB4]" : "border-[#5A8FB4]")}>
                               {isSelected && <div className="w-2 h-2 rounded-full bg-white" />}
                             </div>
-                            <span className="text-sm font-bold">{p.name}</span>
+                            <div className="min-w-0">
+                              <span className="block text-sm font-bold truncate">{p.name}</span>
+                              <span className="block text-[10px] font-bold text-[#B3CFE5] truncate mt-0.5">{formatWorkerProfileModels(p)}</span>
+                            </div>
                           </div>
                         );
                       })}
                       {profiles.length === 0 && (
-                        <div className="text-center py-4 text-[#5A8FB4]/50 text-xs">
-                          No profiles available
+                        <div className="text-center py-4 text-[#5A8FB4]/60 text-xs font-bold">
+                          No active global profiles available
                         </div>
                       )}
                     </div>

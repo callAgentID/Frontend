@@ -8,7 +8,7 @@ import { useTranslations } from 'next-intl';
 import {
   LayoutDashboard, BarChart3, Layers, FileSearch, FileCode,
   ShieldAlert, Settings, Users, LogOut, ChevronLeft, Menu, X, Package,
-  Sun, Moon
+  Sun, Moon, BrainCircuit
 } from "lucide-react";
 import { cn } from "../lib/utils";
 import { LanguageSwitcher } from "./LanguageSwitcher";
@@ -26,6 +26,7 @@ type NavRole = "all" | "admin" | "admin_manager" | "super_admin_only";
 const NAV_ITEMS: { name: string; href: string; icon: any; roles: NavRole }[] = [
   { name: "admin", href: "/admin", icon: Settings, roles: "admin_manager" },
   { name: "users", href: "/users", icon: Users, roles: "super_admin_only" },
+  { name: "workerProfiles", href: "/worker-profiles", icon: BrainCircuit, roles: "super_admin_only" },
   { name: "analysis", href: "/", icon: LayoutDashboard, roles: "all" },
   { name: "callAnalytics", href: "/analytics", icon: BarChart3, roles: "all" },
   { name: "batches", href: "/batches", icon: Package, roles: "all" },

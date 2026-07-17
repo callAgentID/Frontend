@@ -1,6 +1,8 @@
 "use client";
 
 import { useAuth, useUser, useOrganization } from "@clerk/nextjs";
+import { useEffect, useState } from "react";
+import { useApi } from "./useApi";
 
 export type UserRole = "admin" | "super_admin" | "manager" | "user" | null;
 
@@ -20,20 +22,42 @@ export function useCurrentUser() {
   const { user, isLoaded } = useUser();
   const { orgId } = useAuth();
   const { membership } = useOrganization();
+  const { apiFetch } = useApi();
+  const [backendRole, setBackendRole] = useState<string | null>(null);
+  const [isBackendRoleLoading, setIsBackendRoleLoading] = useState(true);
+
+  useEffect(() => {
+    if (!isLoaded) return;
+
+    let cancelled = false;
+    apiFetch("/api/v1/users/me")
+      .then(async (response) => {
+        if (!response.ok) throw new Error("Unable to load current user");
+        const data = await response.json();
+        if (!cancelled) setBackendRole(data?.user?.role ?? null);
+      })
+      .catch(() => {
+        if (!cancelled) setBackendRole(null);
+      })
+      .finally(() => {
+        if (!cancelled) setIsBackendRoleLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [apiFetch, isLoaded]);
 
   const rawProfileRole = user?.publicMetadata?.role as string | undefined;
-  const isSuperAdmin = rawProfileRole?.toLowerCase() === "super_admin";
+  const isSuperAdmin = backendRole === "Super_admin" || rawProfileRole?.toLowerCase() === "super_admin";
 
   let role: UserRole;
 
   if (isSuperAdmin) {
-    // Super admins keep their global role regardless of org membership
     role = "super_admin";
   } else if (membership?.role) {
-    // Active org membership — use the org role
     role = mapOrgRole(membership.role);
   } else if (rawProfileRole) {
-    // No org active yet — fall back to profile role
     role = rawProfileRole.toLowerCase() as UserRole;
   } else {
     role = "user";
@@ -44,6 +68,6 @@ export function useCurrentUser() {
     isSuperAdmin,
     orgId: orgId ?? null,
     hasOrg: !!orgId,
-    isLoading: !isLoaded,
+    isLoading: !isLoaded || isBackendRoleLoading,
   };
 }
