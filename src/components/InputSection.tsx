@@ -1079,11 +1079,11 @@ export function InputSection({
                       <span className="block font-bold tracking-tight text-base truncate text-[#F8F4E9]">
                         {!selectedProfileId ? "Select Profile..." : profiles.find(p => profileId(p) === selectedProfileId)?.name || "Profile Selected"}
                       </span>
-                      {selectedProfileId && profiles.find(p => profileId(p) === selectedProfileId) && (
+                      {/* {selectedProfileId && profiles.find(p => profileId(p) === selectedProfileId) && (
                         <span className="block text-[10px] font-bold text-[#B3CFE5] truncate mt-0.5">
                           {formatWorkerProfileModels(profiles.find(p => profileId(p) === selectedProfileId)!)}
                         </span>
-                      )}
+                      )} */}
                     </div>
                   </div>
                   <Zap className="absolute left-5 top-[65%] -translate-y-1/2 w-5 h-5 text-[#F8F4E9]" />
@@ -1108,7 +1108,7 @@ export function InputSection({
                             </div>
                             <div className="min-w-0">
                               <span className="block text-sm font-bold truncate">{p.name}</span>
-                              <span className="block text-[10px] font-bold text-[#B3CFE5] truncate mt-0.5">{formatWorkerProfileModels(p)}</span>
+                              {/* <span className="block text-[10px] font-bold text-[#B3CFE5] truncate mt-0.5">{formatWorkerProfileModels(p)}</span> */}
                             </div>
                           </div>
                         );
