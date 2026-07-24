@@ -8,10 +8,11 @@ import { useTranslations } from 'next-intl';
 import {
   LayoutDashboard, BarChart3, Layers, FileSearch, FileCode,
   ShieldAlert, Settings, Users, LogOut, ChevronLeft, Menu, X, Package,
-  Sun, Moon, BrainCircuit
+  Sun, Moon, BrainCircuit, Zap
 } from "lucide-react";
 import { cn } from "../lib/utils";
 import { LanguageSwitcher } from "./LanguageSwitcher";
+import { PointsBalance } from "./PointsBalance";
 import { useClerk, useUser } from "@clerk/nextjs";
 import { useCurrentUser } from "@/lib/useCurrentUser";
 import { useTheme } from "@/lib/useTheme";
@@ -27,6 +28,7 @@ const NAV_ITEMS: { name: string; href: string; icon: any; roles: NavRole }[] = [
   { name: "admin", href: "/admin", icon: Settings, roles: "admin_manager" },
   { name: "users", href: "/users", icon: Users, roles: "super_admin_only" },
   { name: "workerProfiles", href: "/worker-profiles", icon: BrainCircuit, roles: "super_admin_only" },
+  { name: "points", href: "/points", icon: Zap, roles: "admin_manager" },
   { name: "analysis", href: "/", icon: LayoutDashboard, roles: "all" },
   { name: "callAnalytics", href: "/analytics", icon: BarChart3, roles: "all" },
   { name: "batches", href: "/batches", icon: Package, roles: "all" },
@@ -178,52 +180,114 @@ export function Sidebar() {
             <ChevronLeft className={cn("w-4 h-4 transition-transform duration-200", isCollapsed && "rotate-180")} />
           </button>
 
-          {/* Nav label */}
-          {!isCollapsed && (
-            <p className="px-2 mb-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--text-tertiary)]">
-              {t('navigation')}
-            </p>
-          )}
+          {/* Nav */}
+          <nav className="flex-1 overflow-y-auto overflow-x-hidden sidebar-nav space-y-3">
 
-          {/* Nav items — CSS handles hover, no inline handlers */}
-          <nav className="flex-1 overflow-y-auto overflow-x-hidden space-y-0.5 sidebar-nav">
-            {NAV_ITEMS.filter(item => canSee(item.roles)).map((item) => {
-              const isActive = pathname === item.href;
-              const Icon = item.icon;
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  onClick={(e) => {
-                    setIsMobileOpen(false);
-                    if (item.href === '/') {
-                      e.preventDefault();
-                      window.location.href = '/';
-                    }
-                  }}
-                  title={isCollapsed ? t(item.name as any) : undefined}
-                  className={cn(
-                    "sidebar-nav-item flex items-center rounded-2xl text-[13px] font-medium relative overflow-hidden",
-                    isCollapsed ? "justify-center p-2.5" : "gap-3 px-3 py-2.5",
-                    isActive ? "sidebar-nav-active" : "sidebar-nav-inactive"
-                  )}
-                  style={isActive ? NAV_ACTIVE_STYLE : NAV_INACTIVE_STYLE}
-                >
-                  {isActive && (
-                    <span className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-r-full bg-[var(--accent)]" />
-                  )}
-                  <Icon
-                    className="w-[16px] h-[16px] shrink-0"
-                    style={{ opacity: isActive ? 1 : 0.5, color: isActive ? 'var(--accent)' : 'inherit' }}
-                  />
-                  {!isCollapsed && <span className="truncate">{t(item.name as any)}</span>}
-                </Link>
+            {/* ── Admin Controls ───────────── */}
+            {(() => {
+              const adminItems = NAV_ITEMS.filter(
+                item => item.roles !== "all" && canSee(item.roles)
               );
-            })}
+              if (adminItems.length === 0) return null;
+              return (
+                <div className="space-y-0.5">
+                  {!isCollapsed && (
+                    <p className="px-2 pb-1 text-[9px] font-black uppercase tracking-[0.16em] text-[var(--text-tertiary)] opacity-60">
+                      Admin Controls
+                    </p>
+                  )}
+                  {isCollapsed && (
+                    <div className="my-1 mx-auto w-6 h-px bg-white/[0.10] rounded-full" />
+                  )}
+                  {adminItems.map((item) => {
+                    const isActive = pathname === item.href;
+                    const Icon = item.icon;
+                    return (
+                      <Link
+                        key={item.href}
+                        href={item.href}
+                        onClick={() => setIsMobileOpen(false)}
+                        title={isCollapsed ? t(item.name as any) : undefined}
+                        className={cn(
+                          "sidebar-nav-item flex items-center rounded-2xl text-[13px] font-medium relative overflow-hidden",
+                          isCollapsed ? "justify-center p-2.5" : "gap-3 px-3 py-2.5",
+                          isActive ? "sidebar-nav-active" : "sidebar-nav-inactive"
+                        )}
+                        style={isActive ? NAV_ACTIVE_STYLE : NAV_INACTIVE_STYLE}
+                      >
+                        {isActive && (
+                          <span className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-r-full bg-[var(--accent)]" />
+                        )}
+                        <Icon
+                          className="w-[16px] h-[16px] shrink-0"
+                          style={{ opacity: isActive ? 1 : 0.5, color: isActive ? 'var(--accent)' : 'inherit' }}
+                        />
+                        {!isCollapsed && <span className="truncate">{t(item.name as any)}</span>}
+                      </Link>
+                    );
+                  })}
+                </div>
+              );
+            })()}
+
+            {/* ── General ──────────────────── */}
+            {(() => {
+              const generalItems = NAV_ITEMS.filter(
+                item => item.roles === "all" && canSee(item.roles)
+              );
+              if (generalItems.length === 0) return null;
+              return (
+                <div className="space-y-0.5">
+                  {!isCollapsed && (
+                    <p className="px-2 pb-1 text-[9px] font-black uppercase tracking-[0.16em] text-[var(--text-tertiary)] opacity-60">
+                      General
+                    </p>
+                  )}
+                  {isCollapsed && (
+                    <div className="my-1 mx-auto w-6 h-px bg-white/[0.10] rounded-full" />
+                  )}
+                  {generalItems.map((item) => {
+                    const isActive = pathname === item.href;
+                    const Icon = item.icon;
+                    return (
+                      <Link
+                        key={item.href}
+                        href={item.href}
+                        onClick={(e) => {
+                          setIsMobileOpen(false);
+                          if (item.href === '/') {
+                            e.preventDefault();
+                            window.location.href = '/';
+                          }
+                        }}
+                        title={isCollapsed ? t(item.name as any) : undefined}
+                        className={cn(
+                          "sidebar-nav-item flex items-center rounded-2xl text-[13px] font-medium relative overflow-hidden",
+                          isCollapsed ? "justify-center p-2.5" : "gap-3 px-3 py-2.5",
+                          isActive ? "sidebar-nav-active" : "sidebar-nav-inactive"
+                        )}
+                        style={isActive ? NAV_ACTIVE_STYLE : NAV_INACTIVE_STYLE}
+                      >
+                        {isActive && (
+                          <span className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-r-full bg-[var(--accent)]" />
+                        )}
+                        <Icon
+                          className="w-[16px] h-[16px] shrink-0"
+                          style={{ opacity: isActive ? 1 : 0.5, color: isActive ? 'var(--accent)' : 'inherit' }}
+                        />
+                        {!isCollapsed && <span className="truncate">{t(item.name as any)}</span>}
+                      </Link>
+                    );
+                  })}
+                </div>
+              );
+            })()}
+
           </nav>
 
           {/* Bottom */}
           <div className="mt-4 space-y-2">
+            {canSee("admin_manager") && <PointsBalance collapsed={isCollapsed} />}
             <button
               onClick={toggleTheme}
               title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}

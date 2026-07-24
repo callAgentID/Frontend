@@ -4,6 +4,7 @@ import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { useApi } from "@/lib/useApi";
 import { useTranslations } from 'next-intl';
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import {
   FileAudio,
   FileText,
@@ -84,6 +85,7 @@ export function InputSection({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const addMoreRef = useRef<HTMLInputElement>(null);
   const pollIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [pointsErrorMsg, setPointsErrorMsg] = useState<string | null>(null);
 
   // Memoized splits — computed once when questionnaires change, not on every render
   const redFlagQuestionnaires = useMemo(() => questionnaires.filter(q => q.is_redflag === true), [questionnaires]);
@@ -411,7 +413,14 @@ export function InputSection({
       });
       if (!initRes.ok) {
         if (initRes.status === 400) await refreshProfiles();
-        throw new Error(await readErrorMessage(initRes, "Failed to initialize call"));
+        const errMsg = await readErrorMessage(initRes, "Failed to initialize call");
+        if (initRes.status === 402 || errMsg.toLowerCase().includes("not enough points")) {
+          setPointsErrorMsg(errMsg);
+          setIsProcessing(false);
+          setProcessingStatus("idle");
+          return;
+        }
+        throw new Error(errMsg);
       }
       const { call_id, s3_key, presigned_url } = await initRes.json();
 
@@ -431,12 +440,25 @@ export function InputSection({
           content_type: audioFile.type || "audio/mpeg",
         }),
       });
-      if (!startRes.ok) throw new Error("Failed to start processing pipeline");
+      if (!startRes.ok) {
+        const errMsg = await readErrorMessage(startRes, "Failed to start processing pipeline");
+        if (startRes.status === 402 || errMsg.toLowerCase().includes("not enough points")) {
+          setPointsErrorMsg(errMsg);
+          setIsProcessing(false);
+          setProcessingStatus("idle");
+          return;
+        }
+        throw new Error(errMsg);
+      }
 
       await pollForTranscript(call_id);
     } catch (error: any) {
       console.error("Audio API Error:", error);
-      alert(error.message || "Failed to connect to the analysis engine. Please check your connection.");
+      if (error?.message?.toLowerCase().includes("not enough points") || error?.status === 402) {
+        setPointsErrorMsg(error.message);
+      } else {
+        alert(error.message || "Failed to connect to the analysis engine. Please check your connection.");
+      }
       setIsProcessing(false);
       setProcessingStatus("idle");
     }
@@ -478,7 +500,14 @@ export function InputSection({
       });
       if (!initRes.ok) {
         if (initRes.status === 400) await refreshProfiles();
-        throw new Error(await readErrorMessage(initRes, "Failed to initialize batch"));
+        const errMsg = await readErrorMessage(initRes, "Failed to initialize batch");
+        if (initRes.status === 402 || errMsg.toLowerCase().includes("not enough points")) {
+          setPointsErrorMsg(errMsg);
+          setIsProcessing(false);
+          setProcessingStatus("idle");
+          return;
+        }
+        throw new Error(errMsg);
       }
       const batchData = await initRes.json();
       const { batch_id, calls } = batchData;
@@ -505,7 +534,16 @@ export function InputSection({
           }),
         }),
       });
-      if (!startRes.ok) throw new Error("Failed to start batch pipeline");
+      if (!startRes.ok) {
+        const errMsg = await readErrorMessage(startRes, "Failed to start batch pipeline");
+        if (startRes.status === 402 || errMsg.toLowerCase().includes("not enough points")) {
+          setPointsErrorMsg(errMsg);
+          setIsProcessing(false);
+          setProcessingStatus("idle");
+          return;
+        }
+        throw new Error(errMsg);
+      }
       const startData = await startRes.json();
 
       if (startData.errors?.length > 0) setBatchIngestErrors(startData.errors);
@@ -515,7 +553,11 @@ export function InputSection({
       setProcessingStatus("idle");
     } catch (error: any) {
       console.error("Batch API Error:", error);
-      alert(error.message || "Failed to submit batch. Please check your connection.");
+      if (error?.message?.toLowerCase().includes("not enough points") || error?.status === 402) {
+        setPointsErrorMsg(error.message);
+      } else {
+        alert(error.message || "Failed to submit batch. Please check your connection.");
+      }
       setIsProcessing(false);
       setProcessingStatus("idle");
     }
@@ -582,7 +624,14 @@ export function InputSection({
 
       if (!response.ok) {
         if (response.status === 400) await refreshProfiles();
-        throw new Error(await readErrorMessage(response, "Manual ingestion failed"));
+        const errMsg = await readErrorMessage(response, "Manual ingestion failed");
+        if (response.status === 402 || errMsg.toLowerCase().includes("not enough points")) {
+          setPointsErrorMsg(errMsg);
+          setIsProcessing(false);
+          setProcessingStatus("idle");
+          return;
+        }
+        throw new Error(errMsg);
       }
 
       const data = await response.json();
@@ -596,7 +645,11 @@ export function InputSection({
       }
     } catch (error: any) {
       console.error("Manual API Error:", error);
-      alert(error.message || "Failed to connect to the analysis engine. Please check your connection.");
+      if (error?.message?.toLowerCase().includes("not enough points") || error?.status === 402) {
+        setPointsErrorMsg(error.message);
+      } else {
+        alert(error.message || "Failed to connect to the analysis engine. Please check your connection.");
+      }
       setIsProcessing(false);
       setProcessingStatus("idle");
     }
@@ -1414,6 +1467,42 @@ export function InputSection({
           Encrypted Signal Tunnel <span className="w-1 h-1 rounded-full bg-[#4A7FA7]" /> Latency: 12ms
         </p>
       </div>
+
+      {/* Insufficient Points Modal (HTTP 402) */}
+      {pointsErrorMsg && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-md z-[100] flex items-center justify-center p-4">
+          <div className="bg-[#0D1F35] border border-amber-500/30 rounded-3xl p-6 md:p-8 max-w-md w-full shadow-2xl space-y-5 animate-in fade-in zoom-in-95">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-2xl bg-amber-500/20 border border-amber-500/30 flex items-center justify-center text-amber-400 shrink-0">
+                <Zap className="w-6 h-6 text-amber-400" />
+              </div>
+              <div>
+                <h3 className="text-lg font-black text-[#F6FAFD]">Insufficient Points</h3>
+                <p className="text-xs text-amber-300 font-semibold">Payment Required (HTTP 402)</p>
+              </div>
+            </div>
+            <p className="text-sm font-medium text-[#B3CFE5] leading-relaxed">
+              {pointsErrorMsg}
+            </p>
+            <div className="flex flex-col sm:flex-row gap-3 pt-2">
+              <Link
+                href="/points"
+                onClick={() => setPointsErrorMsg(null)}
+                className="flex-1 py-2.5 px-4 bg-gradient-to-r from-[#4A7FA7] to-[#1A3D63] text-white font-extrabold text-xs uppercase tracking-wider rounded-xl text-center glow hover:opacity-90 transition-opacity"
+              >
+                View Points & Usage
+              </Link>
+              <button
+                type="button"
+                onClick={() => setPointsErrorMsg(null)}
+                className="py-2.5 px-4 bg-blue-950/40 border border-blue-400/20 text-[#B3CFE5] hover:text-[#F6FAFD] font-bold text-xs uppercase tracking-wider rounded-xl transition-colors"
+              >
+                Dismiss
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </section>
   );
 }
