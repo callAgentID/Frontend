@@ -4,10 +4,12 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   AlertTriangle,
   BrainCircuit,
+  Building2,
   Check,
   ChevronDown,
   Database,
   DollarSign,
+  Globe2,
   Loader2,
   Pencil,
   Plus,
@@ -38,6 +40,17 @@ type ProfileDraft = {
   llm_script_model: string;
   llm_qa_model: string;
   is_global: boolean;
+};
+
+type ProfileVisibility = "global" | "organizations" | "unpublished";
+
+type Organization = {
+  id: string;
+  name: string;
+  slug: string;
+  member_count?: number;
+  created_at?: string;
+  updated_at?: string;
 };
 
 type ModelFilters = {
@@ -226,12 +239,22 @@ function WorkerProfilesPageContent() {
   const [savingId, setSavingId] = useState<string | null>(null);
   const [editingProfileId, setEditingProfileId] = useState<string | null>(null);
   const [profileEdits, setProfileEdits] = useState<ProfileDraft>(emptyDraft);
+  const [profileVisibility, setProfileVisibility] = useState<ProfileVisibility>("global");
+  const [organizations, setOrganizations] = useState<Organization[]>([]);
+  const [selectedOrganizationIds, setSelectedOrganizationIds] = useState<string[]>([]);
+  const [organizationSearch, setOrganizationSearch] = useState("");
+  const [loadingOrganizations, setLoadingOrganizations] = useState(false);
   const [draft, setDraft] = useState<ProfileDraft>(emptyDraft);
   const [costs, setCosts] = useState<LlmCostAnalytics | null>(null);
   const [costFilters, setCostFilters] = useState({ profileId: "", model: "", stage: "", createdAfter: "" });
   const [loadingCosts, setLoadingCosts] = useState(false);
 
   const selectableModels = useMemo(() => models.filter((model) => model.eligible), [models]);
+  const filteredOrganizations = useMemo(() => {
+    const query = organizationSearch.trim().toLowerCase();
+    if (!query) return organizations;
+    return organizations.filter((organization) => `${organization.name} ${organization.slug}`.toLowerCase().includes(query));
+  }, [organizations, organizationSearch]);
 
   const parseResponse = async <T,>(response: Response, fallback: string): Promise<T> => {
     const body = await response.json().catch(() => null);
@@ -331,6 +354,26 @@ function WorkerProfilesPageContent() {
     }
   };
 
+  const loadOrganizationAssignments = useCallback(async (profileId: string) => {
+    setLoadingOrganizations(true);
+    try {
+      const [organizationResponse, assignmentResponse] = await Promise.all([
+        apiFetch("/api/v1/organizations?skip=0&limit=100"),
+        apiFetch(`/api/v1/worker/profiles/${profileId}/organizations`),
+      ]);
+      const organizationData = await parseResponse<Organization[]>(organizationResponse, "Failed to load organizations");
+      const assignmentData = await parseResponse<{ organizations?: Organization[] }>(assignmentResponse, "Failed to load profile assignments");
+      setOrganizations(Array.isArray(organizationData) ? organizationData : []);
+      setSelectedOrganizationIds((assignmentData.organizations || []).map((organization) => organization.id));
+    } catch (error: unknown) {
+      toast(error instanceof Error ? error.message : "Failed to load organization assignments", "error");
+      setOrganizations([]);
+      setSelectedOrganizationIds([]);
+    } finally {
+      setLoadingOrganizations(false);
+    }
+  }, [apiFetch]);
+
   const startEditingProfile = (profile: WorkerProfile) => {
     setEditingProfileId(profile.id);
     setProfileEdits({
@@ -339,20 +382,51 @@ function WorkerProfilesPageContent() {
       llm_qa_model: profile.llm_qa_model,
       is_global: profile.is_global,
     });
+    setProfileVisibility(profile.active ? (profile.is_global ? "global" : "organizations") : "unpublished");
+    setSelectedOrganizationIds([]);
+    setOrganizationSearch("");
+    if (!profile.is_global && profile.active) void loadOrganizationAssignments(profile.id);
   };
 
   const cancelEditingProfile = () => {
     setEditingProfileId(null);
     setProfileEdits(emptyDraft);
+    setProfileVisibility("global");
+    setSelectedOrganizationIds([]);
+    setOrganizationSearch("");
   };
 
   const saveProfileEdits = async (profile: WorkerProfile) => {
-    const saved = await saveProfile(profile, {
-      name: profileEdits.name.trim(),
-      llm_script_model: profileEdits.llm_script_model,
-      llm_qa_model: profileEdits.llm_qa_model,
-    });
-    if (saved) cancelEditingProfile();
+    setSavingId(profile.id);
+    try {
+      const profileResponse = await apiFetch(`/api/v1/worker/profiles/${profile.id}`, {
+          method: "PATCH",
+          body: JSON.stringify({
+            name: profileEdits.name.trim(),
+            llm_script_model: profileEdits.llm_script_model,
+            llm_qa_model: profileEdits.llm_qa_model,
+            ...(profileVisibility === "global" ? { is_global: true, active: true } : {}),
+            ...(profileVisibility === "organizations" ? { active: true } : {}),
+            ...(profileVisibility === "unpublished" ? { active: false } : {}),
+          }),
+        });
+      await parseResponse<WorkerProfile>(profileResponse, "Failed to update profile");
+
+      if (profileVisibility === "organizations") {
+        const assignmentResponse = await apiFetch(`/api/v1/worker/profiles/${profile.id}/organizations`, {
+          method: "PUT",
+          body: JSON.stringify({ organization_ids: selectedOrganizationIds }),
+        });
+        await parseResponse<{ profile_id: string; is_global: boolean; active: boolean }>(assignmentResponse, "Failed to save organization assignments");
+      }
+      await loadProfiles();
+      toast("Worker profile visibility updated", "success");
+      cancelEditingProfile();
+    } catch (error: unknown) {
+      toast(error instanceof Error ? error.message : "Failed to update profile visibility", "error");
+    } finally {
+      setSavingId(null);
+    }
   };
 
   const createProfile = async () => {
@@ -462,14 +536,61 @@ function WorkerProfilesPageContent() {
                     </div>
                   </div>
                   {editingProfileId === profile.id ? (
-                    <div className="grid items-end gap-3 lg:grid-cols-[minmax(220px,1fr)_minmax(260px,1fr)_minmax(260px,1fr)_auto]">
+                    <div className="space-y-4">
+                      <div className="grid gap-3 lg:grid-cols-3">
                       <label className="block space-y-2">
                         <span className="block text-[10px] font-black uppercase tracking-[0.2em] text-[#B3CFE5]">Name</span>
                         <input value={profileEdits.name} onChange={(event) => setProfileEdits((prev) => ({ ...prev, name: event.target.value }))} className="h-12 w-full rounded-xl border border-blue-400/12 bg-blue-950/30 px-4 text-sm font-bold text-[#F6FAFD] outline-none focus:border-[#4A7FA7]" />
                       </label>
                       <ModelSelect label="Script model" value={profileEdits.llm_script_model} onChange={(value) => setProfileEdits((prev) => ({ ...prev, llm_script_model: value }))} models={selectableModels} disabled={loadingModels || savingId === profile.id} />
                       <ModelSelect label="QA model" value={profileEdits.llm_qa_model} onChange={(value) => setProfileEdits((prev) => ({ ...prev, llm_qa_model: value }))} models={selectableModels} disabled={loadingModels || savingId === profile.id} />
-                      <div className="flex h-12 items-center gap-2">
+                      </div>
+                      <div className="space-y-3 rounded-2xl border border-blue-400/12 bg-blue-950/18 p-4">
+                        <span className="block text-[10px] font-black uppercase tracking-[0.2em] text-[#B3CFE5]">Visibility</span>
+                        <div className="grid gap-2 md:grid-cols-3">
+                          {([
+                            ["global", "Global", "Available to every organization", Globe2],
+                            ["organizations", "Specific organizations", "Assign selected organizations", Building2],
+                            ["unpublished", "Unpublished", "Not available for processing", X],
+                          ] as const).map(([value, label, description, Icon]) => (
+                            <button
+                              key={value}
+                              type="button"
+                              disabled={savingId === profile.id}
+                              onClick={() => {
+                                setProfileVisibility(value);
+                                if (value === "organizations" && organizations.length === 0) void loadOrganizationAssignments(profile.id);
+                              }}
+                              className={cn("flex items-start gap-3 rounded-xl border p-3 text-left transition-colors", profileVisibility === value ? "border-[#4A7FA7] bg-[#4A7FA7]/18" : "border-blue-400/10 bg-blue-950/20 hover:bg-blue-950/40")}
+                            >
+                              <Icon className={cn("mt-0.5 h-4 w-4 shrink-0", profileVisibility === value ? "text-[#9DCEFF]" : "text-[#B3CFE5]")} />
+                              <span className="min-w-0"><span className="block text-xs font-black text-[#F6FAFD]">{label}</span><span className="mt-1 block text-[10px] font-semibold text-[#B3CFE5]">{description}</span></span>
+                            </button>
+                          ))}
+                        </div>
+                        {profileVisibility === "organizations" && (
+                          <div className="space-y-3 border-t border-blue-400/10 pt-3">
+                            <div className="relative">
+                              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#B3CFE5]" />
+                              <input value={organizationSearch} onChange={(event) => setOrganizationSearch(event.target.value)} placeholder="Search organizations..." className="h-10 w-full rounded-xl border border-blue-400/12 bg-blue-950/30 pl-9 pr-3 text-sm font-bold text-[#F6FAFD] outline-none focus:border-[#4A7FA7]" />
+                            </div>
+                            <div className="max-h-48 space-y-1 overflow-y-auto pr-1">
+                              {loadingOrganizations ? <div className="p-4 text-center text-xs font-bold text-[#B3CFE5]">Loading organizations...</div> : filteredOrganizations.map((organization) => {
+                                const checked = selectedOrganizationIds.includes(organization.id);
+                                return (
+                                  <label key={organization.id} className="flex cursor-pointer items-center gap-3 rounded-xl px-3 py-2 hover:bg-blue-950/35">
+                                    <input type="checkbox" checked={checked} onChange={() => setSelectedOrganizationIds((current) => checked ? current.filter((id) => id !== organization.id) : [...current, organization.id])} className="h-4 w-4 accent-[#4A7FA7]" />
+                                    <span className="min-w-0"><span className="block truncate text-sm font-bold text-[#F6FAFD]">{organization.name}</span><span className="block truncate text-[10px] font-semibold text-[#B3CFE5]">{organization.slug}</span></span>
+                                  </label>
+                                );
+                              })}
+                              {!loadingOrganizations && filteredOrganizations.length === 0 && <div className="p-4 text-center text-xs font-bold text-[#B3CFE5]">No organizations found.</div>}
+                            </div>
+                            <p className="text-[10px] font-bold uppercase tracking-widest text-[#B3CFE5]">{selectedOrganizationIds.length} organization{selectedOrganizationIds.length === 1 ? "" : "s"} selected</p>
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex items-center justify-end gap-2">
                         <button disabled={savingId === profile.id} onClick={() => void saveProfileEdits(profile)} className="flex h-10 w-10 items-center justify-center rounded-lg border border-green-500/25 bg-green-500/15 text-green-300 hover:bg-green-500/25 disabled:opacity-60" title="Save changes">{savingId === profile.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}</button>
                         <button disabled={savingId === profile.id} onClick={cancelEditingProfile} className="flex h-10 w-10 items-center justify-center rounded-lg border border-blue-400/12 bg-blue-950/30 text-[#B3CFE5] hover:bg-blue-950/45 disabled:opacity-60" title="Cancel editing"><X className="h-4 w-4" /></button>
                       </div>
