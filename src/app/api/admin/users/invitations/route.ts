@@ -1,11 +1,13 @@
-import { auth, clerkClient } from "@clerk/nextjs/server";
+import { clerkClient } from "@clerk/nextjs/server";
 import { isCurrentUserSuperAdmin } from "@/lib/isSuperAdmin";
 
 export async function POST(request: Request) {
   try {
-    const authState = await auth();
-    const { userId } = authState;
-    if (!userId || !(await isCurrentUserSuperAdmin(authState))) {
+    const client = await clerkClient();
+    // Amplify cannot run Clerk's edge proxy. Authenticate this individual
+    // Node route directly from the signed Clerk cookie/token instead.
+    const authState = (await client.authenticateRequest(request)).toAuth();
+    if (!authState?.userId || !(await isCurrentUserSuperAdmin(authState))) {
       return Response.json({ message: "Only super admins can invite users." }, { status: 403 });
     }
 
@@ -17,7 +19,6 @@ export async function POST(request: Request) {
       return Response.json({ message: "Email, first name, and last name are required." }, { status: 422 });
     }
 
-    const client = await clerkClient();
     // Clerk sends the recipient to this URL after they accept. A relative URL
     // makes Clerk use its hosted domain (which has no `/sign-up` page here),
     // so preserve the actual CallBlick origin from the incoming request.

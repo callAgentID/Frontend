@@ -1,11 +1,13 @@
-import { auth, clerkClient } from "@clerk/nextjs/server";
+import { clerkClient } from "@clerk/nextjs/server";
 import { isCurrentUserSuperAdmin } from "@/lib/isSuperAdmin";
 
 export async function PATCH(request: Request, context: RouteContext<"/api/admin/users/[userId]/name">) {
   try {
-    const authState = await auth();
-    const { userId: actorId } = authState;
-    if (!actorId || !(await isCurrentUserSuperAdmin(authState))) {
+    const client = await clerkClient();
+    // Do not rely on Clerk edge middleware: Amplify serves this Route Handler
+    // from a Node Lambda, where the middleware crashes the entire app.
+    const authState = (await client.authenticateRequest(request)).toAuth();
+    if (!authState?.userId || !(await isCurrentUserSuperAdmin(authState))) {
       return Response.json({ message: "Only super admins can edit user names." }, { status: 403 });
     }
 
@@ -17,7 +19,6 @@ export async function PATCH(request: Request, context: RouteContext<"/api/admin/
       return Response.json({ message: "First name and last name are required." }, { status: 422 });
     }
 
-    const client = await clerkClient();
     const user = await client.users.updateUser(userId, { firstName, lastName });
     return Response.json({ id: user.id, firstName: user.firstName, lastName: user.lastName });
   } catch (error) {
