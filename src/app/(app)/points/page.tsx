@@ -103,9 +103,6 @@ function PointsPageContent() {
         if (usersData.status === "fulfilled") setUsers(ensureArray<PointsUser>(usersData.value));
         if (ledgerData.status === "fulfilled") setLedger(ensureArray<PointsLedgerEntry>(ledgerData.value));
       }
-      if (typeof window !== "undefined") {
-        window.dispatchEvent(new Event("points-updated"));
-      }
     } catch (err) {
       console.error("Failed to fetch points data:", err);
     } finally {

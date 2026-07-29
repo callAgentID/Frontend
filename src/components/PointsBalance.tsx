@@ -35,12 +35,9 @@ export function PointsBalance({ collapsed = false, className }: PointsBalancePro
 
   useEffect(() => {
     fetchBalance();
-    // Refresh balance every 60 seconds
-    const interval = setInterval(fetchBalance, 60000);
     const handlePointsUpdated = () => fetchBalance();
     window.addEventListener("points-updated", handlePointsUpdated);
     return () => {
-      clearInterval(interval);
       window.removeEventListener("points-updated", handlePointsUpdated);
     };
   }, [fetchBalance]);

@@ -257,6 +257,7 @@ export default function SignInPage() {
           <style>{clerkStyles}</style>
 
           <SignIn
+            signUpUrl="https://www.callblick.com/contact"
             appearance={{
               variables: isLight ? {
                 colorPrimary: "rgba(26,111,212,1)",
@@ -287,6 +288,13 @@ export default function SignInPage() {
               },
             }}
           />
+
+          <a
+            href="https://www.callblick.com/contact"
+            className="relative mx-auto mt-4 box-border flex h-11 w-full max-w-[400px] -translate-x-5 items-center justify-center rounded-xl border border-blue-400/20 bg-blue-950/25 text-sm font-bold text-[#9DCEFF] transition-colors hover:border-blue-400/40 hover:bg-blue-950/45 hover:text-white"
+          >
+            Not a user yet? Get demo access
+          </a>
 
           <p style={{ textAlign: 'center', fontSize: 11, color: footerColor, marginTop: 20, transition: 'color 0.3s ease' }}>
             Protected by Clerk · End-to-end encrypted
