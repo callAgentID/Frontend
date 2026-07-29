@@ -16,7 +16,8 @@ import {
   UserX,
   Mail,
   Calendar,
-  X
+  X,
+  UserPlus,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTranslations } from "next-intl";
@@ -36,6 +37,56 @@ interface BackendUser {
   role: Role;
   created_at?: string;
   last_active?: string;
+}
+
+type UnknownRecord = Record<string, unknown>;
+
+function asRecord(value: unknown): UnknownRecord | null {
+  return typeof value === "object" && value !== null ? value as UnknownRecord : null;
+}
+
+function asArray(value: unknown): unknown[] {
+  return Array.isArray(value) ? value : [];
+}
+
+function normalizeRole(value: unknown): Role {
+  const role = String(value ?? "user").toLowerCase().replace(/^org:/, "");
+  return role === "super_admin" || role === "admin" || role === "manager" || role === "user" || role === "member"
+    ? (role === "member" ? "user" : role)
+    : "user";
+}
+
+function normalizeUser(value: unknown): BackendUser | null {
+  const user = asRecord(value);
+  if (!user) return null;
+  const id = user.id ?? user.clerk_id ?? user.user_id;
+  if (typeof id !== "string" || !id) return null;
+
+  const name = typeof user.name === "string" ? user.name.trim() : "";
+  const nameParts = name && !/^none(\s+none)?$/i.test(name) ? name.split(/\s+/) : [];
+  return {
+    id,
+    clerk_id: typeof user.clerk_id === "string" ? user.clerk_id : id,
+    email: typeof user.email === "string" ? user.email : "",
+    first_name: typeof user.first_name === "string" ? user.first_name : nameParts[0],
+    last_name: typeof user.last_name === "string" ? user.last_name : nameParts.slice(1).join(" "),
+    role: normalizeRole(user.role),
+    created_at: typeof user.created_at === "string" ? user.created_at : undefined,
+    last_active: typeof user.last_active === "string" ? user.last_active : undefined,
+  };
+}
+
+// Super-admin user responses are grouped by organization. Flatten those
+// memberships into the same table shape used by the rest of this page.
+function extractUsers(payload: unknown): BackendUser[] {
+  const root = asRecord(payload);
+  const entries = Array.isArray(payload) ? payload : [payload];
+  const organizations = entries.flatMap(entry => asArray(asRecord(entry)?.organizations));
+  const rawUsers = organizations.length
+    ? organizations.flatMap(organization => asArray(asRecord(organization)?.users))
+    : asArray(root?.users ?? payload);
+  const users = rawUsers.map(normalizeUser).filter((user): user is BackendUser => user !== null);
+  return Array.from(new Map(users.map(user => [user.id, user])).values());
 }
 
 const ROLE_CONFIG: Record<string, { label: string; color: string; bg: string; border: string; icon: any }> = {
@@ -65,6 +116,13 @@ export default function UsersPage() {
   const [selectedRole, setSelectedRole] = useState<Role>("user");
   const [isSaving, setIsSaving] = useState(false);
   const [dropdownOpenFor, setDropdownOpenFor] = useState<string | null>(null);
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [isInviteOpen, setIsInviteOpen] = useState(false);
+  const [inviteEmail, setInviteEmail] = useState("");
+  const [inviteFirstName, setInviteFirstName] = useState("");
+  const [inviteLastName, setInviteLastName] = useState("");
+  const [isInviting, setIsInviting] = useState(false);
 
   useEffect(() => { setMounted(true); }, []);
 
@@ -76,7 +134,7 @@ export default function UsersPage() {
       if (res.status === 403) { setError("Access denied. Admin role required."); return; }
       if (!res.ok) throw new Error("Failed to fetch users");
       const data = await res.json();
-      setUsers(Array.isArray(data) ? data : []);
+      setUsers(extractUsers(data));
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -92,17 +150,31 @@ export default function UsersPage() {
     if (!editingUser) return;
     setIsSaving(true);
     try {
-      const res = await apiFetch(`/api/v1/users/${editingUser.id}/role`, {
-        method: "PUT",
-        body: JSON.stringify({ role: selectedRole }),
-      });
-      if (!res.ok) {
-        const body = await res.json().catch(() => ({}));
-        throw new Error(body.detail || body.message || "Failed to update role");
+      const updatedFirstName = firstName.trim();
+      const updatedLastName = lastName.trim();
+      if (!updatedFirstName || !updatedLastName) throw new Error("First name and last name are required.");
+      if (updatedFirstName !== (editingUser.first_name || "") || updatedLastName !== (editingUser.last_name || "")) {
+        const nameResponse = await fetch(`/api/admin/users/${editingUser.id}/name`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ firstName: updatedFirstName, lastName: updatedLastName }),
+        });
+        const nameBody = await nameResponse.json().catch(() => ({}));
+        if (!nameResponse.ok) throw new Error(nameBody.message || "Failed to update user name");
       }
-      setUsers(users.map(u => u.id === editingUser.id ? { ...u, role: selectedRole } : u));
+      if (selectedRole !== editingUser.role) {
+        const res = await apiFetch(`/api/v1/users/${editingUser.id}/role`, {
+          method: "PUT",
+          body: JSON.stringify({ role: selectedRole }),
+        });
+        if (!res.ok) {
+          const body = await res.json().catch(() => ({}));
+          throw new Error(body.detail || body.message || "Failed to update role");
+        }
+      }
+      setUsers(users.map(u => u.id === editingUser.id ? { ...u, first_name: updatedFirstName, last_name: updatedLastName, role: selectedRole } : u));
       setEditingUser(null);
-      toast("Role updated successfully", "success");
+      toast("User updated successfully", "success");
     } catch (err: any) {
       toast(err.message || "Failed to update role. Please try again.", "error");
     } finally {
@@ -113,6 +185,27 @@ export default function UsersPage() {
   const openEditModal = (user: BackendUser) => {
     setEditingUser(user);
     setSelectedRole(user.role);
+    setFirstName(user.first_name || "");
+    setLastName(user.last_name || "");
+  };
+
+  const handleInviteUser = async () => {
+    setIsInviting(true);
+    try {
+      const response = await fetch("/api/admin/users/invitations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: inviteEmail, firstName: inviteFirstName, lastName: inviteLastName }),
+      });
+      const body = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(body.message || "Failed to send invitation");
+      setIsInviteOpen(false); setInviteEmail(""); setInviteFirstName(""); setInviteLastName("");
+      toast("CallBlick invitation sent. The user can create their organization after joining.", "success");
+    } catch (err: any) {
+      toast(err.message || "Failed to send invitation.", "error");
+    } finally {
+      setIsInviting(false);
+    }
   };
 
   const filtered = users.filter(u =>
@@ -139,14 +232,10 @@ export default function UsersPage() {
           </div>
           <p className="text-[#B3CFE5] text-sm font-medium pl-1">{t('subtitle')}</p>
         </div>
-        <button
-          onClick={fetchUsers}
-          disabled={isLoading}
-          className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-[#4A7FA7] to-[#1A3D63] glow text-white rounded-xl font-bold text-xs uppercase tracking-widest hover:opacity-90 disabled:opacity-50 transition-colors shrink-0"
-        >
-          {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
-          {t('refresh')}
-        </button>
+        <div className="flex gap-3">
+          <button onClick={() => setIsInviteOpen(true)} className="flex items-center gap-2 px-5 py-2.5 border border-blue-400/25 bg-blue-950/25 text-[#B3CFE5] rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-blue-950/40 transition-colors shrink-0"><UserPlus className="w-4 h-4" /> Invite user</button>
+          <button onClick={fetchUsers} disabled={isLoading} className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-[#4A7FA7] to-[#1A3D63] glow text-white rounded-xl font-bold text-xs uppercase tracking-widest hover:opacity-90 disabled:opacity-50 transition-colors shrink-0">{isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}{t('refresh')}</button>
+        </div>
       </div>
 
       {/* Role Summary Cards */}
@@ -312,6 +401,10 @@ export default function UsersPage() {
 
             {/* Role Selector */}
             <div className="p-6 space-y-4">
+              <div className="grid grid-cols-2 gap-3">
+                <label><span className="text-[10px] font-black uppercase tracking-widest text-[#B3CFE5]">First name</span><input value={firstName} onChange={e => setFirstName(e.target.value)} className="mt-1.5 w-full rounded-xl border border-blue-400/18 bg-blue-950/30 px-3 py-2.5 text-sm font-medium text-[#F6FAFD] outline-none focus:border-[#4A7FA7]" /></label>
+                <label><span className="text-[10px] font-black uppercase tracking-widest text-[#B3CFE5]">Last name</span><input value={lastName} onChange={e => setLastName(e.target.value)} className="mt-1.5 w-full rounded-xl border border-blue-400/18 bg-blue-950/30 px-3 py-2.5 text-sm font-medium text-[#F6FAFD] outline-none focus:border-[#4A7FA7]" /></label>
+              </div>
               <label className="text-[10px] font-black uppercase tracking-widest text-[#B3CFE5]">{t('assignRole')}</label>
               <div className="space-y-2">
                 {(["super_admin", "admin", "manager", "user"] as Role[]).map(role => {
@@ -361,7 +454,7 @@ export default function UsersPage() {
               </button>
               <button
                 onClick={handleUpdateRole}
-                disabled={isSaving || selectedRole === editingUser.role}
+                disabled={isSaving || (selectedRole === editingUser.role && firstName.trim() === (editingUser.first_name || "") && lastName.trim() === (editingUser.last_name || ""))}
                 className="flex-1 h-11 bg-gradient-to-r from-[#4A7FA7] to-[#1A3D63] text-white rounded-xl font-bold text-sm uppercase tracking-wider transition-colors hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2 glow"
               >
                 {isSaving ? (
@@ -374,6 +467,10 @@ export default function UsersPage() {
           </div>
         </div>,
         document.body
+      )}
+      {mounted && isInviteOpen && createPortal(
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-6 bg-black/60 animate-in fade-in duration-150"><div className="w-full max-w-lg overflow-hidden rounded-3xl border border-blue-400/18 bg-[#1A3D63]/95 shadow-2xl"><div className="flex items-center justify-between border-b border-blue-400/12 p-6"><div><h3 className="text-xl font-black text-[#F6FAFD]">Invite user</h3><p className="mt-1 text-sm text-[#B3CFE5]">They will receive a CallBlick invitation email.</p></div><button onClick={() => setIsInviteOpen(false)} className="text-[#B3CFE5] hover:text-white"><X className="w-5 h-5" /></button></div><div className="space-y-4 p-6"><label className="block"><span className="text-[10px] font-black uppercase tracking-widest text-[#B3CFE5]">Email</span><input type="email" value={inviteEmail} onChange={e => setInviteEmail(e.target.value)} className="mt-1.5 w-full rounded-xl border border-blue-400/18 bg-blue-950/30 px-3 py-2.5 text-sm text-[#F6FAFD] outline-none focus:border-[#4A7FA7]" /></label><div className="grid grid-cols-2 gap-3"><label><span className="text-[10px] font-black uppercase tracking-widest text-[#B3CFE5]">First name</span><input value={inviteFirstName} onChange={e => setInviteFirstName(e.target.value)} className="mt-1.5 w-full rounded-xl border border-blue-400/18 bg-blue-950/30 px-3 py-2.5 text-sm text-[#F6FAFD] outline-none focus:border-[#4A7FA7]" /></label><label><span className="text-[10px] font-black uppercase tracking-widest text-[#B3CFE5]">Last name</span><input value={inviteLastName} onChange={e => setInviteLastName(e.target.value)} className="mt-1.5 w-full rounded-xl border border-blue-400/18 bg-blue-950/30 px-3 py-2.5 text-sm text-[#F6FAFD] outline-none focus:border-[#4A7FA7]" /></label></div></div><div className="flex gap-3 border-t border-blue-400/12 p-6"><button onClick={() => setIsInviteOpen(false)} disabled={isInviting} className="flex-1 rounded-xl bg-black/25 py-3 text-sm font-bold text-[#B3CFE5]">Cancel</button><button onClick={handleInviteUser} disabled={isInviting || !inviteEmail.trim() || !inviteFirstName.trim() || !inviteLastName.trim()} className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#4A7FA7] to-[#1A3D63] py-3 text-sm font-black text-white disabled:opacity-40">{isInviting && <Loader2 className="w-4 h-4 animate-spin" />} Send invitation</button></div></div>
+        </div>, document.body
       )}
     </main>
     </RoleGuard>
