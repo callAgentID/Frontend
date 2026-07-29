@@ -86,6 +86,8 @@ export function InputSection({
   const addMoreRef = useRef<HTMLInputElement>(null);
   const pollIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const [pointsErrorMsg, setPointsErrorMsg] = useState<string | null>(null);
+  const [selectedScoringMethod, setSelectedScoringMethod] = useState<"v4" | "v5">("v4");
+  const [allowScoringMethodOverride, setAllowScoringMethodOverride] = useState(true);
 
   // Memoized splits — computed once when questionnaires change, not on every render
   const redFlagQuestionnaires = useMemo(() => questionnaires.filter(q => q.is_redflag === true), [questionnaires]);
@@ -175,6 +177,21 @@ export function InputSection({
       if (pollIntervalRef.current) clearInterval(pollIntervalRef.current);
     };
   }, []);
+
+  // The organization policy is authoritative. Fetch it so upload controls only
+  // offer an override when the organization admin has explicitly allowed one.
+  useEffect(() => {
+    let cancelled = false;
+    apiFetch("/api/v1/organization/scoring-policy")
+      .then(async response => response.ok ? response.json() : null)
+      .then(policy => {
+        if (cancelled || !policy?.settings) return;
+        setAllowScoringMethodOverride(policy.settings.allow_call_scoring_method_override === true);
+        setSelectedScoringMethod(policy.settings.scoring_method === "v5" ? "v5" : "v4");
+      })
+      .catch(() => undefined);
+    return () => { cancelled = true; };
+  }, [apiFetch]);
 
   // Persistent click-outside listener — registered once, avoids add/remove thrashing
   useEffect(() => {
@@ -408,7 +425,7 @@ export function InputSection({
           language: "en",
           ...(metaTags.length > 0 && { meta_tags: metaTags }),
           ...(customQuestions.length > 0 && { custom_questions: customQuestions }),
-          scoring_method: selectedScoringMethod,
+          ...(allowScoringMethodOverride && { scoring_method: selectedScoringMethod }),
         }),
       });
       if (!initRes.ok) {
@@ -495,7 +512,7 @@ export function InputSection({
           ...(batchName.trim() && { name: batchName.trim() }),
           ...(metaTags.length > 0 && { meta_tags: metaTags }),
           ...(customQuestions.length > 0 && { custom_questions: customQuestions }),
-          scoring_method: selectedScoringMethod,
+          ...(allowScoringMethodOverride && { scoring_method: selectedScoringMethod }),
         }),
       });
       if (!initRes.ok) {
@@ -563,7 +580,6 @@ export function InputSection({
     }
   };
 
-  const [selectedScoringMethod, setSelectedScoringMethod] = useState<"v4" | "v5">("v4");
   const [showManualSuccess, setShowManualSuccess] = useState(false);
 
   const handleTranscriptSubmit = async () => {
@@ -614,7 +630,7 @@ export function InputSection({
       if (customQuestions.length > 0) {
         formData.append("custom_questions", JSON.stringify(customQuestions));
       }
-      formData.append("scoring_method", selectedScoringMethod);
+      if (allowScoringMethodOverride) formData.append("scoring_method", selectedScoringMethod);
 
       const response = await apiFetch("/api/v1/ingest/manual", {
         method: "POST",
@@ -1332,10 +1348,10 @@ export function InputSection({
                 </div>
               </div>
 
-              {/* Scoring Method Toggle */}
+              {/* Organization policy controls whether a per-call method can be selected. */}
               <div className="flex items-center justify-between px-1 pt-4 border-t border-blue-400/10">
                 <label className="text-[10px] font-black uppercase tracking-[0.2em] text-[#B3CFE5]">Scoring Method</label>
-                <div className="flex p-1 bg-[#1A3D63]/40 rounded-xl border border-blue-400/10">
+                {allowScoringMethodOverride ? <div className="flex p-1 bg-[#1A3D63]/40 rounded-xl border border-blue-400/10">
                   {(["v4", "v5"] as const).map(v => (
                     <button
                       key={v}
@@ -1350,7 +1366,7 @@ export function InputSection({
                       {v}
                     </button>
                   ))}
-                </div>
+                </div> : <span className="text-xs font-bold text-[#B3CFE5]">Organization default: {selectedScoringMethod.toUpperCase()}</span>}
               </div>
 
               <button

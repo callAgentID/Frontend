@@ -49,6 +49,8 @@ function AnalyticsPageContent() {
   const [calls, setCalls] = useState<any[]>([]);
   const [totalCalls, setTotalCalls] = useState<number>(0);
   const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
   const [selectedCallId, setSelectedCallId] = useState<string | null>(null);
   const [detailedResult, setDetailedResult] = useState<any>(null);
   const [isDetailLoading, setIsDetailLoading] = useState(false);
@@ -133,7 +135,8 @@ function AnalyticsPageContent() {
       try {
         const queryString = buildQueryString();
         const response = await apiFetch(`/api/v1/calls/?${queryString}`);
-        const data = await response.json();
+        const data = await response.json().catch(() => null);
+        if (!response.ok) throw new Error("Failed to load call history");
         if (Array.isArray(data)) {
           // Sort by created_at descending (newest first)
           const sortedData = data.sort((a, b) => {
@@ -157,10 +160,11 @@ function AnalyticsPageContent() {
         console.error("Failed to fetch historical signals:", err);
       } finally {
         setIsLoading(false);
+        setIsRefreshing(false);
       }
     };
     fetchHistory();
-  }, [currentPage, itemsPerPage, filters]);
+  }, [currentPage, itemsPerPage, filters, refreshKey]);
 
   // Fetch specific call detail
   const viewDetail = async (callId: string) => {
@@ -302,12 +306,14 @@ function AnalyticsPageContent() {
             <button
               onClick={() => {
                 setCurrentPage(1);
-                setIsLoading(true);
+                setIsRefreshing(true);
+                setRefreshKey(value => value + 1);
               }}
+              disabled={isRefreshing}
               className="flex items-center gap-2 px-4 h-11 bg-gradient-to-r from-[#4A7FA7] to-[#1A3D63] glow hover:opacity-90 text-white rounded-xl font-bold text-xs uppercase tracking-wider transition-colors"
               title={t('refresh')}
             >
-              <RefreshCw className="w-4 h-4" />
+              <RefreshCw className={cn("w-4 h-4", isRefreshing && "animate-spin")} />
               {t('refresh')}
             </button>
 
@@ -325,7 +331,7 @@ function AnalyticsPageContent() {
         />
 
         <div className="w-full glass-card rounded-[3rem] border border-blue-400/18 overflow-hidden">
-          {isLoading ? (
+          {isLoading && calls.length === 0 ? (
             <div className="divide-y divide-[#4A7FA7]/20">
               {[1, 2, 3, 4, 5].map((i) => (
                 <CallListItemSkeleton key={i} />

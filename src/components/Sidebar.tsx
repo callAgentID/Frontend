@@ -26,6 +26,7 @@ type NavRole = "all" | "admin" | "admin_manager" | "super_admin_only";
 
 const NAV_ITEMS: { name: string; href: string; icon: any; roles: NavRole }[] = [
   { name: "admin", href: "/admin", icon: Settings, roles: "admin_manager" },
+  { name: "scoringSettings", href: "/settings", icon: Settings, roles: "admin" },
   { name: "users", href: "/users", icon: Users, roles: "super_admin_only" },
   { name: "workerProfiles", href: "/worker-profiles", icon: BrainCircuit, roles: "super_admin_only" },
   { name: "points", href: "/points", icon: Zap, roles: "admin_manager" },
