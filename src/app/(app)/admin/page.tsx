@@ -132,7 +132,7 @@ const baseChartOptions = {
   maintainAspectRatio: false,
   plugins: {
     legend: {
-      labels: { color: "#B3CFE5", font: { size: 11, weight: "bold" as const } }
+      labels: { color: "#B3CFE5", font: { size: 13, weight: "bold" as const } }
     },
     tooltip: {
       backgroundColor: "rgba(10,25,49,0.95)",
@@ -144,11 +144,11 @@ const baseChartOptions = {
   },
   scales: {
     x: {
-      ticks: { color: "#B3CFE5", font: { size: 10 } },
+      ticks: { color: "#B3CFE5", font: { size: 12 } },
       grid: { color: "rgba(74,127,167,0.1)" }
     },
     y: {
-      ticks: { color: "#B3CFE5", font: { size: 10 } },
+      ticks: { color: "#B3CFE5", font: { size: 12 } },
       grid: { color: "rgba(74,127,167,0.1)" }
     }
   }
@@ -374,17 +374,17 @@ export default function AdminPage() {
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="space-y-1.5">
-            <label className="text-[10px] font-black uppercase tracking-wider text-[#B3CFE5]">{t('startDate')}</label>
+              <label className="text-xs font-black uppercase tracking-wider text-[#B3CFE5]">{t('startDate')}</label>
             <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)}
               className="w-full h-10 bg-black/25 border border-blue-400/18 rounded-xl px-3 text-sm font-semibold text-[#F6FAFD] outline-none focus:border-[#4A7FA7] transition-colors" />
           </div>
           <div className="space-y-1.5">
-            <label className="text-[10px] font-black uppercase tracking-wider text-[#B3CFE5]">{t('endDate')}</label>
+              <label className="text-xs font-black uppercase tracking-wider text-[#B3CFE5]">{t('endDate')}</label>
             <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)}
               className="w-full h-10 bg-black/25 border border-blue-400/18 rounded-xl px-3 text-sm font-semibold text-[#F6FAFD] outline-none focus:border-[#4A7FA7] transition-colors" />
           </div>
           <div className="space-y-1.5 relative">
-            <label className="text-[10px] font-black uppercase tracking-wider text-[#B3CFE5]">{t('campaign')}</label>
+              <label className="text-xs font-black uppercase tracking-wider text-[#B3CFE5]">{t('campaign')}</label>
             <button type="button" onClick={() => setIsCampaignDropdownOpen(!isCampaignDropdownOpen)}
               className="w-full h-10 bg-black/25 border border-blue-400/18 rounded-xl px-3 text-sm font-semibold text-[#F6FAFD] outline-none focus:border-[#4A7FA7] transition-colors flex items-center justify-between">
               <span className={selectedCampaigns.length === 0 ? "text-[#B3CFE5]/50 text-sm" : "text-sm"}>
@@ -468,8 +468,8 @@ export default function AdminPage() {
             </div>
             <ChartCard title={t('callStatusDistribution')} icon={PieChart}>
               {statusDoughnutData ? (
-                <div className="h-64 flex items-center justify-center">
-                  <Doughnut data={statusDoughnutData} options={{ ...baseChartOptions, scales: undefined, plugins: { ...baseChartOptions.plugins, legend: { position: "bottom", labels: { color: "#B3CFE5", font: { size: 9 }, boxWidth: 10, padding: 8 } } } }} />
+                  <div className="h-64 flex items-center justify-center">
+                    <Doughnut data={statusDoughnutData} options={{ ...baseChartOptions, scales: undefined, plugins: { ...baseChartOptions.plugins, legend: { position: "bottom", labels: { color: "#B3CFE5", font: { size: 12 }, boxWidth: 12, padding: 10 } } } }} />
                 </div>
               ) : <EmptyChart label={t('noData')} />}
             </ChartCard>
@@ -486,10 +486,10 @@ export default function AdminPage() {
                     plugins: { legend: { display: false }, tooltip: baseChartOptions.plugins.tooltip },
                     scales: {
                       r: {
-                        ticks: { color: "#B3CFE5", font: { size: 9 }, backdropColor: "transparent" },
+                        ticks: { color: "#B3CFE5", font: { size: 11 }, backdropColor: "transparent" },
                         grid: { color: "rgba(44,143,255,0.15)" },
                         angleLines: { color: "rgba(44,143,255,0.25)" },
-                        pointLabels: { color: "#F6FAFD", font: { size: 10, weight: "bold" as const } },
+                        pointLabels: { color: "#F6FAFD", font: { size: 12, weight: "bold" as const } },
                         min: 0, max: 100,
                       }
                     }
@@ -524,8 +524,8 @@ export default function AdminPage() {
             </div>
             <ChartCard title={t('redFlagDistribution')} icon={ShieldAlert}>
               {redFlagDoughnutData ? (
-                <div className="h-64 flex items-center justify-center">
-                  <Doughnut data={redFlagDoughnutData} options={{ ...baseChartOptions, scales: undefined, plugins: { ...baseChartOptions.plugins, legend: { position: "bottom", labels: { color: "#B3CFE5", font: { size: 10 }, boxWidth: 10, padding: 8 } } } }} />
+                  <div className="h-64 flex items-center justify-center">
+                    <Doughnut data={redFlagDoughnutData} options={{ ...baseChartOptions, scales: undefined, plugins: { ...baseChartOptions.plugins, legend: { position: "bottom", labels: { color: "#B3CFE5", font: { size: 12 }, boxWidth: 12, padding: 10 } } } }} />
                 </div>
               ) : <EmptyChart label={t('noData')} />}
             </ChartCard>
@@ -535,16 +535,16 @@ export default function AdminPage() {
           <div className={cn("grid grid-cols-1 gap-6", isSuperAdmin && "lg:grid-cols-2")}>
             <ChartCard title={t('complianceViolations')} icon={ShieldAlert}>
               {violationsBarData ? (
-                <div className="h-64">
-                  <Bar data={violationsBarData} options={{ ...baseChartOptions, plugins: { ...baseChartOptions.plugins, legend: { display: false } } }} />
+                <div className="h-80">
+                  <Bar data={violationsBarData} options={{ ...baseChartOptions, plugins: { ...baseChartOptions.plugins, legend: { display: false } }, scales: { ...baseChartOptions.scales, x: { ...baseChartOptions.scales.x, ticks: { ...baseChartOptions.scales.x.ticks, minRotation: 45, maxRotation: 55 } } } }} />
                 </div>
               ) : <EmptyChart label={t('noData')} />}
             </ChartCard>
             {isSuperAdmin && (
               <ChartCard title={t('llmSpendByModel')} icon={DollarSign}>
                 {llmModelDoughnutData ? (
-                  <div className="h-64 flex items-center justify-center">
-                    <Doughnut data={llmModelDoughnutData} options={{ ...baseChartOptions, scales: undefined, plugins: { ...baseChartOptions.plugins, legend: { position: "right", labels: { color: "#B3CFE5", font: { size: 9 }, boxWidth: 10, padding: 6 } } } }} />
+                  <div className="h-72 flex items-center justify-center">
+                    <Doughnut data={llmModelDoughnutData} options={{ ...baseChartOptions, scales: undefined, plugins: { ...baseChartOptions.plugins, legend: { position: "right", labels: { color: "#B3CFE5", font: { size: 16, weight: "bold" as const }, boxWidth: 16, padding: 14 } } } }} />
                   </div>
                 ) : <EmptyChart label={t('noData')} />}
               </ChartCard>
@@ -623,9 +623,9 @@ function KPICard({ icon: Icon, label, value, sub, color }: { icon: any; label: s
         <Icon className="w-5 h-5 text-white" />
       </div>
       <div>
-        <p className="text-[9px] font-black uppercase tracking-widest text-[#B3CFE5] mb-1">{label}</p>
+        <p className="text-xs font-black uppercase tracking-widest text-[#B3CFE5] mb-1">{label}</p>
         <p className="text-2xl font-[900] text-[#F6FAFD] leading-none">{value}</p>
-        <p className="text-[10px] font-semibold text-[#B3CFE5] mt-1">{sub}</p>
+        <p className="text-xs font-semibold text-[#B3CFE5] mt-1">{sub}</p>
       </div>
     </div>
   );
@@ -646,7 +646,7 @@ function ChartCard({ title, icon: Icon, children }: { title: string; icon: any; 
 function StatCard({ label, value }: { label: string; value: string }) {
   return (
     <div className="p-4 bg-blue-950/30 rounded-2xl border border-blue-400/18 text-center">
-      <p className="text-[9px] font-black uppercase tracking-widest text-[#B3CFE5] mb-2">{label}</p>
+      <p className="text-xs font-black uppercase tracking-widest text-[#B3CFE5] mb-2">{label}</p>
       <p className="text-xl font-[900] text-[#F6FAFD]">{value}</p>
     </div>
   );

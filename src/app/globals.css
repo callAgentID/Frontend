@@ -33,6 +33,27 @@
   --border: 210 30% 100% / 0.10;
 }
 
+/* Readability floor: the dashboard is information-dense, but 9-11px labels
+   become unreadable at normal desktop viewing distance. Keep compact utility
+   labels at a legible 12px across app pages. */
+#app-content .text-\[9px\],
+#app-content .text-\[10px\],
+#app-content .text-\[11px\] {
+  font-size: 0.75rem !important;
+  line-height: 1.25rem;
+}
+
+aside .text-\[9px\] {
+  font-size: 0.6875rem !important;
+  line-height: 1rem;
+}
+
+aside .text-\[10px\],
+aside .text-\[11px\] {
+  font-size: 0.75rem !important;
+  line-height: 1.125rem;
+}
+
 /* ─── Light mode ──────────────────────────────────── */
 html.light {
   --water-deep:     #EEF3FA;

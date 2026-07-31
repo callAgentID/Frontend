@@ -193,7 +193,7 @@ export function Sidebar() {
               return (
                 <div className="space-y-0.5">
                   {!isCollapsed && (
-                    <p className="px-2 pb-1 text-[9px] font-black uppercase tracking-[0.16em] text-[var(--text-tertiary)] opacity-60">
+                    <p className="px-2 pb-1 text-[11px] font-black uppercase tracking-[0.16em] text-[var(--text-tertiary)] opacity-60">
                       Admin Controls
                     </p>
                   )}
@@ -210,7 +210,7 @@ export function Sidebar() {
                         onClick={() => setIsMobileOpen(false)}
                         title={isCollapsed ? t(item.name as any) : undefined}
                         className={cn(
-                          "sidebar-nav-item flex items-center rounded-2xl text-[13px] font-medium relative overflow-hidden",
+                          "sidebar-nav-item flex items-center rounded-2xl text-sm font-medium relative overflow-hidden",
                           isCollapsed ? "justify-center p-2.5" : "gap-3 px-3 py-2.5",
                           isActive ? "sidebar-nav-active" : "sidebar-nav-inactive"
                         )}
@@ -240,7 +240,7 @@ export function Sidebar() {
               return (
                 <div className="space-y-0.5">
                   {!isCollapsed && (
-                    <p className="px-2 pb-1 text-[9px] font-black uppercase tracking-[0.16em] text-[var(--text-tertiary)] opacity-60">
+                    <p className="px-2 pb-1 text-[11px] font-black uppercase tracking-[0.16em] text-[var(--text-tertiary)] opacity-60">
                       General
                     </p>
                   )}
@@ -263,7 +263,7 @@ export function Sidebar() {
                         }}
                         title={isCollapsed ? t(item.name as any) : undefined}
                         className={cn(
-                          "sidebar-nav-item flex items-center rounded-2xl text-[13px] font-medium relative overflow-hidden",
+                          "sidebar-nav-item flex items-center rounded-2xl text-sm font-medium relative overflow-hidden",
                           isCollapsed ? "justify-center p-2.5" : "gap-3 px-3 py-2.5",
                           isActive ? "sidebar-nav-active" : "sidebar-nav-inactive"
                         )}
@@ -301,7 +301,7 @@ export function Sidebar() {
                 ? <Sun className="w-4 h-4 shrink-0 text-[var(--text-secondary)]" />
                 : <Moon className="w-4 h-4 shrink-0 text-[var(--text-secondary)]" />}
               {!isCollapsed && (
-                <span className="text-[13px] font-medium text-[var(--text-secondary)]">
+                <span className="text-sm font-medium text-[var(--text-secondary)]">
                   {theme === 'dark' ? 'Light Mode' : 'Dark Mode'}
                 </span>
               )}
@@ -334,8 +334,8 @@ export function Sidebar() {
               {!isCollapsed && (
                 <>
                   <div className="flex-1 min-w-0">
-                    <p className="text-[13px] font-medium truncate leading-tight text-[var(--text-primary)]">{displayName}</p>
-                    <p className="text-[10px] uppercase tracking-wider truncate mt-0.5 text-[var(--text-tertiary)]">
+                    <p className="text-sm font-medium truncate leading-tight text-[var(--text-primary)]">{displayName}</p>
+                    <p className="text-xs uppercase tracking-wider truncate mt-0.5 text-[var(--text-tertiary)]">
                       {currentRole ?? "Member"}
                     </p>
                   </div>
