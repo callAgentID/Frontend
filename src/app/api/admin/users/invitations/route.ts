@@ -22,10 +22,10 @@ export async function POST(request: Request) {
     // Clerk sends the recipient to this URL after they accept. A relative URL
     // makes Clerk use its hosted domain (which has no `/sign-up` page here),
     // so preserve the actual CallBlick origin from the incoming request.
-    const requestUrl = new URL(request.url);
-    const protocol = request.headers.get("x-forwarded-proto") ?? requestUrl.protocol.replace(":", "");
-    const host = request.headers.get("x-forwarded-host") ?? request.headers.get("host") ?? requestUrl.host;
-    const redirectUrl = `${protocol}://${host}/sign-up`;
+
+
+    const redirectUrl = "https://app.callblick.com/sign-up"
+
     await client.invitations.createInvitation({
       emailAddress,
       redirectUrl,
