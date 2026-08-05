@@ -53,7 +53,7 @@ export default async function RootLayout({
         <script dangerouslySetInnerHTML={{ __html: `(function(){try{var t=localStorage.getItem('theme');if(t==='light')document.documentElement.classList.add('light');}catch(e){}})();` }} />
       </head>
       <body className="h-screen overflow-hidden flex relative" style={{ background: 'var(--water-deep, #060E1A)', color: 'var(--text-primary, #F2F6FF)' }}>
-        <ClerkProvider signInForceRedirectUrl="https://app.callblick.com/sign-in" signUpForceRedirectUrl="https://app.callblick.com/sign-up">
+        <ClerkProvider signInForceRedirectUrl="https://app.callblick.com" signUpForceRedirectUrl="https://app.callblick.com">
           <NextIntlClientProvider messages={messages}>
             {children}
           </NextIntlClientProvider>

@@ -24,7 +24,7 @@ export async function POST(request: Request) {
     // so preserve the actual CallBlick origin from the incoming request.
 
 
-    const redirectUrl = "https://app.callblick.com"
+    const redirectUrl = "https://app.callblick.com/sign-up"
 
     await client.invitations.createInvitation({
       emailAddress,
