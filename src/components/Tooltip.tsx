@@ -8,9 +8,12 @@ interface TooltipProps {
   children: React.ReactNode;
   placement?: "top" | "bottom" | "left" | "right";
   delay?: number;
+  /** Use for a grid/flex item that should keep its full available width. */
+  fullWidth?: boolean;
+  className?: string;
 }
 
-export function Tooltip({ content, children, placement = "top", delay = 400 }: TooltipProps) {
+export function Tooltip({ content, children, placement = "top", delay = 400, fullWidth = false, className }: TooltipProps) {
   const [visible, setVisible] = useState(false);
   const [coords, setCoords] = useState({ x: 0, y: 0 });
   const [mounted, setMounted] = useState(false);
@@ -56,11 +59,12 @@ export function Tooltip({ content, children, placement = "top", delay = 400 }: T
       {/* Inline wrapper — inherits layout from its child */}
       <span
         ref={wrapRef}
+        className={className}
         onMouseEnter={show}
         onMouseLeave={hide}
         onFocus={show}
         onBlur={hide}
-        style={{ display: 'inline-flex', alignItems: 'inherit', maxWidth: '100%' }}
+        style={{ display: fullWidth ? 'flex' : 'inline-flex', alignItems: 'inherit', maxWidth: '100%', width: fullWidth ? '100%' : undefined }}
       >
         {children}
       </span>

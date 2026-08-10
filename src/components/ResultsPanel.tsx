@@ -407,15 +407,21 @@ export function ResultsPanel({ data, isHydrating = false }: { data: ResultData, 
       <div className="flex flex-col md:flex-row gap-8 items-start justify-between border-b border-blue-400/10 pb-12">
         <div className="flex-1">
           <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-4 px-1">
-            <span className={cn(
-              "px-2 sm:px-3 py-1 text-[8px] sm:text-[10px] uppercase font-[900] tracking-widest rounded-lg transition-colors duration-150 whitespace-nowrap",
-              isHydrating ? "bg-[#1A3D63]/20 text-[#B3CFE5]/40 animate-pulse" : "bg-gradient-to-r from-[#4A7FA7] to-[#1A3D63] text-[#F6FAFD] shadow-lg shadow-[#4A7FA7]/20"
-            )}>
-              {isHydrating ? 'Hydrating Signal...' : 'Audit Ready'}
-            </span>
+            <Tooltip content={isHydrating ? "CallBlick is loading and preparing this call's analysis." : "Audit ready — this call's analysis is complete and available for review."}>
+              <span
+                tabIndex={0}
+                aria-label={isHydrating ? "Analysis is loading" : "Audit ready"}
+                className={cn(
+                  "px-2 sm:px-3 py-1 text-[8px] sm:text-[10px] uppercase font-[900] tracking-widest rounded-lg transition-colors duration-150 whitespace-nowrap",
+                  isHydrating ? "bg-[#1A3D63]/20 text-[#B3CFE5]/40 animate-pulse" : "bg-gradient-to-r from-[#4A7FA7] to-[#1A3D63] text-[#F6FAFD] shadow-lg shadow-[#4A7FA7]/20"
+                )}
+              >
+                {isHydrating ? 'Hydrating Signal...' : 'Audit Ready'}
+              </span>
+            </Tooltip>
             {safeData.call_success !== null && (
-              <Tooltip content="AI Result">
-                <span className={cn(
+              <Tooltip content={safeData.call_success ? "Success — the AI determined the call met its primary objective." : "Failed — the AI determined the call did not meet its primary objective."}>
+                <span tabIndex={0} aria-label={safeData.call_success ? "Call outcome: success" : "Call outcome: failed"} className={cn(
                   "px-2 sm:px-3 py-1 text-[8px] sm:text-[10px] uppercase font-[900] tracking-widest rounded-lg whitespace-nowrap cursor-default",
                   safeData.call_success ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
                 )}>
@@ -423,30 +429,35 @@ export function ResultsPanel({ data, isHydrating = false }: { data: ResultData, 
                 </span>
               </Tooltip>
             )}
-            <span className={cn(
-              "px-2 sm:px-3 py-1 text-[8px] sm:text-[10px] uppercase font-[900] tracking-widest rounded-lg flex items-center gap-1.5 whitespace-nowrap",
-              reviewStatus === 'reviewed' ? "bg-blue-100 text-blue-700" : "bg-amber-100 text-amber-700"
-            )}>
-              {reviewStatus === 'reviewed' ? <Eye className="w-2.5 h-2.5 sm:w-3 sm:h-3" /> : <EyeOff className="w-2.5 h-2.5 sm:w-3 sm:h-3" />}
-              {reviewStatus === 'reviewed' ? 'Reviewed' : 'Unreviewed'}
-            </span>
-            <span className="text-[9px] sm:text-[10px] font-bold text-[#B3CFE5]/40 uppercase tracking-widest whitespace-nowrap">
-              Trace ID: {safeData.call_id?.split('-')[0] || '...'}...
-            </span>
+            <Tooltip content={reviewStatus === 'reviewed' ? "Reviewed — a reviewer has completed their check of this call." : "Unreviewed — this call is waiting for a reviewer to check it."}>
+              <span tabIndex={0} aria-label={`Review status: ${reviewStatus === 'reviewed' ? 'reviewed' : 'unreviewed'}`} className={cn(
+                "px-2 sm:px-3 py-1 text-[8px] sm:text-[10px] uppercase font-[900] tracking-widest rounded-lg flex items-center gap-1.5 whitespace-nowrap",
+                reviewStatus === 'reviewed' ? "bg-blue-100 text-blue-700" : "bg-amber-100 text-amber-700"
+              )}>
+                {reviewStatus === 'reviewed' ? <Eye className="w-2.5 h-2.5 sm:w-3 sm:h-3" /> : <EyeOff className="w-2.5 h-2.5 sm:w-3 sm:h-3" />}
+                {reviewStatus === 'reviewed' ? 'Reviewed' : 'Unreviewed'}
+              </span>
+            </Tooltip>
+            <Tooltip content={safeData.call_id ? `Trace ID: ${safeData.call_id}` : "A trace ID is not available for this call."}>
+              <span tabIndex={0} aria-label={safeData.call_id ? `Trace ID: ${safeData.call_id}` : "Trace ID unavailable"} className="text-[9px] sm:text-[10px] font-bold text-[#B3CFE5]/40 uppercase tracking-widest whitespace-nowrap">
+                Trace ID: {safeData.call_id?.split('-')[0] || '...'}...
+              </span>
+            </Tooltip>
             {safeData.batch_id && (
-              <a
-                href={`/batches?id=${safeData.batch_id}`}
-                className="inline-flex items-center gap-1.5 px-2 py-1 rounded-lg text-[9px] sm:text-[10px] font-black uppercase tracking-widest whitespace-nowrap transition-colors"
-                style={{
-                  background: 'rgba(44,143,255,0.10)',
-                  border: '1px solid rgba(44,143,255,0.22)',
-                  color: 'rgba(44,143,255,0.85)',
-                }}
-                title={`View batch: ${safeData.batch_id}`}
-              >
-                <Layers className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
-                Batch: {safeData.batch_id.split('-')[0]}...
-              </a>
+              <Tooltip content={`Open batch: ${safeData.batch_id}`}>
+                <a
+                  href={`/batches?id=${safeData.batch_id}`}
+                  className="inline-flex items-center gap-1.5 px-2 py-1 rounded-lg text-[9px] sm:text-[10px] font-black uppercase tracking-widest whitespace-nowrap transition-colors"
+                  style={{
+                    background: 'rgba(44,143,255,0.10)',
+                    border: '1px solid rgba(44,143,255,0.22)',
+                    color: 'rgba(44,143,255,0.85)',
+                  }}
+                >
+                  <Layers className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
+                  Batch: {safeData.batch_id.split('-')[0]}...
+                </a>
+              </Tooltip>
             )}
           </div>
 
@@ -454,95 +465,111 @@ export function ResultsPanel({ data, isHydrating = false }: { data: ResultData, 
           {(safeData.campaign_name || safeData.questionnaire_name || safeData.script_name) && (
             <div className="flex flex-wrap items-center gap-3 mb-4 px-1">
               {safeData.campaign_name && (
-                <div className="flex items-center gap-2">
-                  <span className="text-[9px] font-black uppercase tracking-widest text-[#B3CFE5]">Campaign:</span>
-                  <span className="text-[10px] font-bold text-[#F6FAFD] px-2 py-0.5 glass-card rounded-md">
-                    {safeData.campaign_name}
-                  </span>
-                </div>
+                <Tooltip content={`Campaign: ${safeData.campaign_name}`}>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[9px] font-black uppercase tracking-widest text-[#B3CFE5]">Campaign:</span>
+                    <span className="text-[10px] font-bold text-[#F6FAFD] px-2 py-0.5 glass-card rounded-md">
+                      {safeData.campaign_name}
+                    </span>
+                  </div>
+                </Tooltip>
               )}
               {safeData.questionnaire_name && (
-                <div className="flex items-center gap-2">
-                  <span className="text-[9px] font-black uppercase tracking-widest text-[#B3CFE5]">Questionnaire:</span>
-                  <span className="text-[10px] font-bold text-[#F6FAFD] px-2 py-0.5 glass-card rounded-md">
-                    {safeData.questionnaire_name}
-                  </span>
-                </div>
+                <Tooltip content={`Questionnaire: ${safeData.questionnaire_name}`}>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[9px] font-black uppercase tracking-widest text-[#B3CFE5]">Questionnaire:</span>
+                    <span className="text-[10px] font-bold text-[#F6FAFD] px-2 py-0.5 glass-card rounded-md">
+                      {safeData.questionnaire_name}
+                    </span>
+                  </div>
+                </Tooltip>
               )}
               {safeData.script_name && (
-                <div className="flex items-center gap-2">
-                  <span className="text-[9px] font-black uppercase tracking-widest text-[#B3CFE5]">Script:</span>
-                  <span className="text-[10px] font-bold text-[#F6FAFD] px-2 py-0.5 glass-card rounded-md">
-                    {safeData.script_name}
-                  </span>
-                </div>
+                <Tooltip content={`Script: ${safeData.script_name}`}>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[9px] font-black uppercase tracking-widest text-[#B3CFE5]">Script:</span>
+                    <span className="text-[10px] font-bold text-[#F6FAFD] px-2 py-0.5 glass-card rounded-md">
+                      {safeData.script_name}
+                    </span>
+                  </div>
+                </Tooltip>
               )}
             </div>
           )}
 
           <div className="flex items-center gap-3 mb-6">
             {isAdminOrManager && reviewStatus !== 'reviewed' && !isHydrating && (
-              <button
-                onClick={handleMarkAsReviewed}
-                disabled={isMarkingReviewed}
-                className="flex items-center gap-2 px-5 py-2.5 bg-blue-500 hover:bg-blue-600 disabled:bg-blue-300 text-white rounded-xl font-bold text-xs uppercase tracking-widest transition-colors shadow-lg shadow-blue-500/20 active:scale-95"
-                title="Mark this call as reviewed"
-              >
-                {isMarkingReviewed ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    Marking...
-                  </>
-                ) : (
-                  <>
-                    <Eye className="w-4 h-4" />
-                    Mark as Reviewed
-                  </>
-                )}
-              </button>
+              <Tooltip content="Mark this call as reviewed after you have checked the analysis and evidence.">
+                <button
+                  onClick={handleMarkAsReviewed}
+                  disabled={isMarkingReviewed}
+                  className="flex items-center gap-2 px-5 py-2.5 bg-blue-500 hover:bg-blue-600 disabled:bg-blue-300 text-white rounded-xl font-bold text-xs uppercase tracking-widest transition-colors shadow-lg shadow-blue-500/20 active:scale-95"
+                >
+                  {isMarkingReviewed ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Marking...
+                    </>
+                  ) : (
+                    <>
+                      <Eye className="w-4 h-4" />
+                      Mark as Reviewed
+                    </>
+                  )}
+                </button>
+              </Tooltip>
             )}
           </div>
-          <h2 className="text-[32px] sm:text-[42px] md:text-[52px] font-[850] text-[#F6FAFD] tracking-tight leading-none mb-6">
-            Neural Analysis
-          </h2>
-          <div className={cn(
-            "p-5 rounded-2xl border transition-colors duration-150",
-            isHydrating ? "bg-[#1A3D63]/20 border-[#4A7FA7]/10 animate-pulse" : "bg-blue-950/20 border-blue-400/15"
-          )}>
-            <p className="text-[#B3CFE5] text-sm font-medium leading-relaxed italic">
-              <Sparkles className={cn("w-4 h-4 inline-block mr-2 text-yellow-500 fill-current", isHydrating && "animate-spin")} />
-              "{safeData.smart_summary || safeData.qa_result?.summary || safeData.qa_result?.results?.[0]?.summary || 'Generating neural summary...'}"
-            </p>
-          </div>
-          {safeData.call_success !== null && safeData.call_success_reason && (
-            <div className="mt-6">
-              <h5 className="text-xs font-black uppercase tracking-widest text-[#B3CFE5] mb-3 px-1">
-                AI Call Evaluation
-              </h5>
-              <div className="p-5 rounded-2xl border bg-blue-950/20 border-blue-400/15">
-                <p className="text-sm font-bold leading-relaxed text-[#F6FAFD]">
-                  {safeData.call_success_reason}
-                </p>
-              </div>
+          <Tooltip content="CallBlick's AI-generated analysis of the call's quality, outcome, and supporting evidence.">
+            <h2 className="text-[32px] sm:text-[42px] md:text-[52px] font-[850] text-[#F6FAFD] tracking-tight leading-none mb-6">
+              Neural Analysis
+            </h2>
+          </Tooltip>
+          <Tooltip fullWidth content="AI-generated overview of the conversation. Use it as a quick summary, then review the detailed evidence below.">
+            <div className={cn(
+              "w-full p-5 rounded-2xl border transition-colors duration-150",
+              isHydrating ? "bg-[#1A3D63]/20 border-[#4A7FA7]/10 animate-pulse" : "bg-blue-950/20 border-blue-400/15"
+            )}>
+              <p className="text-[#B3CFE5] text-sm font-medium leading-relaxed italic">
+                <Sparkles className={cn("w-4 h-4 inline-block mr-2 text-yellow-500 fill-current", isHydrating && "animate-spin")} />
+                "{safeData.smart_summary || safeData.qa_result?.summary || safeData.qa_result?.results?.[0]?.summary || 'Generating neural summary...'}"
+              </p>
             </div>
+          </Tooltip>
+          {safeData.call_success !== null && safeData.call_success_reason && (
+            <Tooltip fullWidth content="The AI's explanation for the success or failure outcome, based on the evaluated call evidence.">
+              <div className="mt-6 w-full">
+                <h5 className="text-xs font-black uppercase tracking-widest text-[#B3CFE5] mb-3 px-1">
+                  AI Call Evaluation
+                </h5>
+                <div className="p-5 rounded-2xl border bg-blue-950/20 border-blue-400/15">
+                  <p className="text-sm font-bold leading-relaxed text-[#F6FAFD]">
+                    {safeData.call_success_reason}
+                  </p>
+                </div>
+              </div>
+            </Tooltip>
           )}
           {safeData.final_meta_tags && safeData.final_meta_tags.length > 0 && (
             <div className="flex flex-wrap gap-1.5 sm:gap-2 mt-6">
               {safeData.final_meta_tags.map((tag: string) => {
                 const isUserTag = safeData.user_meta_tags?.includes(tag);
                 const isAiTag = safeData.ai_meta_tags?.includes(tag);
+                const source = isUserTag && !isAiTag ? "Added by a user" : isAiTag && !isUserTag ? "Added by CallBlick AI" : "Added by both a user and CallBlick AI";
                 return (
-                  <span
-                    key={tag}
-                    className={cn(
-                      "px-2 sm:px-2.5 py-0.5 sm:py-1 text-[8px] sm:text-[10px] font-black uppercase tracking-widest rounded-md border whitespace-nowrap",
-                      isUserTag && !isAiTag ? "bg-blue-50 text-blue-700 border-blue-200" :
-                        isAiTag && !isUserTag ? "bg-purple-50 text-purple-700 border-purple-200" :
-                          "bg-[#1A3D63]/30 text-[#B3CFE5] border-blue-400/10"
-                    )}
-                  >
-                    #{tag}
-                  </span>
+                  <Tooltip key={tag} content={`${source}: ${tag}`}>
+                    <span
+                      tabIndex={0}
+                      className={cn(
+                        "px-2 sm:px-2.5 py-0.5 sm:py-1 text-[8px] sm:text-[10px] font-black uppercase tracking-widest rounded-md border whitespace-nowrap",
+                        isUserTag && !isAiTag ? "bg-blue-50 text-blue-700 border-blue-200" :
+                          isAiTag && !isUserTag ? "bg-purple-50 text-purple-700 border-purple-200" :
+                            "bg-[#1A3D63]/30 text-[#B3CFE5] border-blue-400/10"
+                      )}
+                    >
+                      #{tag}
+                    </span>
+                  </Tooltip>
                 );
               })}
             </div>
@@ -556,6 +583,7 @@ export function ResultsPanel({ data, isHydrating = false }: { data: ResultData, 
             icon={Target}
             color={(safeData.overall_score || 0) >= 80 ? 'green' : (safeData.overall_score || 0) >= 50 ? 'neutral' : 'red'}
             isPending={isHydrating && !safeData.overall_score}
+            tooltip="Overall call quality score out of 100. Scores of 80 or above indicate strong performance."
           />
           <MetricCard
             label="Sentiment"
@@ -563,6 +591,7 @@ export function ResultsPanel({ data, isHydrating = false }: { data: ResultData, 
             icon={isPositive ? TrendingUp : TrendingDown}
             color={isPositive ? 'green' : isNeutral ? 'neutral' : 'red'}
             isPending={isHydrating && sentimentLabel === 'analyzing...'}
+            tooltip="The overall emotional tone detected across the conversation."
           />
           <MetricCard
             label="Risk Flags"
@@ -571,6 +600,7 @@ export function ResultsPanel({ data, isHydrating = false }: { data: ResultData, 
             color={safeData.analytics?.red_flags?.has_red_flags ? 'red' : 'green'}
             isPending={isHydrating && !safeData.analytics?.red_flags}
             href={`/red-flags?callId=${safeData.call_id}`}
+            tooltip={hasRedFlags ? `${redFlagsCount} risk flag${redFlagsCount === 1 ? "" : "s"} detected. Select this card to review them.` : "Clean - no risk flags were detected in this call."}
           />
           <MetricCard
             label="Confidence"
@@ -578,6 +608,7 @@ export function ResultsPanel({ data, isHydrating = false }: { data: ResultData, 
             icon={Zap}
             color={isHydrating ? "neutral" : "green"}
             isPending={isHydrating}
+            tooltip="Confidence reflects how reliably CallBlick could evaluate the call from the available audio and evidence."
           />
           <MetricCard
             label="Script Follow"
@@ -586,6 +617,7 @@ export function ResultsPanel({ data, isHydrating = false }: { data: ResultData, 
             color={safeData.script_follow_score == null ? 'neutral' : safeData.script_follow_score >= 80 ? 'green' : safeData.script_follow_score >= 50 ? 'neutral' : 'red'}
             isPending={isHydrating}
             className="col-span-2"
+            tooltip="Script follow measures how closely the conversation followed the assigned call script."
           />
         </div>
       </div>
@@ -679,10 +711,11 @@ export function ResultsPanel({ data, isHydrating = false }: { data: ResultData, 
                         return (
                           <div key={section.section_id || sectionIdx} className="rounded-2xl border border-blue-400/15 bg-blue-950/15 overflow-hidden">
                             {/* Section accordion header */}
-                            <button
-                              onClick={() => toggleSection(sectionKey)}
-                              className="w-full flex items-center gap-4 px-5 py-4 hover:bg-blue-950/25 transition-colors text-left"
-                            >
+                            <Tooltip fullWidth content={`${section.title || "Question section"}: ${passCount} of ${totalCount} questions received a yes answer. Select to ${isSectionExpanded ? "collapse" : "expand"} the section.`}>
+                              <button
+                                onClick={() => toggleSection(sectionKey)}
+                                className="w-full flex items-center gap-4 px-5 py-4 hover:bg-blue-950/25 transition-colors text-left"
+                              >
                               <div className={cn(
                                 "p-2 rounded-xl shrink-0",
                                 templateResult.template_id === 'custom_questions' ? "bg-purple-50 text-purple-600" : "bg-blue-500/10 text-[#4A7FA7]"
@@ -710,7 +743,8 @@ export function ResultsPanel({ data, isHydrating = false }: { data: ResultData, 
                                 <span className="text-[10px] font-black text-[#B3CFE5]/60">{totalCount}</span>
                               </div>
                               <ChevronDown className={cn("w-4 h-4 text-[#B3CFE5]/40 shrink-0 transition-transform duration-200", isSectionExpanded && "rotate-180")} />
-                            </button>
+                              </button>
+                            </Tooltip>
 
                             {/* Section body — answers */}
                             {isSectionExpanded && (
@@ -743,10 +777,11 @@ export function ResultsPanel({ data, isHydrating = false }: { data: ResultData, 
                                     <div key={idx} className="group bg-blue-950/25 rounded-2xl border border-blue-400/15 shadow-sm shadow-[#0A1931]/50 hover:border-[#4A7FA7]/50 transition-colors">
 
                                       {/* ── Accordion Header (always visible) ── */}
-                                      <button
-                                        onClick={() => toggleAnswer(answerKey)}
-                                        className="w-full flex items-center gap-4 px-6 py-4 text-left hover:bg-blue-950/20 transition-colors"
-                                      >
+                                      <Tooltip fullWidth content={`${questionText || "Question result"}. Select to ${isExpanded ? "hide" : "view"} the AI reasoning and supporting evidence.`}>
+                                        <button
+                                          onClick={() => toggleAnswer(answerKey)}
+                                          className="w-full flex items-center gap-4 px-6 py-4 text-left hover:bg-blue-950/20 transition-colors"
+                                        >
                                         {/* Status icon */}
                                         <div className={cn("w-9 h-9 rounded-xl flex items-center justify-center shrink-0 shadow-md", iconBgClass)}>
                                           {isCustomFreeText ? <CheckCircle2 className="w-5 h-5" />
@@ -767,7 +802,7 @@ export function ResultsPanel({ data, isHydrating = false }: { data: ResultData, 
                                                     eq === 'NONE' ? "No evidence — answer is inferred with no supporting quote" :
                                                       `Evidence quality: ${answer.evidence_quality}`;
                                               return (
-                                                <span className="relative group/eq cursor-help">
+                                                <Tooltip content={tooltipText}>
                                                   <span className={cn(
                                                     "px-2 py-0.5 text-[9px] font-black uppercase tracking-wider rounded-md border",
                                                     eq === 'DIRECT' ? "bg-green-50 text-green-700 border-green-200" :
@@ -776,17 +811,15 @@ export function ResultsPanel({ data, isHydrating = false }: { data: ResultData, 
                                                   )}>
                                                     {answer.evidence_quality}
                                                   </span>
-                                                  <span className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-56 px-3 py-2 rounded-lg bg-[#0A1931] border border-blue-400/20 text-[11px] font-medium text-[#B3CFE5] leading-snug shadow-xl opacity-0 group-hover/eq:opacity-100 transition-opacity duration-150 z-[999] whitespace-normal text-center">
-                                                    {tooltipText}
-                                                    <span className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-[#0A1931]" />
-                                                  </span>
-                                                </span>
+                                                </Tooltip>
                                               );
                                             })()}
                                             {answer.weight != null && (
-                                              <span className="px-2 py-0.5 text-[9px] font-black uppercase tracking-wider rounded-md border bg-blue-950/30 text-[#B3CFE5] border-blue-400/20">
-                                                Weight: {answer.weight}
-                                              </span>
+                                              <Tooltip content={`Weight: ${answer.weight}. This is the relative importance of this question in the overall evaluation score.`}>
+                                                <span className="px-2 py-0.5 text-[9px] font-black uppercase tracking-wider rounded-md border bg-blue-950/30 text-[#B3CFE5] border-blue-400/20">
+                                                  Weight: {answer.weight}
+                                                </span>
+                                              </Tooltip>
                                             )}
                                             {answerType && (
                                               <Tooltip content={`Answer Type: ${answerType.replace(/_/g, " ")} — constrains how the AI must format its answer`} placement="top">
@@ -807,15 +840,19 @@ export function ResultsPanel({ data, isHydrating = false }: { data: ResultData, 
                                             {(answer.is_edited || safeData.human_interventions?.some(
                                               (i: any) => i.question_id === answer.question_id && i.template_id === templateResult.template_id
                                             )) && (
-                                                <span className="px-2 py-0.5 text-[9px] font-black uppercase tracking-wider bg-green-100 text-green-700 rounded-md border border-green-200 flex items-center gap-1">
-                                                  <CheckCircle2 className="w-3 h-3" />
-                                                  Human Verified
-                                                </span>
+                                                <Tooltip content="Human verified — an authorized reviewer checked or corrected this answer.">
+                                                  <span className="px-2 py-0.5 text-[9px] font-black uppercase tracking-wider bg-green-100 text-green-700 rounded-md border border-green-200 flex items-center gap-1">
+                                                    <CheckCircle2 className="w-3 h-3" />
+                                                    Human Verified
+                                                  </span>
+                                                </Tooltip>
                                               )}
                                             {getPendingEdit(templateResult.template_id, answer.question_id) && (
-                                              <span className="px-2 py-0.5 text-[9px] font-black uppercase tracking-wider bg-orange-100 text-orange-700 rounded-md border border-orange-200">
-                                                Pending Edit
-                                              </span>
+                                              <Tooltip content="Pending edit — a reviewer has a correction in progress for this answer.">
+                                                <span className="px-2 py-0.5 text-[9px] font-black uppercase tracking-wider bg-orange-100 text-orange-700 rounded-md border border-orange-200">
+                                                  Pending Edit
+                                                </span>
+                                              </Tooltip>
                                             )}
                                           </div>
                                           {questionText && (
@@ -825,7 +862,8 @@ export function ResultsPanel({ data, isHydrating = false }: { data: ResultData, 
 
                                         {/* Chevron */}
                                         <ChevronDown className={cn("w-4 h-4 text-[#B3CFE5]/50 shrink-0 transition-transform duration-200", isExpanded && "rotate-180")} />
-                                      </button>
+                                        </button>
+                                      </Tooltip>
 
                                       {/* ── Accordion Body (expanded details) ── */}
                                       {isExpanded && (
@@ -1031,9 +1069,11 @@ export function ResultsPanel({ data, isHydrating = false }: { data: ResultData, 
           {safeData.transcript?.speakers && safeData.transcript.speakers.length > 0 && (
             <section className="space-y-6">
               <div className="flex items-center justify-between px-1">
-                <h4 className="text-xl font-[850] text-[#F6FAFD] tracking-tight flex items-center gap-3">
-                  <Users className="w-5 h-5 text-[#4A7FA7]" /> Speakers
-                </h4>
+                <Tooltip content="Speaker-level conversation metrics, based on diarization of the call audio.">
+                  <h4 className="text-xl font-[850] text-[#F6FAFD] tracking-tight flex items-center gap-3">
+                    <Users className="w-5 h-5 text-[#4A7FA7]" /> Speakers
+                  </h4>
+                </Tooltip>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -1044,33 +1084,34 @@ export function ResultsPanel({ data, isHydrating = false }: { data: ResultData, 
                     : `Speaker ${speaker.speaker_id}`;
 
                   return (
-                    <div
-                      key={speaker.speaker_id}
-                      className="p-6 rounded-[2rem] glass-card shadow-xl space-y-4"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#4A7FA7] to-[#1A3D63] flex items-center justify-center font-black text-[#F6FAFD] text-lg">
-                          {speaker.speaker_id === "user_1" || speaker.speaker_id === "0" || speaker.speaker_id === "speaker_0" ? "A" : "C"}
-                        </div>
-                        <div>
-                          <p className="text-sm font-black text-[#F6FAFD]">
-                            {displayName}
-                          </p>
-                          <p className="text-[10px] font-bold text-[#B3CFE5] uppercase tracking-wider">
-                            ID: {speaker.speaker_id}
-                          </p>
-                        </div>
-                      </div>
-
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between p-3 rounded-xl bg-black/25 border border-blue-400/10">
-                          <span className="text-[10px] font-black uppercase tracking-widest text-[#B3CFE5]">Turn Count</span>
-                          <span className="text-lg font-[850] text-[#F6FAFD]">{speaker.turn_count}</span>
+                    <Tooltip key={speaker.speaker_id} fullWidth content={`${displayName} (ID: ${speaker.speaker_id}). This card summarizes their contribution to the call.`}>
+                      <div className="w-full p-6 rounded-[2rem] glass-card shadow-xl space-y-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#4A7FA7] to-[#1A3D63] flex items-center justify-center font-black text-[#F6FAFD] text-lg">
+                            {speaker.speaker_id === "user_1" || speaker.speaker_id === "0" || speaker.speaker_id === "speaker_0" ? "A" : "C"}
+                          </div>
+                          <div>
+                            <p className="text-sm font-black text-[#F6FAFD]">
+                              {displayName}
+                            </p>
+                            <p className="text-[10px] font-bold text-[#B3CFE5] uppercase tracking-wider">
+                              ID: {speaker.speaker_id}
+                            </p>
+                          </div>
                         </div>
 
-                        <div className="flex items-center justify-between p-3 rounded-xl bg-black/25 border border-blue-400/10">
-                          <span className="text-[10px] font-black uppercase tracking-widest text-[#B3CFE5]">Avg Sentiment</span>
-                          <div className="flex items-center gap-2">
+                        <div className="space-y-2">
+                        <Tooltip fullWidth content={`Turn count: ${speaker.turn_count}. A turn is one continuous contribution from this speaker.`}>
+                          <div className="w-full flex items-center justify-between p-3 rounded-xl bg-black/25 border border-blue-400/10">
+                            <span className="text-[10px] font-black uppercase tracking-widest text-[#B3CFE5]">Turn Count</span>
+                            <span className="text-lg font-[850] text-[#F6FAFD]">{speaker.turn_count}</span>
+                          </div>
+                        </Tooltip>
+
+                        <Tooltip fullWidth content={`Average sentiment: ${speaker.avg_sentiment_label || "neutral"} (${(speaker.avg_sentiment ?? 0).toFixed(2)}). Positive values indicate more positive language; negative values indicate more negative language.`}>
+                          <div className="w-full flex items-center justify-between p-3 rounded-xl bg-black/25 border border-blue-400/10">
+                            <span className="text-[10px] font-black uppercase tracking-widest text-[#B3CFE5]">Avg Sentiment</span>
+                            <div className="flex items-center gap-2">
                             {speaker.avg_sentiment_label && (
                               <span className={cn(
                                 "px-2 py-0.5 text-[9px] font-black uppercase tracking-wider rounded-md border",
@@ -1087,17 +1128,21 @@ export function ResultsPanel({ data, isHydrating = false }: { data: ResultData, 
                             )}>
                               {(speaker.avg_sentiment !== undefined && speaker.avg_sentiment !== null) ? speaker.avg_sentiment.toFixed(2) : '0.00'}
                             </span>
+                            </div>
                           </div>
-                        </div>
+                        </Tooltip>
 
                         {speaker.talk_time_ms !== undefined && speaker.talk_time_ms !== null && (
-                          <div className="flex items-center justify-between p-3 rounded-xl bg-black/25 border border-blue-400/10">
-                            <span className="text-[10px] font-black uppercase tracking-widest text-[#B3CFE5]">Talk Time</span>
-                            <span className="text-lg font-[850] text-[#F6FAFD]">{(speaker.talk_time_ms / 1000).toFixed(1)}s</span>
-                          </div>
+                          <Tooltip fullWidth content={`Talk time: ${(speaker.talk_time_ms / 1000).toFixed(1)} seconds spoken by this speaker.`}>
+                            <div className="w-full flex items-center justify-between p-3 rounded-xl bg-black/25 border border-blue-400/10">
+                              <span className="text-[10px] font-black uppercase tracking-widest text-[#B3CFE5]">Talk Time</span>
+                              <span className="text-lg font-[850] text-[#F6FAFD]">{(speaker.talk_time_ms / 1000).toFixed(1)}s</span>
+                            </div>
+                          </Tooltip>
                         )}
+                        </div>
                       </div>
-                    </div>
+                    </Tooltip>
                   );
                 })}
               </div>
@@ -1106,47 +1151,59 @@ export function ResultsPanel({ data, isHydrating = false }: { data: ResultData, 
 
           {/* Call Metrics Section */}
           <section className="space-y-6">
-            <div className="flex items-center justify-between px-1">
-              <h4 className="text-xl font-[850] text-[#F6FAFD] tracking-tight flex items-center gap-3">
-                <BarChart3 className="w-5 h-5 text-[#4A7FA7]" /> Call Metrics
-              </h4>
-            </div>
+              <div className="flex items-center justify-between px-1">
+                <Tooltip content="Conversation-level metrics calculated from the transcript and audio timing.">
+                  <h4 className="text-xl font-[850] text-[#F6FAFD] tracking-tight flex items-center gap-3">
+                    <BarChart3 className="w-5 h-5 text-[#4A7FA7]" /> Call Metrics
+                  </h4>
+                </Tooltip>
+              </div>
 
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
-              <div className="p-5 rounded-[1.5rem] glass-card shadow-lg">
-                <p className="text-[9px] font-black uppercase tracking-widest text-[#B3CFE5] mb-2">Total Silence</p>
-                <p className="text-2xl font-[850] text-[#F6FAFD]">
-                  {((safeData.transcript?.metrics?.total_silence_ms || 0) / 1000).toFixed(1)}s
-                </p>
-              </div>
+              <Tooltip fullWidth content="Total silence is the combined duration of silent periods detected anywhere in the call.">
+                <div className="w-full p-5 rounded-[1.5rem] glass-card shadow-lg">
+                  <p className="text-[9px] font-black uppercase tracking-widest text-[#B3CFE5] mb-2">Total Silence</p>
+                  <p className="text-2xl font-[850] text-[#F6FAFD]">
+                    {((safeData.transcript?.metrics?.total_silence_ms || 0) / 1000).toFixed(1)}s
+                  </p>
+                </div>
+              </Tooltip>
 
-              <div className="p-5 rounded-[1.5rem] glass-card shadow-lg">
-                <p className="text-[9px] font-black uppercase tracking-widest text-[#B3CFE5] mb-2">Silence Ratio</p>
-                <p className="text-2xl font-[850] text-[#F6FAFD]">
-                  {((safeData.transcript?.metrics?.silence_ratio || 0) * 100).toFixed(1)}%
-                </p>
-              </div>
+              <Tooltip fullWidth content="Silence ratio is the percentage of the entire call duration identified as silence.">
+                <div className="w-full p-5 rounded-[1.5rem] glass-card shadow-lg">
+                  <p className="text-[9px] font-black uppercase tracking-widest text-[#B3CFE5] mb-2">Silence Ratio</p>
+                  <p className="text-2xl font-[850] text-[#F6FAFD]">
+                    {((safeData.transcript?.metrics?.silence_ratio || 0) * 100).toFixed(1)}%
+                  </p>
+                </div>
+              </Tooltip>
 
-              <div className="p-5 rounded-[1.5rem] glass-card shadow-lg">
-                <p className="text-[9px] font-black uppercase tracking-widest text-[#B3CFE5] mb-2">Turn Count</p>
-                <p className="text-2xl font-[850] text-[#F6FAFD]">
-                  {safeData.transcript?.metrics?.turn_count || 0}
-                </p>
-              </div>
+              <Tooltip fullWidth content="Turn count is the total number of conversational turns across all speakers.">
+                <div className="w-full p-5 rounded-[1.5rem] glass-card shadow-lg">
+                  <p className="text-[9px] font-black uppercase tracking-widest text-[#B3CFE5] mb-2">Turn Count</p>
+                  <p className="text-2xl font-[850] text-[#F6FAFD]">
+                    {safeData.transcript?.metrics?.turn_count || 0}
+                  </p>
+                </div>
+              </Tooltip>
 
-              <div className="p-5 rounded-[1.5rem] glass-card shadow-lg">
-                <p className="text-[9px] font-black uppercase tracking-widest text-[#B3CFE5] mb-2">Initial Silence</p>
-                <p className="text-2xl font-[850] text-[#F6FAFD]">
-                  {((safeData.transcript?.metrics?.initial_silence_ms || 0) / 1000).toFixed(1)}s
-                </p>
-              </div>
+              <Tooltip fullWidth content="Initial silence is the delay before the first detected speech begins.">
+                <div className="w-full p-5 rounded-[1.5rem] glass-card shadow-lg">
+                  <p className="text-[9px] font-black uppercase tracking-widest text-[#B3CFE5] mb-2">Initial Silence</p>
+                  <p className="text-2xl font-[850] text-[#F6FAFD]">
+                    {((safeData.transcript?.metrics?.initial_silence_ms || 0) / 1000).toFixed(1)}s
+                  </p>
+                </div>
+              </Tooltip>
 
-              <div className="p-5 rounded-[1.5rem] glass-card shadow-lg">
-                <p className="text-[9px] font-black uppercase tracking-widest text-[#B3CFE5] mb-2">End Silence</p>
-                <p className="text-2xl font-[850] text-[#F6FAFD]">
-                  {((safeData.transcript?.metrics?.end_silence_ms || 0) / 1000).toFixed(1)}s
-                </p>
-              </div>
+              <Tooltip fullWidth content="End silence is the silent period after the final detected speech in the call.">
+                <div className="w-full p-5 rounded-[1.5rem] glass-card shadow-lg">
+                  <p className="text-[9px] font-black uppercase tracking-widest text-[#B3CFE5] mb-2">End Silence</p>
+                  <p className="text-2xl font-[850] text-[#F6FAFD]">
+                    {((safeData.transcript?.metrics?.end_silence_ms || 0) / 1000).toFixed(1)}s
+                  </p>
+                </div>
+              </Tooltip>
             </div>
           </section>
 
@@ -1895,7 +1952,7 @@ function InterventionModal({ modal, onClose, onSubmit, existingEdit, onRemove }:
   );
 }
 
-function MetricCard({ label, value, icon: Icon, color, isPending = false, className, href }: { label: string, value: string, icon: any, color: 'green' | 'red' | 'neutral', isPending?: boolean, className?: string, href?: string }) {
+function MetricCard({ label, value, icon: Icon, color, isPending = false, className, href, tooltip }: { label: string, value: string, icon: any, color: 'green' | 'red' | 'neutral', isPending?: boolean, className?: string, href?: string, tooltip: string }) {
   const inner = (
     <>
       <div className="flex items-start justify-between mb-4">
@@ -1916,17 +1973,16 @@ function MetricCard({ label, value, icon: Icon, color, isPending = false, classN
   );
 
   const baseClass = cn(
-    "p-6 rounded-[2rem] bg-blue-950/25 apple-shadow border border-blue-400/15 group hover:scale-[1.03] transition-colors",
+    "w-full p-6 rounded-[2rem] bg-blue-950/25 apple-shadow border border-blue-400/15 group hover:scale-[1.03] transition-colors",
     isPending && "animate-pulse",
-    href && "cursor-pointer hover:border-[#4A7FA7]/50",
-    className
+    href && "cursor-pointer hover:border-[#4A7FA7]/50"
   );
 
   if (href) {
-    return <a href={href} className={baseClass}>{inner}</a>;
+    return <Tooltip content={tooltip} fullWidth className={className}><a href={href} className={baseClass} aria-label={`${label}: ${value}. ${tooltip}`}>{inner}</a></Tooltip>;
   }
 
-  return <div className={baseClass}>{inner}</div>;
+  return <Tooltip content={tooltip} fullWidth className={className}><div className={baseClass} tabIndex={0} role="status" aria-label={`${label}: ${value}. ${tooltip}`}>{inner}</div></Tooltip>;
 }
 
 // ─── LLM Cost Breakdown ──────────────────────────────────
