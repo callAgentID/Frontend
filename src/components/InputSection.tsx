@@ -222,8 +222,10 @@ export function InputSection({
         ]);
 
         if (Array.isArray(campData)) {
-          setCampaigns(campData);
-          if (campData.length > 0) setSelectedCampaignId(campData[0].id || campData[0]._id);
+          const eligibleCampaigns = campData.filter(campaign => campaign.active && campaign.script_id);
+          setCampaigns(eligibleCampaigns);
+          if (eligibleCampaigns.length > 0) setSelectedCampaignId(eligibleCampaigns[0].id || eligibleCampaigns[0]._id);
+          else setSelectedCampaignId("");
         }
 
         if (Array.isArray(questData)) {

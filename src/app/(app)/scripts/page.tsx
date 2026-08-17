@@ -30,7 +30,6 @@ import { Document, HeadingLevel, Packer, Paragraph, TextRun } from "docx";
 interface Script {
   id: string;
   title: string;
-  campaign_id?: string;
   call_direction: string;
   status: string;
   source_text: string;
@@ -60,12 +59,10 @@ function ScriptsPageContent() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [createForm, setCreateForm] = useState({
     title: "",
-    campaign_id: "",
     file: null as File | null,
     text: "",
     call_direction: "outbound",
     status: "active",
-    set_as_campaign_default: false,
     inputMode: "text" as "file" | "text"
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -110,17 +107,15 @@ function ScriptsPageContent() {
   }, []);
 
   const handleCreateScript = async () => {
-    if (!createForm.title || !createForm.campaign_id || (!createForm.text.trim() && !createForm.file)) return;
+    if (!createForm.title || (!createForm.text.trim() && !createForm.file)) return;
 
     setIsSubmitting(true);
     try {
       const formData = new FormData();
 
       formData.append("title", createForm.title);
-      if (createForm.campaign_id) formData.append("campaign_id", createForm.campaign_id);
       formData.append("call_direction", createForm.call_direction);
       formData.append("status", createForm.status);
-      formData.append("set_as_campaign_default", String(createForm.set_as_campaign_default));
 
       let endpoint = "";
       if (createForm.inputMode === "file" && createForm.file) {
@@ -140,12 +135,10 @@ function ScriptsPageContent() {
         setIsCreateModalOpen(false);
         setCreateForm({
           title: "",
-          campaign_id: "",
           file: null,
           text: "",
           call_direction: "outbound",
           status: "active",
-          set_as_campaign_default: false,
           inputMode: "text"
         });
         toast("Script created successfully", "success");
@@ -181,10 +174,9 @@ function ScriptsPageContent() {
     }
   };
 
-  const getCampaignName = (campaignId?: string) => {
-    if (!campaignId) return "No Campaign";
-    const campaign = campaigns.find(c => c.id === campaignId || c._id === campaignId);
-    return campaign?.name || "Unknown Campaign";
+  const getCampaignName = (scriptId: string) => {
+    const campaign = campaigns.find(c => c.script_id === scriptId);
+    return campaign?.name || "Not assigned";
   };
 
   const getScriptFileName = (script: Script, extension: "pdf" | "docx") =>
@@ -225,7 +217,7 @@ function ScriptsPageContent() {
     doc.setFont("helvetica", "normal");
     doc.setFontSize(9);
     doc.setTextColor(179, 207, 229);
-    doc.text(`Campaign: ${getCampaignName(script.campaign_id)}`, margin, y);
+    doc.text(`Assigned to: ${getCampaignName(script.id)}`, margin, y);
     y += 6;
     doc.text(`Version ${script.version} | ${script.status} | ${script.call_direction} | Created ${new Date(script.created_at).toLocaleDateString()}`, margin, y);
     y += 12;
@@ -255,7 +247,7 @@ function ScriptsPageContent() {
       sections: [{
         children: [
           new Paragraph({ text: script.title, heading: HeadingLevel.TITLE }),
-          new Paragraph(`Campaign: ${getCampaignName(script.campaign_id)}`),
+          new Paragraph(`Assigned to: ${getCampaignName(script.id)}`),
           new Paragraph(`Version ${script.version} | ${script.status} | ${script.call_direction} | Created ${new Date(script.created_at).toLocaleDateString()}`),
           new Paragraph({ text: "Source Text", heading: HeadingLevel.HEADING_1 }),
           new Paragraph({ children: [new TextRun(script.source_text || "")] }),
@@ -391,7 +383,7 @@ function ScriptsPageContent() {
                     </span>
                   </div>
                   <p className="text-[#B3CFE5] text-sm font-medium leading-relaxed">
-                    Campaign: <span className="font-bold">{getCampaignName(script.campaign_id)}</span>
+                    Assigned to: <span className="font-bold">{getCampaignName(script.id)}</span>
                   </p>
                 </div>
 
@@ -556,21 +548,6 @@ function ScriptsPageContent() {
                 />
               </div>
 
-              {/* Campaign */}
-              <div className="space-y-1.5">
-                <label className="text-[10px] font-black uppercase tracking-[0.15em] text-[#B3CFE5]">Campaign *</label>
-                <select
-                  value={createForm.campaign_id}
-                  onChange={(e) => setCreateForm({ ...createForm, campaign_id: e.target.value })}
-                  className="w-full h-11 px-4 rounded-xl text-sm font-medium text-[#F6FAFD] bg-blue-950/40 border border-blue-400/18 outline-none appearance-none cursor-pointer focus:border-[#4A7FA7] transition-colors"
-                >
-                  <option value="" style={{ background: '#0D1F3C' }}>Select a campaign…</option>
-                  {campaigns.map(c => (
-                    <option key={c.id || c._id} value={c.id || c._id} style={{ background: '#0D1F3C' }}>{c.name}</option>
-                  ))}
-                </select>
-              </div>
-
               {/* Input mode toggle */}
               <div className="space-y-1.5">
                 <label className="text-[10px] font-black uppercase tracking-[0.15em] text-[#B3CFE5]">{t('inputMethod')}</label>
@@ -634,18 +611,6 @@ function ScriptsPageContent() {
                 </div>
               )}
 
-              {/* Set as default */}
-              {createForm.campaign_id && (
-                <label className="flex items-center gap-3 p-3 rounded-xl cursor-pointer bg-[#4A7FA7]/08 border border-[#4A7FA7]/18 hover:bg-[#4A7FA7]/12 transition-colors">
-                  <input
-                    type="checkbox"
-                    checked={createForm.set_as_campaign_default}
-                    onChange={(e) => setCreateForm({ ...createForm, set_as_campaign_default: e.target.checked })}
-                    className="w-4 h-4 rounded accent-[#4A7FA7]"
-                  />
-                  <span className="text-xs font-semibold text-[#B3CFE5]">{t('setDefault')}</span>
-                </label>
-              )}
             </div>
 
             {/* Footer */}
@@ -658,7 +623,7 @@ function ScriptsPageContent() {
               </button>
               <button
                 onClick={handleCreateScript}
-                disabled={isSubmitting || !createForm.title || !createForm.campaign_id || (!createForm.text.trim() && !createForm.file)}
+                disabled={isSubmitting || !createForm.title || (!createForm.text.trim() && !createForm.file)}
                 className="flex-1 h-11 bg-gradient-to-r from-[#4A7FA7] to-[#1A3D63] text-white rounded-xl font-bold text-sm uppercase tracking-wider hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2 glow transition-opacity"
               >
                 {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Plus className="w-4 h-4" /> {t('createScript')}</>}

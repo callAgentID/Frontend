@@ -71,6 +71,7 @@ interface ResultData {
   custom_questions?: Array<{ text: string; weight: number }> | null;
   campaign_name?: string | null;
   questionnaire_name?: string | null;
+  script_id?: string | null;
   script_name?: string | null;
   batch_id?: string | null;
   risk_flags_count?: number | null;
@@ -462,7 +463,7 @@ export function ResultsPanel({ data, isHydrating = false }: { data: ResultData, 
           </div>
 
           {/* Campaign, Questionnaire, Script Info */}
-          {(safeData.campaign_name || safeData.questionnaire_name || safeData.script_name) && (
+          {(safeData.campaign_name || safeData.questionnaire_name || safeData.script_name || safeData.script_id) && (
             <div className="flex flex-wrap items-center gap-3 mb-4 px-1">
               {safeData.campaign_name && (
                 <Tooltip content={`Campaign: ${safeData.campaign_name}`}>
@@ -484,12 +485,12 @@ export function ResultsPanel({ data, isHydrating = false }: { data: ResultData, 
                   </div>
                 </Tooltip>
               )}
-              {safeData.script_name && (
-                <Tooltip content={`Script: ${safeData.script_name}`}>
+              {(safeData.script_name || safeData.script_id) && (
+                <Tooltip content={safeData.script_name ? `Script snapshot used for this call: ${safeData.script_name}` : "No script was used for this historical call."}>
                   <div className="flex items-center gap-2">
                     <span className="text-[9px] font-black uppercase tracking-widest text-[#B3CFE5]">Script:</span>
                     <span className="text-[10px] font-bold text-[#F6FAFD] px-2 py-0.5 glass-card rounded-md">
-                      {safeData.script_name}
+                      {safeData.script_name || "No script used"}
                     </span>
                   </div>
                 </Tooltip>

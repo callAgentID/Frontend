@@ -27,11 +27,12 @@ import {
 import { cn } from "@/lib/utils";
 import { formatLLMCost, formatTokens, formatCompactNumber } from "@/lib/formatters";
 import { RoleGuard } from "@/components/RoleGuard";
+import { Tooltip as AppTooltip } from "@/components/Tooltip";
 import { useCurrentUser } from "@/lib/useCurrentUser";
 import {
   Chart as ChartJS,
   ArcElement,
-  Tooltip,
+  Tooltip as ChartTooltip,
   Legend,
   CategoryScale,
   LinearScale,
@@ -46,7 +47,7 @@ import { Doughnut, Bar, Line, Radar } from "react-chartjs-2";
 
 ChartJS.register(
   ArcElement,
-  Tooltip,
+  ChartTooltip,
   Legend,
   CategoryScale,
   LinearScale,
@@ -360,10 +361,12 @@ export default function AdminPage() {
           </div>
           <p className="text-[#B3CFE5] text-sm font-medium pl-1">{t('subtitle')}</p>
         </div>
-        <button onClick={fetchAll} disabled={isLoading} className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-[#4A7FA7] to-[#1A3D63] glow text-white rounded-xl font-bold text-xs uppercase tracking-widest hover:opacity-90 disabled:opacity-50 transition-colors shrink-0">
-          {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
-          {t('refresh')}
-        </button>
+        <AppTooltip content="Reload all dashboard data using the currently selected filters.">
+          <button onClick={fetchAll} disabled={isLoading} className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-[#4A7FA7] to-[#1A3D63] glow text-white rounded-xl font-bold text-xs uppercase tracking-widest hover:opacity-90 disabled:opacity-50 transition-colors shrink-0">
+            {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
+            {t('refresh')}
+          </button>
+        </AppTooltip>
       </div>
 
       {/* Filters */}
@@ -375,23 +378,25 @@ export default function AdminPage() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="space-y-1.5">
               <label className="text-xs font-black uppercase tracking-wider text-[#B3CFE5]">{t('startDate')}</label>
-            <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)}
-              className="w-full h-10 bg-black/25 border border-blue-400/18 rounded-xl px-3 text-sm font-semibold text-[#F6FAFD] outline-none focus:border-[#4A7FA7] transition-colors" />
+            <AppTooltip fullWidth content="Include calls created on or after this date."><input type="date" value={startDate} onChange={e => setStartDate(e.target.value)}
+              className="w-full h-10 bg-black/25 border border-blue-400/18 rounded-xl px-3 text-sm font-semibold text-[#F6FAFD] outline-none focus:border-[#4A7FA7] transition-colors" /></AppTooltip>
           </div>
           <div className="space-y-1.5">
               <label className="text-xs font-black uppercase tracking-wider text-[#B3CFE5]">{t('endDate')}</label>
-            <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)}
-              className="w-full h-10 bg-black/25 border border-blue-400/18 rounded-xl px-3 text-sm font-semibold text-[#F6FAFD] outline-none focus:border-[#4A7FA7] transition-colors" />
+            <AppTooltip fullWidth content="Include calls created on or before this date."><input type="date" value={endDate} onChange={e => setEndDate(e.target.value)}
+              className="w-full h-10 bg-black/25 border border-blue-400/18 rounded-xl px-3 text-sm font-semibold text-[#F6FAFD] outline-none focus:border-[#4A7FA7] transition-colors" /></AppTooltip>
           </div>
           <div className="space-y-1.5 relative">
               <label className="text-xs font-black uppercase tracking-wider text-[#B3CFE5]">{t('campaign')}</label>
-            <button type="button" onClick={() => setIsCampaignDropdownOpen(!isCampaignDropdownOpen)}
-              className="w-full h-10 bg-black/25 border border-blue-400/18 rounded-xl px-3 text-sm font-semibold text-[#F6FAFD] outline-none focus:border-[#4A7FA7] transition-colors flex items-center justify-between">
-              <span className={selectedCampaigns.length === 0 ? "text-[#B3CFE5]/50 text-sm" : "text-sm"}>
-                {selectedCampaigns.length === 0 ? t('allCampaigns') : `${selectedCampaigns.length} ${t('selectedCount').replace('{count}', '')}`}
-              </span>
-              <ChevronDown className={cn("w-4 h-4 transition-transform shrink-0", isCampaignDropdownOpen && "rotate-180")} />
-            </button>
+            <AppTooltip fullWidth content="Filter analytics to one or more campaigns. Leave empty to include all campaigns.">
+              <button type="button" onClick={() => setIsCampaignDropdownOpen(!isCampaignDropdownOpen)}
+                className="w-full h-10 bg-black/25 border border-blue-400/18 rounded-xl px-3 text-sm font-semibold text-[#F6FAFD] outline-none focus:border-[#4A7FA7] transition-colors flex items-center justify-between">
+                <span className={selectedCampaigns.length === 0 ? "text-[#B3CFE5]/50 text-sm" : "text-sm"}>
+                  {selectedCampaigns.length === 0 ? t('allCampaigns') : `${selectedCampaigns.length} ${t('selectedCount').replace('{count}', '')}`}
+                </span>
+                <ChevronDown className={cn("w-4 h-4 transition-transform shrink-0", isCampaignDropdownOpen && "rotate-180")} />
+              </button>
+            </AppTooltip>
             {isCampaignDropdownOpen && (
               <>
                 <div className="fixed inset-0 z-10" onClick={() => setIsCampaignDropdownOpen(false)} />
@@ -426,9 +431,9 @@ export default function AdminPage() {
           </div>
         </div>
         <div className="flex gap-3 pt-1">
-          <button onClick={fetchAll} disabled={isLoading} className="px-5 py-2 bg-gradient-to-r from-[#4A7FA7] to-[#1A3D63] text-white rounded-xl font-bold text-xs uppercase tracking-wider hover:opacity-90 disabled:opacity-50 transition-colors">{t('apply')}</button>
-          <button onClick={() => { setStartDate(""); setEndDate(""); setSelectedCampaigns([]); setTimeout(fetchAll, 50); }}
-            className="px-5 py-2 bg-blue-950/30 text-[#B3CFE5] hover:text-[#F6FAFD] rounded-xl font-bold text-xs uppercase tracking-wider transition-colors">{t('reset')}</button>
+          <AppTooltip content="Apply the selected date and campaign filters to every dashboard metric."><button onClick={fetchAll} disabled={isLoading} className="px-5 py-2 bg-gradient-to-r from-[#4A7FA7] to-[#1A3D63] text-white rounded-xl font-bold text-xs uppercase tracking-wider hover:opacity-90 disabled:opacity-50 transition-colors">{t('apply')}</button></AppTooltip>
+          <AppTooltip content="Clear every filter and reload analytics for all available calls."><button onClick={() => { setStartDate(""); setEndDate(""); setSelectedCampaigns([]); setTimeout(fetchAll, 50); }}
+            className="px-5 py-2 bg-blue-950/30 text-[#B3CFE5] hover:text-[#F6FAFD] rounded-xl font-bold text-xs uppercase tracking-wider transition-colors">{t('reset')}</button></AppTooltip>
         </div>
       </div>
 
@@ -617,38 +622,54 @@ export default function AdminPage() {
 // ─── Sub-components ───────────────────────────────────────
 
 function KPICard({ icon: Icon, label, value, sub, color }: { icon: any; label: string; value: string; sub: string; color: string }) {
+  const descriptions: Record<string, string> = {
+    "Total Calls": "Number of calls in the selected period. The subtext shows calls still waiting for human review.",
+    "Avg Score": "Average final quality score across the selected calls, out of 100.",
+    "Success Rate": "Percentage of selected calls classified as successful by the active scoring policy.",
+    "LLM Spend": "Estimated language-model cost and token usage for the selected calls.",
+    "Avg Processing": "Average time the platform took to process each selected call.",
+    "Red Flag Rate": "Percentage of selected calls that contain one or more red flags.",
+    "Agents": "Number of agents with performance data in the selected period.",
+    "QA Review Time": "Average time spent completing a human QA review.",
+  };
   return (
-    <div className="p-5 glass-card rounded-2xl border border-blue-400/18 space-y-3 hover:scale-[1.02] transition-transform">
-      <div className={cn("w-10 h-10 rounded-xl bg-gradient-to-r flex items-center justify-center shadow-lg shrink-0", color)}>
-        <Icon className="w-5 h-5 text-white" />
+    <AppTooltip fullWidth content={descriptions[label] || `${label}: ${value}. ${sub}`}>
+      <div className="w-full p-5 glass-card rounded-2xl border border-blue-400/18 space-y-3 hover:scale-[1.02] transition-transform">
+        <div className={cn("w-10 h-10 rounded-xl bg-gradient-to-r flex items-center justify-center shadow-lg shrink-0", color)}>
+          <Icon className="w-5 h-5 text-white" />
+        </div>
+        <div>
+          <p className="text-xs font-black uppercase tracking-widest text-[#B3CFE5] mb-1">{label}</p>
+          <p className="text-2xl font-[900] text-[#F6FAFD] leading-none">{value}</p>
+          <p className="text-xs font-semibold text-[#B3CFE5] mt-1">{sub}</p>
+        </div>
       </div>
-      <div>
-        <p className="text-xs font-black uppercase tracking-widest text-[#B3CFE5] mb-1">{label}</p>
-        <p className="text-2xl font-[900] text-[#F6FAFD] leading-none">{value}</p>
-        <p className="text-xs font-semibold text-[#B3CFE5] mt-1">{sub}</p>
-      </div>
-    </div>
+    </AppTooltip>
   );
 }
 
 function ChartCard({ title, icon: Icon, children }: { title: string; icon: any; children: React.ReactNode }) {
   return (
-    <div className="p-6 glass-card rounded-2xl border border-blue-400/18 space-y-4">
-      <div className="flex items-center gap-2">
-        <Icon className="w-4 h-4 text-[#4A7FA7] shrink-0" />
-        <h3 className="text-sm font-black uppercase tracking-wider text-[#F6FAFD]">{title}</h3>
+    <AppTooltip fullWidth content={`${title}. Hover a chart data point or legend item to see its exact value.`}>
+      <div className="w-full p-6 glass-card rounded-2xl border border-blue-400/18 space-y-4">
+        <div className="flex items-center gap-2">
+          <Icon className="w-4 h-4 text-[#4A7FA7] shrink-0" />
+          <h3 className="text-sm font-black uppercase tracking-wider text-[#F6FAFD]">{title}</h3>
+        </div>
+        {children}
       </div>
-      {children}
-    </div>
+    </AppTooltip>
   );
 }
 
 function StatCard({ label, value }: { label: string; value: string }) {
   return (
-    <div className="p-4 bg-blue-950/30 rounded-2xl border border-blue-400/18 text-center">
-      <p className="text-xs font-black uppercase tracking-widest text-[#B3CFE5] mb-2">{label}</p>
-      <p className="text-xl font-[900] text-[#F6FAFD]">{value}</p>
-    </div>
+    <AppTooltip fullWidth content={`${label}: ${value} for the selected calls.`}>
+      <div className="w-full p-4 bg-blue-950/30 rounded-2xl border border-blue-400/18 text-center">
+        <p className="text-xs font-black uppercase tracking-widest text-[#B3CFE5] mb-2">{label}</p>
+        <p className="text-xl font-[900] text-[#F6FAFD]">{value}</p>
+      </div>
+    </AppTooltip>
   );
 }
 

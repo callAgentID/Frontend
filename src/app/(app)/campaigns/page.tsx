@@ -60,7 +60,7 @@ function CampaignsPageContent() {
   // Form States
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [editingCampaign, setEditingCampaign] = useState<any | null>(null);
-  const [editForm, setEditForm] = useState({ name: "", code: "" });
+  const [editForm, setEditForm] = useState({ name: "", script_id: "" });
   const [isDeleting, setIsDeleting] = useState(false);
 
   const handleEditCampaign = async () => {
@@ -70,7 +70,7 @@ function CampaignsPageContent() {
       const res = await apiFetch(`/api/v1/campaigns/${editingCampaign.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: editForm.name, code: editForm.code }),
+        body: JSON.stringify({ name: editForm.name, script_id: editForm.script_id }),
       });
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
@@ -105,7 +105,7 @@ function CampaignsPageContent() {
     }
   };
 
-  const [campForm, setCampForm] = useState({ name: "", code: "" });
+  const [campForm, setCampForm] = useState({ name: "", code: "", script_id: "" });
   const [scriptForm, setScriptForm] = useState({
     title: "",
     campaign_id: "",
@@ -131,6 +131,8 @@ function CampaignsPageContent() {
     scripts: [],
     questionnaires: []
   });
+  const assignedScriptIds = new Set(data.campaigns.map(campaign => campaign.script_id).filter(Boolean));
+  const availableScripts = data.scripts.filter(script => !assignedScriptIds.has(script.id));
 
   const fetchData = async () => {
     setLoading(true);
@@ -162,20 +164,24 @@ function CampaignsPageContent() {
   }, []);
 
   const handleCreateCampaign = async () => {
-    if (!campForm.name || !campForm.code) return;
+    if (!campForm.name || !campForm.code || !campForm.script_id) return;
     setIsSubmitting(true);
     try {
       const res = await apiFetch(`/api/v1/campaigns/`, {
         method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ...campForm, active: true, config: {} })
       });
       if (res.ok) {
         setIsModalOpen(false);
-        setCampForm({ name: "", code: "" });
+        setCampForm({ name: "", code: "", script_id: "" });
         fetchData();
+      } else {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.detail || body.message || "Failed to create campaign");
       }
-    } catch (err) {
-      console.error("Campaign creation failed:", err);
+    } catch (err: any) {
+      toast(err.message || "Campaign creation failed", "error");
     } finally {
       setIsSubmitting(false);
     }
@@ -349,7 +355,8 @@ function CampaignsPageContent() {
       ) : (
         <div className="grid grid-cols-1 gap-10">
           {data.campaigns.map((campaign) => {
-            const campaignScripts = data.scripts.filter(s => s.campaign_id === campaign.id);
+            const selectedScript = data.scripts.find(s => s.id === campaign.script_id) ?? null;
+            const campaignScripts = selectedScript ? [selectedScript] : [];
             const campaignQuestionnaires = data.questionnaires.filter(q => q.campaign_id === campaign.id);
 
             return (
@@ -392,7 +399,7 @@ function CampaignsPageContent() {
                               <div className="fixed inset-0 z-[100]" onClick={() => setOpenMenuId(null)} />
                               <div className="absolute right-0 top-14 z-[101] w-44 bg-[#0D1F3C] border border-blue-400/20 rounded-2xl shadow-2xl overflow-hidden animate-in fade-in duration-150">
                                 <button
-                                  onClick={(e) => { e.stopPropagation(); setEditingCampaign(campaign); setEditForm({ name: campaign.name, code: campaign.code }); setOpenMenuId(null); }}
+                                  onClick={(e) => { e.stopPropagation(); setEditingCampaign(campaign); setEditForm({ name: campaign.name, script_id: campaign.script_id || "" }); setOpenMenuId(null); }}
                                   className="w-full flex items-center gap-3 px-4 py-3 text-sm font-semibold text-[#F6FAFD] hover:bg-blue-500/15 transition-colors"
                                 >
                                   <Pencil className="w-4 h-4 text-[#4A7FA7]" /> Edit Campaign
@@ -424,13 +431,12 @@ function CampaignsPageContent() {
                       {isAdminOrManager && (
                         <button
                           onClick={() => {
-                            setScriptForm(prev => ({ ...prev, campaign_id: campaign.id }));
-                            setModalType("script");
-                            setIsModalOpen(true);
+                            setEditingCampaign(campaign);
+                            setEditForm({ name: campaign.name, script_id: campaign.script_id || "" });
                           }}
                           className="bg-blue-950/18 text-[#4A7FA7] text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-lg hover:bg-gradient-to-r hover:from-[#4A7FA7] hover:to-[#1A3D63] hover:text-white transition-colors border border-blue-400/15"
                         >
-                          Add Logic
+                          {campaign.script_id ? "Change Script" : "Assign Script"}
                         </button>
                       )}
                     </div>
@@ -491,7 +497,8 @@ function CampaignsPageContent() {
                 <div className="space-y-6">
                   <InputField label="Name" placeholder="e.g. Q4 Growth Sales" value={campForm.name} onChange={(v) => setCampForm({ ...campForm, name: v })} />
                   <InputField label="Identity Code" placeholder="e.g. SALES_Q4" value={campForm.code} onChange={(v) => setCampForm({ ...campForm, code: v })} />
-                  <button onClick={handleCreateCampaign} disabled={isSubmitting} className="w-full h-14 bg-gradient-to-r from-[#4A7FA7] to-[#1A3D63] glow text-[#F6FAFD] rounded-2xl font-bold flex items-center justify-center gap-3 shadow-xl hover:scale-[1.02] transition-colors disabled:opacity-50">
+                  <div className="space-y-2"><label className="text-[10px] font-black uppercase tracking-[0.2em] text-[#B3CFE5]">Script *</label><select value={campForm.script_id} onChange={e => setCampForm({ ...campForm, script_id: e.target.value })} className="w-full h-14 glass rounded-xl px-4 outline-none focus:border-[#4A7FA7] text-[#F6FAFD] font-semibold"><option value="">{availableScripts.length ? "Select an available script…" : "No unassigned scripts available"}</option>{availableScripts.map(script => <option key={script.id} value={script.id}>{script.title}</option>)}</select>{availableScripts.length ? <p className="text-xs text-[#B3CFE5]">Only scripts that are not assigned to another campaign can be selected.</p> : <div className="flex items-center justify-between gap-3"><p className="text-xs text-amber-200">All existing scripts are already assigned to campaigns.</p><button type="button" onClick={() => router.push("/scripts")} className="shrink-0 text-xs font-bold text-[#B3CFE5] hover:text-white">Create Script</button></div>}</div>
+                  <button onClick={handleCreateCampaign} disabled={isSubmitting || !campForm.name || !campForm.code || !campForm.script_id} className="w-full h-14 bg-gradient-to-r from-[#4A7FA7] to-[#1A3D63] glow text-[#F6FAFD] rounded-2xl font-bold flex items-center justify-center gap-3 shadow-xl hover:scale-[1.02] transition-colors disabled:opacity-50">
                     {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : <><Plus className="w-5 h-5" /> Initialize Cluster</>}
                   </button>
                 </div>
@@ -702,13 +709,10 @@ function CampaignsPageContent() {
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-[10px] font-black uppercase tracking-[0.2em] text-[#B3CFE5]">Identity Code</label>
-                <input
-                  value={editForm.code}
-                  onChange={e => setEditForm(f => ({ ...f, code: e.target.value }))}
-                  className="w-full h-12 bg-blue-950/30 border border-blue-400/18 rounded-xl px-4 text-sm font-semibold text-[#F6FAFD] outline-none focus:border-[#4A7FA7] transition-colors placeholder:text-[#B3CFE5]/40"
-                  placeholder="e.g. SALES_Q4"
-                />
+                <label className="text-[10px] font-black uppercase tracking-[0.2em] text-[#B3CFE5]">Assigned Script</label>
+                <select value={editForm.script_id} onChange={e => setEditForm(f => ({ ...f, script_id: e.target.value }))} className="w-full h-12 bg-blue-950/30 border border-blue-400/18 rounded-xl px-4 text-sm font-semibold text-[#F6FAFD] outline-none focus:border-[#4A7FA7] transition-colors">
+                  {(data.scripts.filter(script => script.id === editingCampaign.script_id || !assignedScriptIds.has(script.id))).map(script => <option key={script.id} value={script.id}>{script.title}</option>)}
+                </select>
               </div>
             </div>
             <div className="p-6 border-t border-blue-400/15 flex gap-3">
@@ -717,7 +721,7 @@ function CampaignsPageContent() {
               </button>
               <button
                 onClick={handleEditCampaign}
-                disabled={isSubmitting || !editForm.name.trim()}
+                disabled={isSubmitting || !editForm.name.trim() || !editForm.script_id}
                 className="flex-1 h-11 bg-gradient-to-r from-[#4A7FA7] to-[#1A3D63] text-white rounded-xl font-bold text-sm uppercase tracking-wider hover:opacity-90 disabled:opacity-40 flex items-center justify-center gap-2 glow"
               >
                 {isSubmitting ? <><Loader2 className="w-4 h-4 animate-spin" /> Saving...</> : "Save Changes"}
