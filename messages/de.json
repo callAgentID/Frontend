@@ -62,7 +62,8 @@
     "scoringSettings": "Bewertungseinstellungen",
     "batches": "Stapel",
     "workerProfiles": "Worker-Profile",
-    "points": "Punkte & Nutzung"
+    "points": "Punkte & Nutzung",
+    "queries": "Anfragen"
   },
   "home": {
     "title": "Analysieren Sie Ihr Gespräch",

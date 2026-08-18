@@ -62,7 +62,8 @@
     "scoringSettings": "Scoring Settings",
     "batches": "Batches",
     "workerProfiles": "Worker Profiles",
-    "points": "Points & Usage"
+    "points": "Points & Usage",
+    "queries": "Query Requests"
   },
   "home": {
     "title": "Analyze Your Conversation",

@@ -8,7 +8,7 @@ import { useTranslations } from 'next-intl';
 import {
   LayoutDashboard, BarChart3, Layers, FileSearch, FileCode,
   ShieldAlert, Settings, Users, LogOut, ChevronLeft, Menu, X, Package,
-  Sun, Moon, BrainCircuit, Zap
+  Sun, Moon, BrainCircuit, Zap, MessageSquare
 } from "lucide-react";
 import { cn } from "../lib/utils";
 import { LanguageSwitcher } from "./LanguageSwitcher";
@@ -29,6 +29,7 @@ const NAV_ITEMS: { name: string; href: string; icon: any; roles: NavRole }[] = [
   { name: "scoringSettings", href: "/settings", icon: Settings, roles: "admin" },
   { name: "users", href: "/users", icon: Users, roles: "super_admin_only" },
   { name: "workerProfiles", href: "/worker-profiles", icon: BrainCircuit, roles: "super_admin_only" },
+  { name: "queries", href: "/queries", icon: MessageSquare, roles: "super_admin_only" },
   { name: "points", href: "/points", icon: Zap, roles: "admin_manager" },
   { name: "analysis", href: "/", icon: LayoutDashboard, roles: "all" },
   { name: "callAnalytics", href: "/analytics", icon: BarChart3, roles: "all" },
