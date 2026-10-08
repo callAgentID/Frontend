@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Loader2, XCircle } from "lucide-react";
 import { useApi } from "@/lib/useApi";
+import { apiErrorMessage } from "@/lib/billing";
 
 type AudioState =
   | { status: "loading"; src: null; error: null }
@@ -53,7 +54,8 @@ export function AuthenticatedAudioPlayer({
         });
 
         if (!response.ok) {
-          throw new Error(`Audio request failed with ${response.status}`);
+          const body = await response.clone().json().catch(() => null);
+          throw new Error(apiErrorMessage(body, "The call audio could not be loaded.", response.status));
         }
 
         const contentType = response.headers.get("content-type") || "";
@@ -61,13 +63,13 @@ export function AuthenticatedAudioPlayer({
         if (contentType.includes("application/json")) {
           const payload = await response.json();
           const url = getAudioUrlFromPayload(payload);
-          if (!url) throw new Error("Audio response did not include a playable URL");
+          if (!url) throw new Error("The call audio is not ready for playback yet.");
           if (isActive) setAudio({ status: "ready", src: url, error: null });
           return;
         }
 
         const blob = await response.blob();
-        if (blob.size === 0) throw new Error("Audio file is empty");
+        if (blob.size === 0) throw new Error("The call audio is empty and cannot be played.");
 
         objectUrl = URL.createObjectURL(blob);
         if (!isActive) {

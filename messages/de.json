@@ -60,6 +60,8 @@
     "users": "Benutzer",
     "admin": "Admin Dashboard",
     "scoringSettings": "Bewertungseinstellungen",
+    "billing": "Abrechnung & Minuten",
+    "billingPlans": "Abrechnungspläne",
     "batches": "Stapel",
     "workerProfiles": "Worker-Profile",
     "points": "Punkte & Nutzung",

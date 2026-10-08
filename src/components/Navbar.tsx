@@ -2,6 +2,7 @@
 
 import { useTranslations } from 'next-intl';
 import { OrganizationSwitcher } from "@clerk/nextjs";
+import { BillingBadge } from "./BillingBadge";
 
 export function Navbar() {
   const t = useTranslations('common');
@@ -100,9 +101,10 @@ export function Navbar() {
         </div>
 
         {/* Actions */}
-        <div className="flex items-center gap-2">
+        <div className="flex shrink-0 items-center gap-2.5">
+          <BillingBadge />
           {/* Organization switcher */}
-          <div className="hidden sm:block">
+          <div className="hidden shrink-0 sm:block">
             <OrganizationSwitcher
               hidePersonal={true}
               afterCreateOrganizationUrl="/"

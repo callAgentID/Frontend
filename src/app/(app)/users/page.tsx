@@ -25,6 +25,7 @@ import { useApi } from "@/lib/useApi";
 import { useCurrentUser } from "@/lib/useCurrentUser";
 import { RoleGuard } from "@/components/RoleGuard";
 import { toast } from "@/components/Toast";
+import { apiErrorMessage } from "@/lib/billing";
 
 type Role = "super_admin" | "admin" | "manager" | "user";
 
@@ -160,7 +161,7 @@ export default function UsersPage() {
           body: JSON.stringify({ firstName: updatedFirstName, lastName: updatedLastName }),
         });
         const nameBody = await nameResponse.json().catch(() => ({}));
-        if (!nameResponse.ok) throw new Error(nameBody.message || "Failed to update user name");
+        if (!nameResponse.ok) throw new Error(apiErrorMessage(nameBody, "The user’s name could not be updated.", nameResponse.status));
       }
       if (selectedRole !== editingUser.role) {
         const res = await apiFetch(`/api/v1/users/${editingUser.id}/role`, {
@@ -169,7 +170,7 @@ export default function UsersPage() {
         });
         if (!res.ok) {
           const body = await res.json().catch(() => ({}));
-          throw new Error(body.detail || body.message || "Failed to update role");
+          throw new Error(apiErrorMessage(body, "The user role could not be updated.", res.status));
         }
       }
       setUsers(users.map(u => u.id === editingUser.id ? { ...u, first_name: updatedFirstName, last_name: updatedLastName, role: selectedRole } : u));
@@ -198,7 +199,7 @@ export default function UsersPage() {
         body: JSON.stringify({ email: inviteEmail, firstName: inviteFirstName, lastName: inviteLastName }),
       });
       const body = await response.json().catch(() => ({}));
-      if (!response.ok) throw new Error(body.message || "Failed to send invitation");
+      if (!response.ok) throw new Error(apiErrorMessage(body, "The invitation could not be sent.", response.status));
       setIsInviteOpen(false); setInviteEmail(""); setInviteFirstName(""); setInviteLastName("");
       toast("CallBlick invitation sent. The user can create their organization after joining.", "success");
     } catch (err: any) {

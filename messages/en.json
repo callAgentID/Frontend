@@ -60,6 +60,8 @@
     "users": "Users",
     "admin": "Admin Dashboard",
     "scoringSettings": "Scoring Settings",
+    "billing": "Billing & Minutes",
+    "billingPlans": "Billing Plans",
     "batches": "Batches",
     "workerProfiles": "Worker Profiles",
     "points": "Points & Usage",

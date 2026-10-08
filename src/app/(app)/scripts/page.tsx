@@ -25,6 +25,7 @@ import { ScriptCardSkeleton } from "@/components/Skeleton";
 import { Tooltip } from "@/components/Tooltip";
 import { toast } from "@/components/Toast";
 import { useCurrentUser } from "@/lib/useCurrentUser";
+import { apiErrorMessage } from "@/lib/billing";
 import { Document, HeadingLevel, Packer, Paragraph, TextRun } from "docx";
 
 interface Script {
@@ -145,7 +146,7 @@ function ScriptsPageContent() {
         fetchScripts();
       } else {
         const errorData = await res.json().catch(() => ({}));
-        toast(errorData.detail || errorData.message || "Failed to create script", "error");
+        toast(apiErrorMessage(errorData, "The script could not be created.", res.status), "error");
       }
     } catch (err: any) {
       toast(err.message || "Failed to create script. Please try again.", "error");
@@ -165,7 +166,7 @@ function ScriptsPageContent() {
         fetchScripts();
       } else {
         const errorData = await res.json().catch(() => ({}));
-        toast(errorData.detail || errorData.message || "Failed to delete script", "error");
+        toast(apiErrorMessage(errorData, "The script could not be deleted.", res.status), "error");
       }
     } catch (err: any) {
       toast(err.message || "Failed to delete script. Please try again.", "error");

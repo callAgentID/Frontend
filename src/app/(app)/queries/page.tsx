@@ -23,6 +23,7 @@ import { cn } from "@/lib/utils";
 import { useApi } from "@/lib/useApi";
 import { toast } from "@/components/Toast";
 import { RoleGuard } from "@/components/RoleGuard";
+import { apiErrorMessage } from "@/lib/billing";
 
 interface QueryRequest {
   id: string;
@@ -74,11 +75,12 @@ export default function QueriesPage() {
         ...(search ? { search } : {}),
       });
       const res = await apiFetch(`/api/v1/query-requests?${params.toString()}`);
-      if (!res.ok) throw new Error(`Failed to fetch queries (${res.status})`);
-      const data: QueryResponse = await res.json();
-      setQueries(data.items);
-      setTotalPages(data.pages);
-      setTotal(data.total);
+      const data = await res.json().catch(() => null);
+      if (!res.ok) throw new Error(apiErrorMessage(data, "Could not load contact requests.", res.status));
+      const queryData = data as QueryResponse;
+      setQueries(queryData.items);
+      setTotalPages(queryData.pages);
+      setTotal(queryData.total);
     } catch (err: any) {
       setError(err.message || "Failed to fetch queries");
     } finally {
@@ -109,7 +111,10 @@ export default function QueriesPage() {
       const res = await apiFetch(`/api/v1/query-requests/${confirmDeleteQuery.id}`, {
         method: "DELETE",
       });
-      if (!res.ok) throw new Error(`Delete failed (${res.status})`);
+      if (!res.ok) {
+        const body = await res.json().catch(() => null);
+        throw new Error(apiErrorMessage(body, "The contact request could not be deleted.", res.status));
+      }
       setQueries(prev => prev.filter(q => q.id !== confirmDeleteQuery.id));
       setTotal(prev => prev - 1);
       setConfirmDeleteQuery(null);

@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { createPortal } from "react-dom";
 import { CheckCircle2, XCircle, AlertTriangle, Info, X } from "lucide-react";
+import { apiErrorMessage } from "@/lib/billing";
 
 export type ToastType = "success" | "error" | "warning" | "info";
 
@@ -16,7 +17,10 @@ interface ToastItem {
 let addToastFn: ((message: string, type: ToastType) => void) | null = null;
 
 export function toast(message: string, type: ToastType = "success") {
-  addToastFn?.(message, type);
+  const displayMessage = type === "error"
+    ? apiErrorMessage({ message }, "Something went wrong. Please try again.")
+    : message;
+  addToastFn?.(displayMessage, type);
 }
 
 const ICONS = {

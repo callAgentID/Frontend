@@ -33,6 +33,7 @@ import Link from "next/link";
 import { QuestionnaireCardSkeleton } from "@/components/Skeleton";
 import { useCurrentUser } from "@/lib/useCurrentUser";
 import { InlineQuestionnaireEditor, Section, Question } from "@/components/InlineQuestionnaireEditor";
+import { apiErrorMessage } from "@/lib/billing";
 import { Tooltip } from "@/components/Tooltip";
 import { toast } from "@/components/Toast";
 import { Document, HeadingLevel, Packer, Paragraph, TextRun } from "docx";
@@ -178,7 +179,7 @@ function QuestionnairesPageContent() {
 
       if (!res.ok) {
         const errorData = await res.json().catch(() => ({}));
-        throw new Error(errorData.detail || "Failed to update questionnaire");
+        throw new Error(apiErrorMessage(errorData, "The questionnaire could not be updated.", res.status));
       }
 
       setEditingQuestionnaireId(null);
@@ -227,7 +228,7 @@ function QuestionnairesPageContent() {
 
       if (!res.ok) {
         const errorData = await res.json().catch(() => ({}));
-        throw new Error(errorData.detail || "Failed to create questionnaire");
+        throw new Error(apiErrorMessage(errorData, "The questionnaire could not be created.", res.status));
       }
 
       setIsCreatingNew(false);
@@ -293,7 +294,7 @@ function QuestionnairesPageContent() {
       } else {
         const errorData = await res.json().catch(() => ({}));
         console.error("Failed to update questionnaire:", errorData);
-        toast(errorData.detail || "Failed to update questionnaire. Please try again.", "error");
+        toast(apiErrorMessage(errorData, "The questionnaire could not be updated.", res.status), "error");
       }
     } catch (err: any) {
       toast("Network error. Please check your connection and try again.", "error");
@@ -356,7 +357,7 @@ function QuestionnairesPageContent() {
       } else {
         const errorData = await res.json().catch(() => ({}));
         console.error("Failed to create questionnaire:", errorData);
-        toast(errorData.detail || "Failed to create questionnaire. Please try again.", "error");
+        toast(apiErrorMessage(errorData, "The questionnaire could not be created.", res.status), "error");
       }
     } catch (err: any) {
       toast("Network error. Please check your connection and try again.", "error");
@@ -388,7 +389,7 @@ function QuestionnairesPageContent() {
         }
       } else {
         const errorData = await res.json().catch(() => ({}));
-        toast(errorData.detail || "Failed to delete questionnaire", "error");
+        toast(apiErrorMessage(errorData, "The questionnaire could not be deleted.", res.status), "error");
       }
     } catch (err: any) {
       setDeleteConfirm(null);

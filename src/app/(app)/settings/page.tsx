@@ -6,6 +6,7 @@ import { RoleGuard } from "@/components/RoleGuard";
 import { toast } from "@/components/Toast";
 import { Tooltip } from "@/components/Tooltip";
 import { useApi } from "@/lib/useApi";
+import { apiErrorMessage } from "@/lib/billing";
 
 type ScoringMethod = "v4" | "v5";
 type PolicySource = "system_default" | "organization_policy";
@@ -69,9 +70,8 @@ const descriptions: Record<string, string> = {
   "Change reason": "Optional audit note explaining why this scoring policy is being changed.",
 };
 
-function readError(body: unknown, fallback: string) {
-  const value = body as { detail?: string | { message?: string }; message?: string } | null;
-  return typeof value?.detail === "string" ? value.detail : value?.detail?.message || value?.message || fallback;
+function readError(body: unknown, fallback: string, status?: number) {
+  return apiErrorMessage(body, fallback, status);
 }
 
 function Field({ label, value, onChange, min = 0, max = 100, step = 1, help }: { label: string; value: number; onChange: (value: number) => void; min?: number; max?: number; step?: number; help?: string }) {
@@ -101,7 +101,7 @@ function SettingsContent() {
     try {
       const response = await apiFetch(endpoint);
       const data = await response.json().catch(() => null);
-      if (!response.ok) throw new Error(readError(data, "Could not load scoring settings."));
+      if (!response.ok) throw new Error(readError(data, "Could not load scoring settings.", response.status));
       setCurrent(data); setSettings(data.settings);
       if (loadHistory) {
         const h = await apiFetch(`${endpoint}/history?limit=50&offset=0`);
@@ -136,7 +136,7 @@ function SettingsContent() {
       const response = await apiFetch(endpoint, { method: "PUT", body: JSON.stringify({ expected_version: current.version, change_reason: reason.trim() || null, settings }) });
       const data = await response.json().catch(() => null);
       if (response.status === 409) { await loadPolicy(); throw new Error("Another admin changed this policy. The latest settings have been loaded; please review and save again."); }
-      if (!response.ok) throw new Error(readError(data, "Could not save scoring settings."));
+      if (!response.ok) throw new Error(readError(data, "Could not save scoring settings.", response.status));
       setCurrent(data); setSettings(data.settings); setReason(""); toast(`Policy version ${data.version} saved.`, "success"); if (showHistory) loadPolicy(true);
     } catch (err) { setError(err instanceof Error ? err.message : "Could not save scoring settings."); }
     finally { setSaving(false); }
@@ -148,7 +148,7 @@ function SettingsContent() {
       const response = await apiFetch(`${endpoint}/reset`, { method: "POST", body: JSON.stringify({ expected_version: current.version, change_reason: reason.trim() || "Return to platform defaults" }) });
       const data = await response.json().catch(() => null);
       if (response.status === 409) { await loadPolicy(); throw new Error("Another admin changed this policy. The latest settings have been loaded."); }
-      if (!response.ok) throw new Error(readError(data, "Could not reset scoring settings."));
+      if (!response.ok) throw new Error(readError(data, "Could not reset scoring settings.", response.status));
       setCurrent(data); setSettings(data.settings); setReason(""); toast("Policy reset to platform defaults.", "success"); if (showHistory) loadPolicy(true);
     } catch (err) { setError(err instanceof Error ? err.message : "Could not reset scoring settings."); }
     finally { setSaving(false); }

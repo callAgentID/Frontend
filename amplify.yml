@@ -11,7 +11,7 @@ frontend:
         # server routes only receive values loaded through a Next env file.
         # Keep the Clerk secret server-only: never copy a NEXT_PUBLIC secret.
         - test -n "$CLERK_SECRET_KEY"
-        - env | grep -E '^(CLERK_SECRET_KEY|CLERK_BACKEND_API_URL|CLERK_FRONTEND_API_URL|CLERK_JWKS_URL|NEXT_PUBLIC_)' >> .env.production
+        - env | grep -E '^(CLERK_SECRET_KEY|CLERK_BACKEND_API_URL|CLERK_FRONTEND_API_URL|CLERK_JWKS_URL|NEXT_PUBLIC_|VITE_)' >> .env.production
         - npm run build
   artifacts:
     baseDirectory: .next

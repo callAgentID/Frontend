@@ -4,6 +4,7 @@ import { useEffect, useState, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useTranslations } from 'next-intl';
 import { useApi } from "@/lib/useApi";
+import { apiErrorMessage } from "@/lib/billing";
 import { createPortal } from 'react-dom';
 import {
   BarChart3,
@@ -211,7 +212,7 @@ function AnalyticsPageContent() {
         }
       } else {
         const body = await response.json().catch(() => ({}));
-        toast(body.detail || body.message || "Failed to delete call", "error");
+        toast(apiErrorMessage(body, "The call could not be deleted.", response.status), "error");
       }
     } catch (error: any) {
       toast(error.message || "Error deleting call. Please try again.", "error");

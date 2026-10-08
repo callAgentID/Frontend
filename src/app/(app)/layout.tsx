@@ -2,10 +2,12 @@ import { Sidebar } from "@/components/Sidebar";
 import { Navbar } from "@/components/Navbar";
 import { AuthGuard } from "@/components/AuthGuard";
 import { ToastProvider } from "@/components/Toast";
+import { BillingStatusProvider, EntitlementGate } from "@/components/BillingStatusProvider";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
     <AuthGuard>
+      <BillingStatusProvider>
       <ToastProvider />
       <Sidebar />
       {/*
@@ -17,9 +19,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       <div id="app-content" className="app-content flex flex-col min-h-screen overflow-hidden w-full">
         <Navbar />
         <main className="flex-1 overflow-y-auto p-4 sm:p-5 md:p-6 subtle-grid w-full">
-          {children}
+          <EntitlementGate>{children}</EntitlementGate>
         </main>
       </div>
+      </BillingStatusProvider>
     </AuthGuard>
   );
 }

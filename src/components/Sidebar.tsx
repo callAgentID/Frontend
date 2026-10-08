@@ -8,7 +8,7 @@ import { useTranslations } from 'next-intl';
 import {
   LayoutDashboard, BarChart3, Layers, FileSearch, FileCode,
   ShieldAlert, Settings, Users, LogOut, ChevronLeft, Menu, X, Package,
-  Sun, Moon, BrainCircuit, Zap, MessageSquare
+  Sun, Moon, BrainCircuit, Zap, MessageSquare, CreditCard
 } from "lucide-react";
 import { cn } from "../lib/utils";
 import { LanguageSwitcher } from "./LanguageSwitcher";
@@ -27,8 +27,10 @@ type NavRole = "all" | "admin" | "admin_manager" | "super_admin_only";
 const NAV_ITEMS: { name: string; href: string; icon: any; roles: NavRole }[] = [
   { name: "admin", href: "/admin", icon: Settings, roles: "admin_manager" },
   { name: "scoringSettings", href: "/settings", icon: Settings, roles: "admin" },
+  { name: "billing", href: "/settings/billing", icon: CreditCard, roles: "admin" },
+  { name: "billingPlans", href: "/superadmin/billing-plans", icon: CreditCard, roles: "super_admin_only" },
   { name: "users", href: "/users", icon: Users, roles: "super_admin_only" },
-  { name: "workerProfiles", href: "/worker-profiles", icon: BrainCircuit, roles: "super_admin_only" },
+  { name: "workerProfiles", href: "/worker-profiles", icon: BrainCircuit, roles: "admin" },
   { name: "queries", href: "/queries", icon: MessageSquare, roles: "super_admin_only" },
   { name: "points", href: "/points", icon: Zap, roles: "admin_manager" },
   { name: "analysis", href: "/", icon: LayoutDashboard, roles: "all" },

@@ -76,6 +76,7 @@ export function BatchProgress({ batchId, batchName, initialErrors = [], onClose 
       setBatch(data);
       // Stop polling when completed or failed (case-insensitive)
       if (data.status?.toUpperCase() === "COMPLETED" || data.status?.toUpperCase() === "FAILED") {
+        window.dispatchEvent(new Event("billing:refresh"));
         setCallsExpanded(true);
         if (intervalRef.current) {
           clearInterval(intervalRef.current);

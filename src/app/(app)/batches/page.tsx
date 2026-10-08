@@ -25,6 +25,7 @@ import { createPortal } from "react-dom";
 import { ResultsPanel } from "@/components/ResultsPanel";
 import { toast } from "@/components/Toast";
 import { useCurrentUser } from "@/lib/useCurrentUser";
+import { apiErrorMessage } from "@/lib/billing";
 
 interface BatchCall {
   call_id: string;
@@ -111,7 +112,7 @@ function BatchesContent() {
       const res = await apiFetch(`/api/v1/batches/${batchId}`, { method: "DELETE" });
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
-        throw new Error(body.detail || body.message || "Failed to delete batch");
+        throw new Error(apiErrorMessage(body, "The batch could not be deleted.", res.status));
       }
       setBatches(batches.filter(b => b.batch_id !== batchId));
       if (selectedBatch?.batch_id === batchId) setSelectedBatch(null);

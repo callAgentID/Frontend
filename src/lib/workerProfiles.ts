@@ -7,8 +7,10 @@ export interface WorkerProfile {
   llm_script_model: string;
   llm_qa_provider: "openrouter";
   llm_qa_model: string;
+  compliance_tier: "gdpr" | "non_gdpr";
   active: boolean;
   is_global: boolean;
+  organization_id: string | null;
   created_at: string;
   updated_at: string;
 }

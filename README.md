@@ -4,6 +4,29 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 
 ## Getting Started
 
+Configure the public backend and Clerk keys before starting the app:
+
+```env
+VITE_API_BASE_URL=https://your-api.example.com/api/v1
+VITE_CLERK_PUBLISHABLE_KEY=pk_...
+```
+
+The deployment plan uses the `VITE_*` names above. `next.config.ts` maps them to
+Next.js public client variables at build time. The equivalent
+`NEXT_PUBLIC_API_BASE_URL` and `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` names are also
+supported and take precedence when both forms are present.
+
+Configure Stripe Checkout on the backend to return to these frontend routes:
+
+```text
+organization success_url: https://your-frontend.example.com/billing/success?session_id={CHECKOUT_SESSION_ID}&checkout_scope=organization
+public signup success_url: https://your-frontend.example.com/billing/success?session_id={CHECKOUT_SESSION_ID}&checkout_scope=public_signup
+cancel_url:                 https://your-frontend.example.com/billing/cancel
+```
+
+The scope is used only to choose the return flow. Subscription access still comes
+from the verified billing overview, claim response, or Stripe webhook state.
+
 First, run the development server:
 
 ```bash

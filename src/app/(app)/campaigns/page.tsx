@@ -26,6 +26,7 @@ import { toast } from "@/components/Toast";
 import { cn } from "@/lib/utils";
 import { CampaignCardSkeleton, ScriptDetailSkeleton } from "@/components/Skeleton";
 import { useCurrentUser } from "@/lib/useCurrentUser";
+import { apiErrorMessage } from "@/lib/billing";
 
 function CampaignsPageContent() {
   const searchParams = useSearchParams();
@@ -74,7 +75,7 @@ function CampaignsPageContent() {
       });
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
-        throw new Error(body.detail || "Failed to update campaign");
+        throw new Error(apiErrorMessage(body, "The campaign could not be updated.", res.status));
       }
       toast("Campaign updated successfully", "success");
       setEditingCampaign(null);
@@ -93,7 +94,7 @@ function CampaignsPageContent() {
       const res = await apiFetch(`/api/v1/campaigns/${id}`, { method: "DELETE" });
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
-        throw new Error(body.detail || "Failed to delete campaign");
+        throw new Error(apiErrorMessage(body, "The campaign could not be deleted.", res.status));
       }
       toast("Campaign deleted", "success");
       fetchData();
@@ -178,7 +179,7 @@ function CampaignsPageContent() {
         fetchData();
       } else {
         const body = await res.json().catch(() => ({}));
-        throw new Error(body.detail || body.message || "Failed to create campaign");
+        throw new Error(apiErrorMessage(body, "The campaign could not be created.", res.status));
       }
     } catch (err: any) {
       toast(err.message || "Campaign creation failed", "error");
@@ -234,7 +235,7 @@ function CampaignsPageContent() {
         fetchData();
       } else if (res.status === 400) {
         const error = await res.json();
-        alert(error.detail || "Invalid input. Please check your data.");
+        alert(apiErrorMessage(error, "Please check the script information and try again.", res.status));
       }
     } catch (err) {
       console.error("Script upload failed:", err);
@@ -289,7 +290,7 @@ function CampaignsPageContent() {
         fetchData();
       } else if (res.status === 400) {
         const error = await res.json();
-        alert(error.detail || "Invalid input. Please check your data.");
+        alert(apiErrorMessage(error, "Please check the questionnaire information and try again.", res.status));
       }
     } catch (err) {
       console.error("Questionnaire upload failed:", err);

@@ -30,6 +30,7 @@ import {
 import { cn } from "../lib/utils";
 import { BatchProgress } from "./BatchProgress";
 import { WorkerProfile, formatWorkerProfileModels, profileId } from "@/lib/workerProfiles";
+import { apiErrorMessage } from "@/lib/billing";
 
 type InputMode = "audio" | "transcript";
 
@@ -143,8 +144,8 @@ export function InputSection({
 
   const refreshProfiles = useCallback(async () => {
     const response = await apiFetch("/api/v1/worker/profiles?skip=0&limit=100");
-    if (!response.ok) throw new Error("Failed to load intelligence profiles");
-    const data = await response.json();
+    const data = await response.json().catch(() => null);
+    if (!response.ok) throw new Error(apiErrorMessage(data, "Could not load processing profiles.", response.status));
 
     if (Array.isArray(data)) {
       setProfiles(data);
@@ -160,12 +161,19 @@ export function InputSection({
     return [];
   }, [apiFetch]);
 
+  useEffect(() => {
+    const handleBillingStatusUpdate = () => {
+      setProfiles([]);
+      setSelectedProfileId("");
+      void refreshProfiles();
+    };
+    window.addEventListener("billing:status-updated", handleBillingStatusUpdate);
+    return () => window.removeEventListener("billing:status-updated", handleBillingStatusUpdate);
+  }, [refreshProfiles]);
+
   const readErrorMessage = async (response: Response, fallback: string) => {
     const body = await response.json().catch(() => null);
-    if (typeof body?.detail === "string") return body.detail;
-    if (body?.detail?.message) return body.detail.message;
-    if (body?.message) return body.message;
-    return fallback;
+    return apiErrorMessage(body, fallback, response.status);
   };
 
   const removeMetaTag = useCallback((i: number) => setMetaTags(prev => prev.filter((_, idx) => idx !== i)), []);
@@ -346,6 +354,7 @@ export function InputSection({
 
         // Handle failed status — stop polling and show error
         if (data.status === "failed") {
+          window.dispatchEvent(new Event("billing:refresh"));
           setIsProcessing(false);
           setProcessingStatus("idle");
           return true; // Stop polling
@@ -353,6 +362,7 @@ export function InputSection({
 
         // Only stop polling when status is "ready" - full analysis complete
         if (data.status === "ready") {
+          window.dispatchEvent(new Event("billing:refresh"));
           if (data.transcript?.utterances) {
             const formattedTranscript = data.transcript.utterances
               .map((u: any) => `Speaker ${u.speaker_id}: ${u.text}`)
@@ -411,7 +421,7 @@ export function InputSection({
       const highPriorityValue = selectedRedFlagIds.length > 0
         ? (selectedRedFlagIds.length > 1 ? JSON.stringify(selectedRedFlagIds) : selectedRedFlagIds[0])
         : (campaignTemplateId || globalIds[0]);
-      if (!highPriorityValue) throw new Error("Misconfiguration: No audit frameworks selected.");
+      if (!highPriorityValue) throw new Error("Select at least one audit framework before continuing.");
       const allIds = Array.from(new Set([highPriorityValue, ...globalIds]));
 
       // Step 1: Initialize call — JSON payload, get presigned URL
@@ -431,7 +441,7 @@ export function InputSection({
         }),
       });
       if (!initRes.ok) {
-        if (initRes.status === 400) await refreshProfiles();
+        if (initRes.status === 400 || initRes.status === 403) await refreshProfiles();
         const errMsg = await readErrorMessage(initRes, "Failed to initialize call");
         if (initRes.status === 402 || errMsg.toLowerCase().includes("not enough points")) {
           setPointsErrorMsg(errMsg);
@@ -449,7 +459,7 @@ export function InputSection({
         headers: { "Content-Type": audioFile.type || "audio/mpeg" },
         body: audioFile,
       });
-      if (!s3Res.ok) throw new Error("S3 upload failed");
+      if (!s3Res.ok) throw new Error("The audio file could not be uploaded. Please try again.");
 
       // Step 3: Start processing pipeline
       const startRes = await apiFetch(`/api/v1/calls/${call_id}/start`, {
@@ -498,7 +508,7 @@ export function InputSection({
       const highPriorityValue = selectedRedFlagIds.length > 0
         ? (selectedRedFlagIds.length > 1 ? JSON.stringify(selectedRedFlagIds) : selectedRedFlagIds[0])
         : (campaignTemplateId || globalIds[0]);
-      if (!highPriorityValue) throw new Error("Misconfiguration: No audit frameworks selected.");
+      if (!highPriorityValue) throw new Error("Select at least one audit framework before continuing.");
       const allIds = Array.from(new Set([highPriorityValue, ...globalIds]));
 
       // Step 1: Initialize batch — JSON payload, get presigned URLs for all files
@@ -518,7 +528,7 @@ export function InputSection({
         }),
       });
       if (!initRes.ok) {
-        if (initRes.status === 400) await refreshProfiles();
+        if (initRes.status === 400 || initRes.status === 403) await refreshProfiles();
         const errMsg = await readErrorMessage(initRes, "Failed to initialize batch");
         if (initRes.status === 402 || errMsg.toLowerCase().includes("not enough points")) {
           setPointsErrorMsg(errMsg);
@@ -617,7 +627,7 @@ export function InputSection({
         ? (selectedRedFlagIds.length > 1 ? JSON.stringify(selectedRedFlagIds) : selectedRedFlagIds[0])
         : (campaignTemplateId || globalIds[0]);
 
-      if (!highPriorityValue) throw new Error("Misconfiguration: No audit frameworks selected.");
+      if (!highPriorityValue) throw new Error("Select at least one audit framework before continuing.");
 
       // high_priority must also be included in questionnaire_template_ids array
       const allIds = Array.from(new Set([highPriorityValue, ...globalIds]));
@@ -641,7 +651,7 @@ export function InputSection({
       });
 
       if (!response.ok) {
-        if (response.status === 400) await refreshProfiles();
+        if (response.status === 400 || response.status === 403) await refreshProfiles();
         const errMsg = await readErrorMessage(response, "Manual ingestion failed");
         if (response.status === 402 || errMsg.toLowerCase().includes("not enough points")) {
           setPointsErrorMsg(errMsg);
@@ -659,7 +669,7 @@ export function InputSection({
         // Shared Polling Logic
         await pollForTranscript(data.call_id);
       } else {
-        throw new Error("No call_id returned from manual ingestion");
+        throw new Error("Processing started, but confirmation was incomplete. Check call history before trying again.");
       }
     } catch (error: any) {
       console.error("Manual API Error:", error);
@@ -1486,7 +1496,7 @@ export function InputSection({
         </p>
       </div>
 
-      {/* Insufficient Points Modal (HTTP 402) */}
+      {/* Insufficient minutes / subscription required (HTTP 402) */}
       {pointsErrorMsg && (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-md z-[100] flex items-center justify-center p-4">
           <div className="bg-[#0D1F35] border border-amber-500/30 rounded-3xl p-6 md:p-8 max-w-md w-full shadow-2xl space-y-5 animate-in fade-in zoom-in-95">
@@ -1495,7 +1505,7 @@ export function InputSection({
                 <Zap className="w-6 h-6 text-amber-400" />
               </div>
               <div>
-                <h3 className="text-lg font-black text-[#F6FAFD]">Insufficient Points</h3>
+                <h3 className="text-lg font-black text-[#F6FAFD]">Minutes or subscription required</h3>
                 <p className="text-xs text-amber-300 font-semibold">Payment Required (HTTP 402)</p>
               </div>
             </div>
@@ -1504,11 +1514,11 @@ export function InputSection({
             </p>
             <div className="flex flex-col sm:flex-row gap-3 pt-2">
               <Link
-                href="/points"
+                href="/settings/billing"
                 onClick={() => setPointsErrorMsg(null)}
                 className="flex-1 py-2.5 px-4 bg-gradient-to-r from-[#4A7FA7] to-[#1A3D63] text-white font-extrabold text-xs uppercase tracking-wider rounded-xl text-center glow hover:opacity-90 transition-opacity"
               >
-                View Points & Usage
+                View billing & minutes
               </Link>
               <button
                 type="button"

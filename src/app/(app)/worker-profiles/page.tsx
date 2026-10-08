@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useAuth } from "@clerk/nextjs";
 import {
   AlertTriangle,
   BrainCircuit,
@@ -24,6 +25,9 @@ import { RoleGuard } from "@/components/RoleGuard";
 import { toast } from "@/components/Toast";
 import { useApi } from "@/lib/useApi";
 import { cn } from "@/lib/utils";
+import { useCurrentUser } from "@/lib/useCurrentUser";
+import { apiErrorMessage, type ComplianceTier } from "@/lib/billing";
+import { useBillingStatus } from "@/components/BillingStatusProvider";
 import { formatLLMCost, formatTokens } from "@/lib/formatters";
 import {
   WorkerProfile,
@@ -39,6 +43,7 @@ type ProfileDraft = {
   name: string;
   llm_script_model: string;
   llm_qa_model: string;
+  compliance_tier: ComplianceTier;
   is_global: boolean;
 };
 
@@ -54,6 +59,7 @@ type Organization = {
 };
 
 type ModelFilters = {
+  compliance_tier: ComplianceTier;
   search: string;
   eligible: "true" | "false" | "all";
   input_modality: string;
@@ -69,10 +75,12 @@ const emptyDraft: ProfileDraft = {
   name: "",
   llm_script_model: "",
   llm_qa_model: "",
+  compliance_tier: "non_gdpr",
   is_global: true,
 };
 
 const defaultModelFilters: ModelFilters = {
+  compliance_tier: "non_gdpr",
   search: "",
   eligible: "true",
   input_modality: "",
@@ -84,14 +92,8 @@ const defaultModelFilters: ModelFilters = {
   limit: "300",
 };
 
-function messageFromErrorBody(body: unknown, fallback: string) {
-  const value = body as { detail?: string | { message?: string; reasons?: string[] }; message?: string } | null;
-  if (typeof value?.detail === "string") return value.detail;
-  if (typeof value?.detail === "object" && value.detail?.message) {
-    return `${value.detail.message}${value.detail.reasons?.length ? `: ${value.detail.reasons.join(", ")}` : ""}`;
-  }
-  if (value?.message) return value.message;
-  return fallback;
+function messageFromErrorBody(body: unknown, fallback: string, status?: number) {
+  return apiErrorMessage(body, fallback, status);
 }
 
 function normalizeInteger(value: string, fallback: number, min: number, max?: number) {
@@ -103,6 +105,7 @@ function normalizeInteger(value: string, fallback: number, min: number, max?: nu
 
 function buildModelParams(filters: ModelFilters, force: boolean) {
   const params = new URLSearchParams();
+  params.set("compliance_tier", filters.compliance_tier);
   const trimmedSearch = filters.search.trim();
   if (trimmedSearch) params.set("search", trimmedSearch);
   if (filters.eligible !== "all") params.set("eligible", filters.eligible);
@@ -229,6 +232,8 @@ function ModelSelect({
 
 function WorkerProfilesPageContent() {
   const { apiFetch } = useApi();
+  const { isSuperAdmin } = useCurrentUser();
+  const { status: billingStatus } = useBillingStatus();
   const [tab, setTab] = useState<Tab>("profiles");
   const [profiles, setProfiles] = useState<WorkerProfile[]>([]);
   const [models, setModels] = useState<OpenRouterModel[]>([]);
@@ -236,6 +241,7 @@ function WorkerProfilesPageContent() {
   const [modelFilters, setModelFilters] = useState<ModelFilters>(defaultModelFilters);
   const [loadingProfiles, setLoadingProfiles] = useState(true);
   const [loadingModels, setLoadingModels] = useState(false);
+  const [gdprUnavailableReason, setGdprUnavailableReason] = useState<string | null>(null);
   const [savingId, setSavingId] = useState<string | null>(null);
   const [editingProfileId, setEditingProfileId] = useState<string | null>(null);
   const [profileEdits, setProfileEdits] = useState<ProfileDraft>(emptyDraft);
@@ -258,7 +264,7 @@ function WorkerProfilesPageContent() {
 
   const parseResponse = async <T,>(response: Response, fallback: string): Promise<T> => {
     const body = await response.json().catch(() => null);
-    if (!response.ok) throw new Error(messageFromErrorBody(body, fallback));
+    if (!response.ok) throw new Error(messageFromErrorBody(body, fallback, response.status));
     return body as T;
   };
 
@@ -276,21 +282,31 @@ function WorkerProfilesPageContent() {
   }, [apiFetch]);
 
   const loadModels = useCallback(async (force = false) => {
+    if (!isSuperAdmin && !billingStatus?.access.compliance_tier) return;
+    const effectiveTier = !isSuperAdmin && billingStatus?.access.compliance_tier
+      ? billingStatus.access.compliance_tier
+      : modelFilters.compliance_tier;
     setLoadingModels(true);
     try {
-      const params = buildModelParams(modelFilters, force);
+      const params = buildModelParams({
+        ...modelFilters,
+        compliance_tier: effectiveTier,
+      }, force);
       const response = await apiFetch(`/api/v1/worker/llm-models?${params.toString()}`);
       const data = await parseResponse<OpenRouterModelPage>(response, "OpenRouter model catalog is unavailable");
       setCatalog(data);
       setModels(Array.isArray(data?.items) ? data.items : []);
+      if (effectiveTier === "gdpr") setGdprUnavailableReason(null);
     } catch (error: unknown) {
-      toast(error instanceof Error ? error.message : "Failed to load model catalog", "error");
+      const message = error instanceof Error ? error.message : "Failed to load model catalog";
+      if (effectiveTier === "gdpr" && /unavailable|eu-only|routing/i.test(message)) setGdprUnavailableReason(message);
+      toast(message, "error");
       setCatalog(null);
       setModels([]);
     } finally {
       setLoadingModels(false);
     }
-  }, [apiFetch, modelFilters]);
+  }, [apiFetch, billingStatus?.access.compliance_tier, isSuperAdmin, modelFilters]);
 
   const loadCosts = useCallback(async () => {
     setLoadingCosts(true);
@@ -316,7 +332,18 @@ function WorkerProfilesPageContent() {
       void loadProfiles();
     }, 0);
     return () => clearTimeout(timer);
-  }, [loadProfiles]);
+  }, [billingStatus?.access.compliance_tier, loadProfiles]);
+
+  useEffect(() => {
+    if (isSuperAdmin || !billingStatus?.access.compliance_tier) return;
+    const tier = billingStatus.access.compliance_tier;
+    const timer = window.setTimeout(() => {
+      setModelFilters((current) => ({ ...current, compliance_tier: tier }));
+      setDraft((current) => ({ ...current, compliance_tier: tier, is_global: false, llm_script_model: "", llm_qa_model: "" }));
+      setModels([]);
+    }, 0);
+    return () => window.clearTimeout(timer);
+  }, [billingStatus?.access.compliance_tier, isSuperAdmin]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -380,12 +407,13 @@ function WorkerProfilesPageContent() {
       name: profile.name,
       llm_script_model: profile.llm_script_model,
       llm_qa_model: profile.llm_qa_model,
+      compliance_tier: profile.compliance_tier,
       is_global: profile.is_global,
     });
     setProfileVisibility(profile.active ? (profile.is_global ? "global" : "organizations") : "unpublished");
     setSelectedOrganizationIds([]);
     setOrganizationSearch("");
-    if (!profile.is_global && profile.active) void loadOrganizationAssignments(profile.id);
+    if (isSuperAdmin && !profile.is_global && profile.active) void loadOrganizationAssignments(profile.id);
   };
 
   const cancelEditingProfile = () => {
@@ -405,14 +433,15 @@ function WorkerProfilesPageContent() {
             name: profileEdits.name.trim(),
             llm_script_model: profileEdits.llm_script_model,
             llm_qa_model: profileEdits.llm_qa_model,
-            ...(profileVisibility === "global" ? { is_global: true, active: true } : {}),
-            ...(profileVisibility === "organizations" ? { active: true } : {}),
-            ...(profileVisibility === "unpublished" ? { active: false } : {}),
+            compliance_tier: profileEdits.compliance_tier,
+            ...(isSuperAdmin && profileVisibility === "global" ? { is_global: true, active: true } : {}),
+            ...(isSuperAdmin && profileVisibility === "organizations" ? { is_global: false, active: true } : {}),
+            ...(isSuperAdmin && profileVisibility === "unpublished" ? { active: false } : {}),
           }),
         });
       await parseResponse<WorkerProfile>(profileResponse, "Failed to update profile");
 
-      if (profileVisibility === "organizations") {
+      if (isSuperAdmin && profileVisibility === "organizations") {
         const assignmentResponse = await apiFetch(`/api/v1/worker/profiles/${profile.id}/organizations`, {
           method: "PUT",
           body: JSON.stringify({ organization_ids: selectedOrganizationIds }),
@@ -442,7 +471,8 @@ function WorkerProfilesPageContent() {
           name: draft.name.trim(),
           llm_script_model: draft.llm_script_model,
           llm_qa_model: draft.llm_qa_model,
-          is_global: draft.is_global,
+          compliance_tier: draft.compliance_tier,
+          is_global: isSuperAdmin ? draft.is_global : false,
         }),
       });
       const data = await parseResponse<WorkerProfile>(response, "Failed to create profile");
@@ -464,7 +494,7 @@ function WorkerProfilesPageContent() {
       const response = await apiFetch(`/api/v1/worker/profiles/${profile.id}`, { method: "DELETE" });
       if (!response.ok) {
         const body = await response.json().catch(() => null);
-        throw new Error(messageFromErrorBody(body, "Failed to delete profile"));
+        throw new Error(messageFromErrorBody(body, "The profile could not be deleted.", response.status));
       }
       setProfiles((prev) => prev.filter((item) => item.id !== profile.id));
       toast("Worker profile deleted", "success");
@@ -483,7 +513,7 @@ function WorkerProfilesPageContent() {
     { id: "profiles", label: "Profiles" },
     { id: "create", label: "Create Profile" },
     { id: "catalog", label: "Model Catalog" },
-    { id: "costs", label: "LLM Cost Analytics" },
+    ...(isSuperAdmin ? [{ id: "costs" as const, label: "LLM Cost Analytics" }] : []),
   ];
 
   return (
@@ -492,10 +522,10 @@ function WorkerProfilesPageContent() {
         <div>
           <div className="mb-4 flex items-center gap-3">
             <span className="rounded-xl bg-[#4A7FA7]/20 p-2 text-[#4A7FA7]"><BrainCircuit className="h-5 w-5" /></span>
-            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-[#4A7FA7]">Super Admin</span>
+            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-[#4A7FA7]">{isSuperAdmin ? "Super Admin" : "Organization Admin"}</span>
           </div>
           <h1 className="text-[34px] font-[850] leading-none tracking-tight text-[#F6FAFD] sm:text-[48px]">Worker Profiles</h1>
-          <p className="mt-4 max-w-2xl text-sm font-semibold text-[#B3CFE5]">Manage reusable processing profiles, select eligible OpenRouter models, and inspect LLM spend by profile.</p>
+          <p className="mt-4 max-w-2xl text-sm font-semibold text-[#B3CFE5]">Manage processing profiles for the organization’s exact compliance tier and select only server-approved OpenRouter models.</p>
         </div>
         <button onClick={() => { void loadProfiles(); void loadModels(true); }} className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-[#4A7FA7] px-4 text-xs font-black uppercase tracking-widest text-white hover:bg-[#4A7FA7]/90">
           <RefreshCw className="h-4 w-4" /> Refresh
@@ -524,28 +554,30 @@ function WorkerProfilesPageContent() {
                         <h3 className="truncate text-lg font-[850] text-[#F6FAFD]">{profile.name}</h3>
                         <span className={cn("rounded-md px-2 py-0.5 text-[9px] font-black uppercase tracking-widest", profile.active ? "bg-green-500/20 text-green-300" : "bg-red-500/20 text-red-300")}>{profile.active ? "Active" : "Inactive"}</span>
                         <span className={cn("rounded-md px-2 py-0.5 text-[9px] font-black uppercase tracking-widest", profile.is_global ? "bg-[#4A7FA7]/20 text-[#9DCEFF]" : "bg-amber-500/20 text-amber-200")}>{profile.is_global ? "Global" : "Private"}</span>
+                        <span className="rounded-md bg-blue-500/15 px-2 py-0.5 text-[9px] font-black uppercase tracking-widest text-blue-200">{profile.compliance_tier === "gdpr" ? "GDPR" : "Non-GDPR"}</span>
                       </div>
                       <p className="mt-1 truncate text-xs font-bold text-[#B3CFE5]">{formatWorkerProfileModels(profile)}</p>
                       <p className="mt-2 font-mono text-[10px] text-[#B3CFE5]/70">{profile.id}</p>
                     </div>
                     <div className="flex flex-wrap gap-2">
-                      <button disabled={savingId === profile.id} onClick={() => startEditingProfile(profile)} className="flex h-9 w-9 items-center justify-center rounded-lg border border-blue-400/12 bg-blue-950/30 text-[#B3CFE5] hover:bg-blue-950/45 hover:text-[#F6FAFD] disabled:opacity-60" title="Edit profile"><Pencil className="h-4 w-4" /></button>
-                      <button disabled={savingId === profile.id} onClick={() => void saveProfile(profile, { active: !profile.active })} className="h-9 rounded-lg border border-blue-400/12 bg-blue-950/30 px-3 text-xs font-bold text-[#F6FAFD] hover:bg-blue-950/45 disabled:opacity-60">{profile.active ? "Deactivate" : "Reactivate"}</button>
-                      <button disabled={savingId === profile.id} onClick={() => void saveProfile(profile, { is_global: !profile.is_global })} className="h-9 rounded-lg border border-blue-400/12 bg-blue-950/30 px-3 text-xs font-bold text-[#F6FAFD] hover:bg-blue-950/45 disabled:opacity-60">{profile.is_global ? "Make private" : "Publish global"}</button>
-                      <button disabled={savingId === profile.id} onClick={() => deleteProfile(profile)} className="flex h-9 w-9 items-center justify-center rounded-lg border border-red-500/25 bg-red-500/15 text-red-300 hover:bg-red-500/25 disabled:opacity-60" title="Delete profile"><Trash2 className="h-4 w-4" /></button>
+                      {(isSuperAdmin || !profile.is_global) && <button disabled={savingId === profile.id} onClick={() => startEditingProfile(profile)} className="flex h-9 w-9 items-center justify-center rounded-lg border border-blue-400/12 bg-blue-950/30 text-[#B3CFE5] hover:bg-blue-950/45 hover:text-[#F6FAFD] disabled:opacity-60" title="Edit profile"><Pencil className="h-4 w-4" /></button>}
+                      {(isSuperAdmin || !profile.is_global) && <button disabled={savingId === profile.id} onClick={() => void saveProfile(profile, { active: !profile.active })} className="h-9 rounded-lg border border-blue-400/12 bg-blue-950/30 px-3 text-xs font-bold text-[#F6FAFD] hover:bg-blue-950/45 disabled:opacity-60">{profile.active ? "Deactivate" : "Reactivate"}</button>}
+                      {isSuperAdmin && <button disabled={savingId === profile.id} onClick={() => void saveProfile(profile, { is_global: !profile.is_global })} className="h-9 rounded-lg border border-blue-400/12 bg-blue-950/30 px-3 text-xs font-bold text-[#F6FAFD] hover:bg-blue-950/45 disabled:opacity-60">{profile.is_global ? "Make private" : "Publish global"}</button>}
+                      {(isSuperAdmin || !profile.is_global) && <button disabled={savingId === profile.id} onClick={() => deleteProfile(profile)} className="flex h-9 w-9 items-center justify-center rounded-lg border border-red-500/25 bg-red-500/15 text-red-300 hover:bg-red-500/25 disabled:opacity-60" title="Delete profile"><Trash2 className="h-4 w-4" /></button>}
                     </div>
                   </div>
                   {editingProfileId === profile.id ? (
                     <div className="space-y-4">
-                      <div className="grid gap-3 lg:grid-cols-3">
+                      <div className="grid gap-3 lg:grid-cols-4">
                       <label className="block space-y-2">
                         <span className="block text-[10px] font-black uppercase tracking-[0.2em] text-[#B3CFE5]">Name</span>
                         <input value={profileEdits.name} onChange={(event) => setProfileEdits((prev) => ({ ...prev, name: event.target.value }))} className="h-12 w-full rounded-xl border border-blue-400/12 bg-blue-950/30 px-4 text-sm font-bold text-[#F6FAFD] outline-none focus:border-[#4A7FA7]" />
                       </label>
                       <ModelSelect label="Script model" value={profileEdits.llm_script_model} onChange={(value) => setProfileEdits((prev) => ({ ...prev, llm_script_model: value }))} models={selectableModels} disabled={loadingModels || savingId === profile.id} />
                       <ModelSelect label="QA model" value={profileEdits.llm_qa_model} onChange={(value) => setProfileEdits((prev) => ({ ...prev, llm_qa_model: value }))} models={selectableModels} disabled={loadingModels || savingId === profile.id} />
+                      <label className="block space-y-2"><span className="block text-[10px] font-black uppercase tracking-[0.2em] text-[#B3CFE5]">Compliance tier</span><select disabled={!isSuperAdmin} value={profileEdits.compliance_tier} onChange={(event) => { const tier = event.target.value as ComplianceTier; setProfileEdits((prev) => ({ ...prev, compliance_tier: tier, llm_script_model: "", llm_qa_model: "" })); setModelFilters((prev) => ({ ...prev, compliance_tier: tier })); }} className="h-12 w-full rounded-xl border border-blue-400/12 bg-blue-950/30 px-4 text-sm font-bold text-[#F6FAFD] outline-none focus:border-[#4A7FA7] disabled:opacity-60"><option value="non_gdpr">Non-GDPR</option><option value="gdpr">GDPR</option></select></label>
                       </div>
-                      <div className="space-y-3 rounded-2xl border border-blue-400/12 bg-blue-950/18 p-4">
+                      {isSuperAdmin && <div className="space-y-3 rounded-2xl border border-blue-400/12 bg-blue-950/18 p-4">
                         <span className="block text-[10px] font-black uppercase tracking-[0.2em] text-[#B3CFE5]">Visibility</span>
                         <div className="grid gap-2 md:grid-cols-3">
                           {([
@@ -589,9 +621,9 @@ function WorkerProfilesPageContent() {
                             <p className="text-[10px] font-bold uppercase tracking-widest text-[#B3CFE5]">{selectedOrganizationIds.length} organization{selectedOrganizationIds.length === 1 ? "" : "s"} selected</p>
                           </div>
                         )}
-                      </div>
+                      </div>}
                       <div className="flex items-center justify-end gap-2">
-                        <button disabled={savingId === profile.id} onClick={() => void saveProfileEdits(profile)} className="flex h-10 w-10 items-center justify-center rounded-lg border border-green-500/25 bg-green-500/15 text-green-300 hover:bg-green-500/25 disabled:opacity-60" title="Save changes">{savingId === profile.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}</button>
+                        <button disabled={savingId === profile.id || (profileEdits.compliance_tier === "gdpr" && !!gdprUnavailableReason)} onClick={() => void saveProfileEdits(profile)} className="flex h-10 w-10 items-center justify-center rounded-lg border border-green-500/25 bg-green-500/15 text-green-300 hover:bg-green-500/25 disabled:opacity-60" title="Save changes">{savingId === profile.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}</button>
                         <button disabled={savingId === profile.id} onClick={cancelEditingProfile} className="flex h-10 w-10 items-center justify-center rounded-lg border border-blue-400/12 bg-blue-950/30 text-[#B3CFE5] hover:bg-blue-950/45 disabled:opacity-60" title="Cancel editing"><X className="h-4 w-4" /></button>
                       </div>
                     </div>
@@ -628,12 +660,14 @@ function WorkerProfilesPageContent() {
             <span className="text-[10px] font-black uppercase tracking-[0.2em] text-[#B3CFE5]">Name</span>
             <input value={draft.name} onChange={(event) => setDraft((prev) => ({ ...prev, name: event.target.value }))} placeholder="DeepSeek Global Profile" className="h-12 w-full rounded-xl border border-blue-400/12 bg-blue-950/30 px-4 text-sm font-bold text-[#F6FAFD] outline-none focus:border-[#4A7FA7]" />
           </label>
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className="grid gap-4 md:grid-cols-3">
+            <label className="block space-y-2"><span className="block text-[10px] font-black uppercase tracking-[0.2em] text-[#B3CFE5]">Compliance tier</span><select disabled={!isSuperAdmin} value={draft.compliance_tier} onChange={(event) => { const tier = event.target.value as ComplianceTier; setDraft((prev) => ({ ...prev, compliance_tier: tier, llm_script_model: "", llm_qa_model: "" })); setModelFilters((prev) => ({ ...prev, compliance_tier: tier })); }} className="h-12 w-full rounded-xl border border-blue-400/12 bg-blue-950/30 px-4 text-sm font-bold text-[#F6FAFD] outline-none focus:border-[#4A7FA7] disabled:opacity-60"><option value="non_gdpr">Non-GDPR</option><option value="gdpr">GDPR</option></select></label>
             <ModelSelect label="Script model" value={draft.llm_script_model} onChange={(value) => setDraft((prev) => ({ ...prev, llm_script_model: value }))} models={selectableModels} disabled={loadingModels} />
             <ModelSelect label="QA model" value={draft.llm_qa_model} onChange={(value) => setDraft((prev) => ({ ...prev, llm_qa_model: value }))} models={selectableModels} disabled={loadingModels} />
           </div>
-          <label className="flex items-center gap-3 text-sm font-bold text-[#F6FAFD]"><input type="checkbox" checked={draft.is_global} onChange={(event) => setDraft((prev) => ({ ...prev, is_global: event.target.checked }))} />Publish globally for organization users</label>
-          <button onClick={createProfile} disabled={savingId === "new"} className="inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-[#4A7FA7] px-5 text-xs font-black uppercase tracking-widest text-white hover:bg-[#4A7FA7]/90 disabled:opacity-60">
+          {isSuperAdmin && <label className="flex items-center gap-3 text-sm font-bold text-[#F6FAFD]"><input type="checkbox" checked={draft.is_global} onChange={(event) => setDraft((prev) => ({ ...prev, is_global: event.target.checked }))} />Publish globally for organization users</label>}
+          {draft.compliance_tier === "gdpr" && gdprUnavailableReason && <div className="rounded-xl border border-amber-400/20 bg-amber-500/10 p-3 text-sm text-amber-100">{gdprUnavailableReason}</div>}
+          <button onClick={createProfile} disabled={savingId === "new" || (draft.compliance_tier === "gdpr" && !!gdprUnavailableReason)} className="inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-[#4A7FA7] px-5 text-xs font-black uppercase tracking-widest text-white hover:bg-[#4A7FA7]/90 disabled:opacity-60">
             {savingId === "new" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}Create Profile
           </button>
         </div>
@@ -644,6 +678,7 @@ function WorkerProfilesPageContent() {
           <div className="glass-card rounded-[2rem] border border-blue-400/18 p-5">
             <div className="mb-4 flex items-center gap-2 text-sm font-[850] text-[#F6FAFD]"><SlidersHorizontal className="h-4 w-4 text-[#4A7FA7]" /> Model filters</div>
             <div className="grid gap-3 lg:grid-cols-4">
+              <label className="space-y-1"><span className="text-[10px] font-black uppercase tracking-[0.16em] text-[#B3CFE5]">compliance_tier</span><select disabled={!isSuperAdmin} value={modelFilters.compliance_tier} onChange={(event) => updateModelFilter("compliance_tier", event.target.value as ComplianceTier)} className="h-11 w-full rounded-xl border border-blue-400/12 bg-blue-950/30 px-3 text-sm font-bold text-[#F6FAFD] outline-none focus:border-[#4A7FA7] disabled:opacity-60"><option value="non_gdpr">non_gdpr</option><option value="gdpr">gdpr</option></select></label>
               <label className="space-y-1"><span className="text-[10px] font-black uppercase tracking-[0.16em] text-[#B3CFE5]">search</span><input value={modelFilters.search} onChange={(event) => updateModelFilter("search", event.target.value)} placeholder="deepseek, claude, gemini" className="h-11 w-full rounded-xl border border-blue-400/12 bg-blue-950/30 px-3 text-sm font-bold text-[#F6FAFD] outline-none focus:border-[#4A7FA7]" /></label>
               <label className="space-y-1"><span className="text-[10px] font-black uppercase tracking-[0.16em] text-[#B3CFE5]">eligible</span><select value={modelFilters.eligible} onChange={(event) => updateModelFilter("eligible", event.target.value as ModelFilters["eligible"])} className="h-11 w-full rounded-xl border border-blue-400/12 bg-blue-950/30 px-3 text-sm font-bold text-[#F6FAFD] outline-none focus:border-[#4A7FA7]"><option value="true">true</option><option value="false">false</option><option value="all">all</option></select></label>
               <label className="space-y-1"><span className="text-[10px] font-black uppercase tracking-[0.16em] text-[#B3CFE5]">input_modality</span><input value={modelFilters.input_modality} onChange={(event) => updateModelFilter("input_modality", event.target.value)} placeholder="text, image, audio" className="h-11 w-full rounded-xl border border-blue-400/12 bg-blue-950/30 px-3 text-sm font-bold text-[#F6FAFD] outline-none focus:border-[#4A7FA7]" /></label>
@@ -735,9 +770,10 @@ function WorkerProfilesPageContent() {
 }
 
 export default function WorkerProfilesPage() {
+  const { userId, orgId } = useAuth();
   return (
-    <RoleGuard allow={["super_admin"]}>
-      <WorkerProfilesPageContent />
+    <RoleGuard allow={["admin"]}>
+      <WorkerProfilesPageContent key={`${userId || "signed-out"}:${orgId || "no-org"}`} />
     </RoleGuard>
   );
 }
