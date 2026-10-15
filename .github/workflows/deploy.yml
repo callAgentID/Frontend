@@ -1,0 +1,62 @@
+name: Deploy frontend
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+concurrency:
+  group: production-deployment
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Configure SSH
+        env:
+          VPS_SSH_PRIVATE_KEY: ${{ secrets.VPS_SSH_PRIVATE_KEY }}
+          VPS_SSH_KNOWN_HOSTS: ${{ secrets.VPS_SSH_KNOWN_HOSTS }}
+        run: |
+          install -d -m 700 ~/.ssh
+          printf '%s\n' "$VPS_SSH_PRIVATE_KEY" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          printf '%s\n' "$VPS_SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/known_hosts
+
+      - name: Package release
+        run: |
+          tar \
+            --exclude=.git \
+            --exclude=.next \
+            --exclude='.env*' \
+            --exclude=node_modules \
+            -czf "/tmp/${GITHUB_SHA}.tar.gz" .
+
+      - name: Upload release
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_PORT: ${{ secrets.VPS_PORT }}
+          VPS_USER: ${{ secrets.VPS_USER }}
+        run: |
+          scp -P "$VPS_PORT" \
+            "/tmp/${GITHUB_SHA}.tar.gz" \
+            scripts/deploy.sh \
+            "$VPS_USER@$VPS_HOST:/var/www/conversation-intel/incoming/"
+
+      - name: Deploy with PM2
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_PORT: ${{ secrets.VPS_PORT }}
+          VPS_USER: ${{ secrets.VPS_USER }}
+        run: |
+          ssh -p "$VPS_PORT" "$VPS_USER@$VPS_HOST" \
+            "cd /var/www/conversation-intel && \
+            chmod 750 incoming/deploy.sh && \
+            mv incoming/deploy.sh deploy.sh && \
+            ./deploy.sh '${GITHUB_SHA}' 'incoming/${GITHUB_SHA}.tar.gz'"
