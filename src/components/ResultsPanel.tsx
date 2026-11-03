@@ -203,7 +203,16 @@ interface ResultData {
   };
 }
 
-export function ResultsPanel({ data, isHydrating = false }: { data: ResultData, isHydrating?: boolean }) {
+export function ResultsPanel({
+  data,
+  isHydrating = false,
+  embedded = false,
+}: {
+  data: ResultData;
+  isHydrating?: boolean;
+  /** Rendered inside another panel (for example an expanded batch call). */
+  embedded?: boolean;
+}) {
   const { apiFetch } = useApi();
   const { role, isSuperAdmin } = useCurrentUser();
   const isAdminOrManager = isSuperAdmin || role === "admin" || role === "manager";
@@ -403,7 +412,10 @@ export function ResultsPanel({ data, isHydrating = false }: { data: ResultData, 
   };
 
   return (
-    <div className="w-full space-y-16 animate-in fade-in duration-150 duration-150 pb-20 mt-10 px-4 sm:px-6">
+    <div className={cn(
+      "w-full animate-in fade-in duration-150",
+      embedded ? "space-y-10 pb-8 mt-0 px-0" : "space-y-16 pb-20 mt-10 px-4 sm:px-6"
+    )}>
       {/* Header Pipeline State */}
       <div className="flex flex-col md:flex-row gap-8 items-start justify-between border-b border-blue-400/10 pb-12">
         <div className="flex-1">
@@ -641,9 +653,12 @@ export function ResultsPanel({ data, isHydrating = false }: { data: ResultData, 
         </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 pt-8 items-start">
+      <div className={cn(
+        "grid grid-cols-1 items-start",
+        embedded ? "gap-10 pt-4" : "lg:grid-cols-12 gap-12 pt-8"
+      )}>
         {/* Left Column (8 cols): Audit & Transcript */}
-        <div className="lg:col-span-8 space-y-20">
+        <div className={cn(embedded ? "space-y-12" : "lg:col-span-8 space-y-20")}>
 
           {/* Audit Scoreboard */}
           <section className="space-y-10">
@@ -1084,9 +1099,12 @@ export function ResultsPanel({ data, isHydrating = false }: { data: ResultData, 
                     ? speaker.role
                     : `Speaker ${speaker.speaker_id}`;
 
+                  const sentimentLabel = (speaker.avg_sentiment_label || "neutral").toLowerCase();
+                  const sentimentValue = speaker.avg_sentiment ?? 0;
+
                   return (
                     <Tooltip key={speaker.speaker_id} fullWidth content={`${displayName} (ID: ${speaker.speaker_id}). This card summarizes their contribution to the call.`}>
-                      <div className="w-full p-6 rounded-[2rem] glass-card shadow-xl space-y-4">
+                      <div className="w-full min-w-0 p-5 rounded-[2rem] glass-card shadow-xl space-y-4">
                         <div className="flex items-center gap-3">
                           <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#4A7FA7] to-[#1A3D63] flex items-center justify-center font-black text-[#F6FAFD] text-lg">
                             {speaker.speaker_id === "user_1" || speaker.speaker_id === "0" || speaker.speaker_id === "speaker_0" ? "A" : "C"}
@@ -1101,46 +1119,44 @@ export function ResultsPanel({ data, isHydrating = false }: { data: ResultData, 
                           </div>
                         </div>
 
-                        <div className="space-y-2">
-                        <Tooltip fullWidth content={`Turn count: ${speaker.turn_count}. A turn is one continuous contribution from this speaker.`}>
-                          <div className="w-full flex items-center justify-between p-3 rounded-xl bg-black/25 border border-blue-400/10">
-                            <span className="text-[10px] font-black uppercase tracking-widest text-[#B3CFE5]">Turn Count</span>
-                            <span className="text-lg font-[850] text-[#F6FAFD]">{speaker.turn_count}</span>
-                          </div>
-                        </Tooltip>
-
-                        <Tooltip fullWidth content={`Average sentiment: ${speaker.avg_sentiment_label || "neutral"} (${(speaker.avg_sentiment ?? 0).toFixed(2)}). Positive values indicate more positive language; negative values indicate more negative language.`}>
-                          <div className="w-full flex items-center justify-between p-3 rounded-xl bg-black/25 border border-blue-400/10">
-                            <span className="text-[10px] font-black uppercase tracking-widest text-[#B3CFE5]">Avg Sentiment</span>
-                            <div className="flex items-center gap-2">
-                            {speaker.avg_sentiment_label && (
-                              <span className={cn(
-                                "px-2 py-0.5 text-[9px] font-black uppercase tracking-wider rounded-md border",
-                                speaker.avg_sentiment_label === 'positive' ? "bg-green-50 text-green-700 border-green-200" :
-                                  speaker.avg_sentiment_label === 'negative' ? "bg-red-50 text-red-700 border-red-200" :
-                                    "bg-gray-50 text-gray-700 border-gray-200"
-                              )}>
-                                {speaker.avg_sentiment_label}
-                              </span>
-                            )}
-                            <span className={cn(
-                              "text-lg font-[850]",
-                              (speaker.avg_sentiment || 0) > 0 ? "text-green-400" : (speaker.avg_sentiment || 0) < 0 ? "text-red-400" : "text-[#B3CFE5]"
-                            )}>
-                              {(speaker.avg_sentiment !== undefined && speaker.avg_sentiment !== null) ? speaker.avg_sentiment.toFixed(2) : '0.00'}
-                            </span>
-                            </div>
-                          </div>
-                        </Tooltip>
-
-                        {speaker.talk_time_ms !== undefined && speaker.talk_time_ms !== null && (
-                          <Tooltip fullWidth content={`Talk time: ${(speaker.talk_time_ms / 1000).toFixed(1)} seconds spoken by this speaker.`}>
-                            <div className="w-full flex items-center justify-between p-3 rounded-xl bg-black/25 border border-blue-400/10">
-                              <span className="text-[10px] font-black uppercase tracking-widest text-[#B3CFE5]">Talk Time</span>
-                              <span className="text-lg font-[850] text-[#F6FAFD]">{(speaker.talk_time_ms / 1000).toFixed(1)}s</span>
+                        <div className="grid grid-cols-2 gap-2">
+                          <Tooltip fullWidth content={`Turn count: ${speaker.turn_count}. A turn is one continuous contribution from this speaker.`}>
+                            <div className="w-full min-w-0 p-3 rounded-xl bg-black/25 border border-blue-400/10">
+                              <span className="block text-[9px] font-black uppercase tracking-widest text-[#B3CFE5]">Turn Count</span>
+                              <span className="text-lg font-[850] text-[#F6FAFD]">{speaker.turn_count}</span>
                             </div>
                           </Tooltip>
-                        )}
+
+                          {speaker.talk_time_ms !== undefined && speaker.talk_time_ms !== null && (
+                            <Tooltip fullWidth content={`Talk time: ${(speaker.talk_time_ms / 1000).toFixed(1)} seconds spoken by this speaker.`}>
+                              <div className="w-full min-w-0 p-3 rounded-xl bg-black/25 border border-blue-400/10">
+                                <span className="block text-[9px] font-black uppercase tracking-widest text-[#B3CFE5]">Talk Time</span>
+                                <span className="text-lg font-[850] text-[#F6FAFD]">{(speaker.talk_time_ms / 1000).toFixed(1)}s</span>
+                              </div>
+                            </Tooltip>
+                          )}
+
+                          <Tooltip fullWidth content={`Average sentiment: ${sentimentLabel} (${sentimentValue.toFixed(2)}). Positive values indicate more positive language; negative values indicate more negative language.`}>
+                            <div className="col-span-2 w-full min-w-0 flex flex-wrap items-center justify-between gap-2 p-3 rounded-xl bg-black/25 border border-blue-400/10">
+                              <span className="text-[9px] font-black uppercase tracking-widest text-[#B3CFE5]">Avg Sentiment</span>
+                              <div className="flex min-w-0 flex-wrap items-center justify-end gap-2">
+                                <span className={cn(
+                                  "max-w-full px-2 py-0.5 text-[9px] font-black uppercase tracking-wider rounded-md border break-words",
+                                  sentimentLabel === 'positive' ? "bg-green-50 text-green-700 border-green-200" :
+                                    sentimentLabel === 'negative' ? "bg-red-50 text-red-700 border-red-200" :
+                                      "bg-gray-50 text-gray-700 border-gray-200"
+                                )}>
+                                  {sentimentLabel}
+                                </span>
+                                <span className={cn(
+                                  "text-lg font-[850] tabular-nums",
+                                  sentimentValue > 0 ? "text-green-400" : sentimentValue < 0 ? "text-red-400" : "text-[#B3CFE5]"
+                                )}>
+                                  {sentimentValue.toFixed(2)}
+                                </span>
+                              </div>
+                            </div>
+                          </Tooltip>
                         </div>
                       </div>
                     </Tooltip>
@@ -1160,7 +1176,10 @@ export function ResultsPanel({ data, isHydrating = false }: { data: ResultData, 
                 </Tooltip>
               </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+            <div className={cn(
+              "grid grid-cols-2 sm:grid-cols-3 gap-4",
+              !embedded && "lg:grid-cols-5"
+            )}>
               <Tooltip fullWidth content="Total silence is the combined duration of silent periods detected anywhere in the call.">
                 <div className="w-full p-5 rounded-[1.5rem] glass-card shadow-lg">
                   <p className="text-[9px] font-black uppercase tracking-widest text-[#B3CFE5] mb-2">Total Silence</p>
@@ -1468,7 +1487,10 @@ export function ResultsPanel({ data, isHydrating = false }: { data: ResultData, 
         </div>
 
         {/* Right Column (4 cols): Metrics & Script Reference */}
-        <div className="lg:col-span-4 space-y-12 md:sticky md:top-8 md:max-h-[calc(100vh-4rem)] md:overflow-y-auto md:pr-2">
+        <div className={cn(
+          "space-y-12",
+          !embedded && "lg:col-span-4 lg:sticky lg:top-8 lg:max-h-[calc(100vh-4rem)] lg:overflow-y-auto lg:pr-2"
+        )}>
           {/* Signal Dynamics Card */}
           <div className="rounded-[2rem] p-8 overflow-hidden relative group glass-card">
             <div className="absolute top-0 right-0 p-10 opacity-5 group-hover:scale-110 transition-transform">
@@ -1488,7 +1510,7 @@ export function ResultsPanel({ data, isHydrating = false }: { data: ResultData, 
           {isSuperAdmin && data.llm_usage_summary && <LLMCostBreakdown llm={data.llm_usage_summary} />}
 
           {/* Script Framework Reference */}
-          <div className="p-10 rounded-[3rem] border border-blue-400/15 bg-blue-950/25 shadow-sm shadow-[#0A1931]/30 space-y-8">
+          <div className="p-5 sm:p-8 rounded-[2rem] sm:rounded-[3rem] border border-blue-400/15 bg-blue-950/25 shadow-sm shadow-[#0A1931]/30 space-y-8">
             <div className="flex items-center gap-3">
               <FileSearch className="w-6 h-6 text-[#4A7FA7]" />
               <h4 className="text-xl font-[850] text-[#F6FAFD] tracking-tight">Script Framework</h4>
@@ -1504,8 +1526,8 @@ export function ResultsPanel({ data, isHydrating = false }: { data: ResultData, 
                       <CircleDot className="w-4 h-4 text-[#B3CFE5] group-hover:text-[#F6FAFD] transition-colors" />
                     </div>
                     <div className="flex-1 min-w-0 space-y-1">
-                      <div className="flex items-center justify-between gap-2">
-                        <p className="text-sm font-extrabold text-[#F6FAFD]">{section.title}</p>
+                      <div className="flex flex-wrap items-start justify-between gap-2">
+                        <p className="min-w-0 flex-1 break-words text-sm font-extrabold text-[#F6FAFD]">{section.title}</p>
                         {section.required && (
                           <span className="text-[9px] font-black uppercase tracking-wider text-yellow-600 bg-yellow-50 px-2 py-0.5 rounded-md border border-yellow-200 shrink-0">
                             Required
@@ -1531,25 +1553,28 @@ export function ResultsPanel({ data, isHydrating = false }: { data: ResultData, 
             {data.prepared_script?.questions && data.prepared_script.questions.length > 0 && (
               <div className="space-y-3">
                 <h5 className="text-xs font-black uppercase tracking-widest text-[#B3CFE5]">Questions ({data.prepared_script.questions.length})</h5>
-                <div className="space-y-2 max-h-96 overflow-y-auto">
+                <div className={cn(
+                  "grid grid-cols-1 gap-3 max-h-96 overflow-y-auto pr-1",
+                  embedded && "sm:grid-cols-2"
+                )}>
                   {data.prepared_script.questions.map((question) => (
-                    <div key={question.question_id} className="p-3 rounded-xl glass space-y-2">
-                      <div className="flex items-start justify-between gap-2">
-                        <p className="text-xs font-bold text-[#F6FAFD] leading-tight">{question.question_text}</p>
+                    <div key={question.question_id} className="min-w-0 p-4 rounded-xl glass space-y-3">
+                      <div className="flex flex-wrap items-start justify-between gap-2">
+                        <p className="min-w-0 flex-1 break-words text-xs font-bold text-[#F6FAFD] leading-relaxed">{question.question_text}</p>
                         {question.required && (
-                          <span className="text-[8px] font-black uppercase tracking-wider text-red-500 bg-red-50 px-1.5 py-0.5 rounded shrink-0">
+                          <span className="text-[8px] font-black uppercase tracking-wider text-red-500 bg-red-50 px-2 py-0.5 rounded shrink-0">
                             Required
                           </span>
                         )}
                       </div>
                       <div className="flex flex-wrap items-center gap-2">
-                        <span className="text-[9px] font-bold text-[#B3CFE5] bg-[#0A1931] px-2 py-0.5 rounded-md border border-blue-400/10">
-                          {question.response_type}
+                        <span className="max-w-full break-words text-[9px] font-bold text-[#B3CFE5] bg-[#0A1931] px-2 py-0.5 rounded-md border border-blue-400/10">
+                          {question.response_type?.replace(/_/g, " ") || "text"}
                         </span>
                         {question.expected_answers && question.expected_answers.length > 0 && (
                           <div className="flex flex-wrap gap-1">
                             {question.expected_answers.map((answer, idx) => (
-                              <span key={idx} className="text-[8px] font-semibold text-blue-700 bg-blue-50 px-1.5 py-0.5 rounded border border-blue-200">
+                              <span key={idx} className="max-w-full whitespace-normal break-words text-[8px] font-semibold text-blue-700 bg-blue-50 px-1.5 py-0.5 rounded border border-blue-200">
                                 {answer}
                               </span>
                             ))}

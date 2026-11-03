@@ -22,6 +22,22 @@ export function Tooltip({ content, children, placement = "top", delay = 400, ful
 
   useEffect(() => { setMounted(true); }, []);
   useEffect(() => () => { if (timerRef.current) clearTimeout(timerRef.current); }, []);
+  useEffect(() => {
+    const dismiss = () => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+      setVisible(false);
+    };
+
+    // A fixed-position tooltip becomes detached from its trigger when any
+    // nested results panel scrolls. Dismiss it instead of leaving a stale
+    // tooltip floating over unrelated controls.
+    window.addEventListener("scroll", dismiss, true);
+    window.addEventListener("resize", dismiss);
+    return () => {
+      window.removeEventListener("scroll", dismiss, true);
+      window.removeEventListener("resize", dismiss);
+    };
+  }, []);
 
   const show = () => {
     if (timerRef.current) clearTimeout(timerRef.current);
@@ -37,6 +53,9 @@ export function Tooltip({ content, children, placement = "top", delay = 400, ful
         case "left":   x = r.left - 8;            y = r.top + r.height / 2; break;
         case "right":  x = r.right + 8;           y = r.top + r.height / 2; break;
       }
+      // Keep the 220px tooltip inside the viewport at narrow breakpoints.
+      const horizontalInset = 122;
+      x = Math.min(Math.max(x, horizontalInset), window.innerWidth - horizontalInset);
       setCoords({ x, y });
       setVisible(true);
     }, delay);

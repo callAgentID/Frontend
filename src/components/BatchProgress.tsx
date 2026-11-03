@@ -233,6 +233,8 @@ export function BatchProgress({ batchId, batchName, initialErrors = [], onClose 
             )}
           </div>
 
+          {/* Keep the call picker compact, but never trap the expanded analysis in
+              this short scrolling region. */}
           <div className="divide-y divide-[#4A7FA7]/10 max-h-72 overflow-y-auto">
             {batch.calls.map(call => {
               const isReady = call.status?.toUpperCase() === "READY";
@@ -241,68 +243,67 @@ export function BatchProgress({ batchId, batchName, initialErrors = [], onClose 
               const score = call.overall_score;
 
               return (
-                <div key={call.call_id}>
-                  <div
-                    onClick={() => handleCallClick(call)}
-                    className={cn(
-                      "flex items-center gap-3 px-4 py-3 transition-colors",
-                      isReady ? "cursor-pointer hover:bg-blue-950/25 group" : "cursor-default",
-                      isSelected ? "bg-blue-950/25 border-l-2 border-[#4A7FA7]" : ""
-                    )}
-                  >
-                    <FileAudio className="w-4 h-4 text-[#B3CFE5]/40 shrink-0" />
-
-                    <p className="flex-1 text-xs font-medium text-[#F6FAFD] truncate">{call.file_name}</p>
-
-                    {/* Score badge */}
-                    {score != null && (
-                      <span className={cn(
-                        "text-xs font-black px-2 py-0.5 rounded-lg shrink-0",
-                        score >= 80 ? "text-green-400 bg-green-400/10" :
-                        score >= 50 ? "text-[#F6FAFD] bg-blue-950/25" :
-                                      "text-red-400 bg-red-400/10"
-                      )}>
-                        {score.toFixed(0)}
-                      </span>
-                    )}
-
-                    {/* Error */}
-                    {isFailed && call.error_message && (
-                      <span className="text-[10px] text-red-400 truncate max-w-[100px]" title={call.error_message}>
-                        {call.error_message}
-                      </span>
-                    )}
-
-                    {/* Status icon / expand arrow */}
-                    <div className="shrink-0 flex items-center gap-1">
-                      {CALL_STATUS_ICON[call.status?.toUpperCase()] ?? CALL_STATUS_ICON.QUEUED}
-                      {isReady && (
-                        <ArrowUpRight className={cn(
-                          "w-3.5 h-3.5 transition-colors",
-                          isSelected ? "text-[#4A7FA7]" : "text-[#B3CFE5]/30 group-hover:text-[#4A7FA7]"
-                        )} />
-                      )}
-                    </div>
-                  </div>
-
-                  {/* ── Inline call detail ── */}
-                  {isSelected && (
-                    <div className="border-t border-blue-400/10 bg-black/18">
-                      {isLoadingCall ? (
-                        <div className="flex items-center justify-center py-16">
-                          <Loader2 className="w-8 h-8 text-[#4A7FA7] animate-spin" />
-                        </div>
-                      ) : selectedCallData ? (
-                        <div className="p-4">
-                          <ResultsPanel data={selectedCallData} />
-                        </div>
-                      ) : null}
-                    </div>
+                <div
+                  key={call.call_id}
+                  onClick={() => handleCallClick(call)}
+                  className={cn(
+                    "flex items-center gap-3 px-4 py-3 transition-colors",
+                    isReady ? "cursor-pointer hover:bg-blue-950/25 group" : "cursor-default",
+                    isSelected ? "bg-blue-950/25 border-l-2 border-[#4A7FA7]" : ""
                   )}
+                >
+                  <FileAudio className="w-4 h-4 text-[#B3CFE5]/40 shrink-0" />
+
+                  <p className="flex-1 text-xs font-medium text-[#F6FAFD] truncate">{call.file_name}</p>
+
+                  {/* Score badge */}
+                  {score != null && (
+                    <span className={cn(
+                      "text-xs font-black px-2 py-0.5 rounded-lg shrink-0",
+                      score >= 80 ? "text-green-400 bg-green-400/10" :
+                        score >= 50 ? "text-[#F6FAFD] bg-blue-950/25" :
+                          "text-red-400 bg-red-400/10"
+                    )}>
+                      {score.toFixed(0)}
+                    </span>
+                  )}
+
+                  {/* Error */}
+                  {isFailed && call.error_message && (
+                    <span className="text-[10px] text-red-400 truncate max-w-[100px]" title={call.error_message}>
+                      {call.error_message}
+                    </span>
+                  )}
+
+                  {/* Status icon / expand arrow */}
+                  <div className="shrink-0 flex items-center gap-1">
+                    {CALL_STATUS_ICON[call.status?.toUpperCase()] ?? CALL_STATUS_ICON.QUEUED}
+                    {isReady && (
+                      <ArrowUpRight className={cn(
+                        "w-3.5 h-3.5 transition-colors",
+                        isSelected ? "text-[#4A7FA7]" : "text-[#B3CFE5]/30 group-hover:text-[#4A7FA7]"
+                      )} />
+                    )}
+                  </div>
                 </div>
               );
             })}
           </div>
+
+          {/* ── Inline call detail ── */}
+          {selectedCallId && (
+            <div className="border-t border-blue-400/10 bg-black/18">
+              {isLoadingCall ? (
+                <div className="flex items-center justify-center py-16">
+                  <Loader2 className="w-8 h-8 text-[#4A7FA7] animate-spin" />
+                </div>
+              ) : selectedCallData ? (
+                <div className="p-3 sm:p-4">
+                  <ResultsPanel data={selectedCallData} embedded />
+                </div>
+              ) : null}
+            </div>
+          )}
         </div>
       )}
     </div>
