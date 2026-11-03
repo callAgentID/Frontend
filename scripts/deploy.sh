@@ -37,7 +37,13 @@ ln -sfn "$release_dir" "$app_root/current.next"
 mv -Tf "$app_root/current.next" "$app_root/current"
 
 cd "$app_root/current"
-pm2 startOrReload ecosystem.config.cjs --env production --update-env
+# PM2 preserves the cwd of an existing process during startOrReload, which can
+# leave it serving a previous immutable release after the current symlink moves.
+# Recreate the process so __dirname resolves to this release every time.
+if pm2 describe conversation-intel >/dev/null 2>&1; then
+  pm2 delete conversation-intel
+fi
+pm2 start ecosystem.config.cjs --env production --update-env
 pm2 save --force
 
 curl --fail --silent --show-error \
