@@ -29,6 +29,7 @@ rm -f "$archive"
 cd "$release_dir"
 ln -sfn "$app_root/shared/.env.production" .env.production
 
+export CALLBLICK_RELEASE="$revision"
 npm ci --no-audit --no-fund
 npm run build
 
@@ -42,5 +43,11 @@ pm2 save --force
 curl --fail --silent --show-error \
   --retry 10 --retry-delay 2 --retry-connrefused \
   http://127.0.0.1:3000/ >/dev/null
+
+local_release="$(curl --fail --silent --show-error http://127.0.0.1:3000/api/release)"
+if [[ "$local_release" != *"$revision"* ]]; then
+  echo "Local release verification failed: $local_release" >&2
+  exit 70
+fi
 
 echo "Deployed $revision"

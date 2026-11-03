@@ -60,3 +60,22 @@ jobs:
             chmod 750 incoming/deploy.sh && \
             mv incoming/deploy.sh deploy.sh && \
             ./deploy.sh '${GITHUB_SHA}' 'incoming/${GITHUB_SHA}.tar.gz'"
+
+      - name: Verify public release
+        env:
+          EXPECTED_RELEASE: ${{ github.sha }}
+        run: |
+          for attempt in {1..15}; do
+            release="$(curl --fail --silent --show-error \
+              -H 'Cache-Control: no-cache' \
+              'https://app.callblick.com/api/release' || true)"
+            if [[ "$release" == *"$EXPECTED_RELEASE"* ]]; then
+              echo "Production is serving $EXPECTED_RELEASE"
+              exit 0
+            fi
+            echo "Attempt $attempt: production returned ${release:-no release metadata}"
+            sleep 2
+          done
+
+          echo "Production did not activate $EXPECTED_RELEASE" >&2
+          exit 1
