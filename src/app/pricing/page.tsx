@@ -2,13 +2,15 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useAuth, useOrganization, useUser } from "@clerk/nextjs";
+import { OrganizationList, useAuth, useOrganization, useUser } from "@clerk/nextjs";
+import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Check, Loader2, LockKeyhole, ShieldCheck, Sparkles } from "lucide-react";
 import { useApi } from "@/lib/useApi";
 import {
   BILLING_CHECKOUT_SCOPE_KEY,
   BILLING_CHECKOUT_SESSION_KEY,
+  BILLING_CHECKOUT_RETURN_KEY,
   BillingStatus,
   CatalogItem,
   apiErrorMessage,
@@ -51,6 +53,7 @@ function CatalogCard({
 }
 
 export default function PricingPage() {
+  const searchParams = useSearchParams();
   const { isLoaded, isSignedIn, orgId } = useAuth();
   const { membership } = useOrganization();
   const { user } = useUser();
@@ -67,6 +70,7 @@ export default function PricingPage() {
   const canManageOrgBilling = !!orgId && (isOrgAdmin || isSuperAdmin);
   const visibleBillingStatus = billingStatus?.access.organization_id === orgId ? billingStatus : null;
   const canPurchaseForOrganization = canManageOrgBilling && visibleBillingStatus?.access.purchases_allowed !== false;
+  const isSignUpOnboarding = searchParams.get("onboarding") === "signup";
 
   const loadCatalog = useCallback(async () => {
     setLoading(true);
@@ -133,6 +137,11 @@ export default function PricingPage() {
       if (!body?.id || !body?.url) throw new Error("Checkout is temporarily unavailable. Please try again.");
       window.sessionStorage.setItem(BILLING_CHECKOUT_SESSION_KEY, body.id);
       window.sessionStorage.setItem(BILLING_CHECKOUT_SCOPE_KEY, isSignedIn ? "organization" : "public_signup");
+      if (isSignedIn && isSignUpOnboarding) {
+        window.sessionStorage.setItem(BILLING_CHECKOUT_RETURN_KEY, "/");
+      } else {
+        window.sessionStorage.removeItem(BILLING_CHECKOUT_RETURN_KEY);
+      }
       window.location.assign(body.url);
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Checkout could not be started. Please retry.");
@@ -149,17 +158,33 @@ export default function PricingPage() {
     return { label: "Ask an organization admin", handler: undefined };
   };
 
+  const needsOrganization = isLoaded && isSignedIn && !orgId && !isSuperAdmin;
+
   return <div className="h-screen w-full overflow-y-auto bg-[#020912] text-[#F6FAFD]">
     <header className="sticky top-0 z-20 border-b border-white/5 bg-[#020912]/85 backdrop-blur-xl">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-4"><Link href="/"><Image src="/CallBlick-Logo-Final.png" alt="CallBlick" width={132} height={36} /></Link><div className="flex items-center gap-3">{isSignedIn ? <Link href="/settings/billing" className="rounded-xl border border-blue-400/20 px-4 py-2 text-sm font-bold">Billing settings</Link> : <Link href="/sign-in" className="rounded-xl border border-blue-400/20 px-4 py-2 text-sm font-bold">Sign in</Link>}</div></div>
     </header>
     <main className="mx-auto max-w-7xl px-5 py-16">
+      {needsOrganization ? <div className="mx-auto max-w-2xl text-center">
+        <div className="inline-flex items-center gap-2 rounded-full border border-blue-400/20 bg-blue-500/10 px-4 py-2 text-xs font-black uppercase tracking-widest text-[#9DCEFF]"><Sparkles className="h-4 w-4" /> Account setup</div>
+        <h1 className="mt-6 text-4xl font-black tracking-tight sm:text-5xl">Set up your organization</h1>
+        <p className="mx-auto mt-4 max-w-xl text-sm leading-6 text-[#B3CFE5]">Subscriptions belong to an organization. Create one now, then choose your plan and complete payment.</p>
+        <div className="mt-10 rounded-[2rem] border border-blue-400/15 bg-[#071a33]/80 p-5 text-left shadow-2xl shadow-black/20">
+          <OrganizationList
+            hidePersonal
+            skipInvitationScreen
+            afterCreateOrganizationUrl="/pricing?onboarding=signup"
+            afterSelectOrganizationUrl="/pricing?onboarding=signup"
+          />
+        </div>
+      </div> : <>
       <div className="mx-auto max-w-3xl text-center"><div className="inline-flex items-center gap-2 rounded-full border border-blue-400/20 bg-blue-500/10 px-4 py-2 text-xs font-black uppercase tracking-widest text-[#9DCEFF]"><Sparkles className="h-4 w-4" /> Simple, server-managed pricing</div><h1 className="mt-6 text-4xl font-black tracking-tight sm:text-6xl">Conversation intelligence that scales with you</h1><p className="mt-5 text-base leading-7 text-[#B3CFE5]">Choose the processing tier that matches your data requirements. Your catalog, pricing, and availability come directly from our billing service.</p></div>
       {!isSignedIn && <div className="mx-auto mt-10 max-w-xl"><label className="text-xs font-black uppercase tracking-widest text-[#B3CFE5]">Checkout email</label><input type="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="you@company.com" className="mt-2 h-12 w-full rounded-xl border border-blue-400/15 bg-[#071a33] px-4 text-sm text-white outline-none focus:border-[#4A7FA7]" /><p className="mt-2 text-xs text-[#B3CFE5]">We’ll use this email to send your account invitation after payment.</p></div>}
       {error && <div className="mx-auto mt-8 max-w-2xl rounded-xl border border-red-400/25 bg-red-500/10 p-4 text-sm text-red-100">{error}</div>}
       {loading ? <div className="flex justify-center py-24"><Loader2 className="h-9 w-9 animate-spin text-[#6BB6FF]" /></div> : <>
         <section className="mt-14 grid gap-6 md:grid-cols-2">{subscriptions.map((item) => { const action = subscriptionAction(item); return <CatalogCard key={item.price_id} item={item} busy={busyPrice === item.price_id} actionLabel={action.label} onCheckout={action.handler} />; })}</section>
         <section className="mt-20"><div className="mb-7"><p className="text-xs font-black uppercase tracking-widest text-[#6BB6FF]">After activation</p><h2 className="mt-2 text-3xl font-black">Need more minutes?</h2><p className="mt-2 text-sm text-[#B3CFE5]">Top-ups remain available indefinitely, but are usable only while a matching paid subscription is active.</p></div><div className="grid gap-6 md:grid-cols-2">{topups.map((item) => <CatalogCard key={item.price_id} item={item} busy={false} actionLabel={visibleBillingStatus?.access.purchases_allowed === false ? "Purchases unavailable" : canManageOrgBilling ? "Buy in billing settings" : "Available after activation"} onCheckout={canPurchaseForOrganization ? () => window.location.assign("/settings/billing") : undefined} />)}</div></section>
+      </>}
       </>}
     </main>
   </div>;

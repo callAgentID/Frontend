@@ -2,12 +2,18 @@
 
 import Image from "next/image";
 import { SignUp } from "@clerk/nextjs";
+import { useSearchParams } from "next/navigation";
+import { useState } from "react";
 import { useTheme } from "@/lib/useTheme";
 import { Sun, Moon } from "lucide-react";
 
 export default function SignUpPage() {
+  const searchParams = useSearchParams();
   const { theme, toggle } = useTheme();
   const isLight = theme === 'light';
+  const [isInvitationSignUp] = useState(() =>
+    Boolean(searchParams.get("__clerk_ticket") || searchParams.get("__clerk_invitation_token"))
+  );
 
   const bg = isLight
     ? 'radial-gradient(ellipse 120% 80% at 50% -10%, #C8DCF5 0%, #EEF3FA 60%)'
@@ -259,6 +265,8 @@ export default function SignUpPage() {
           <style>{clerkStyles}</style>
 
           <SignUp
+            signInUrl="/sign-in"
+            forceRedirectUrl={isInvitationSignUp ? "/" : "/pricing?onboarding=signup"}
             appearance={{
               variables: isLight ? {
                 colorPrimary: "rgba(26,111,212,1)",

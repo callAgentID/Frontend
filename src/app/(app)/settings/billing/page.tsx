@@ -10,6 +10,7 @@ import { useApi } from "@/lib/useApi";
 import {
   BILLING_CHECKOUT_SCOPE_KEY,
   BILLING_CHECKOUT_SESSION_KEY,
+  BILLING_CHECKOUT_RETURN_KEY,
   BillingOverview,
   CatalogItem,
   apiErrorMessage,
@@ -108,6 +109,7 @@ function BillingPageContent() {
       if (!body?.id || !body?.url) throw new Error("Checkout is temporarily unavailable. Please try again.");
       window.sessionStorage.setItem(BILLING_CHECKOUT_SESSION_KEY, body.id);
       window.sessionStorage.setItem(BILLING_CHECKOUT_SCOPE_KEY, "organization");
+      window.sessionStorage.removeItem(BILLING_CHECKOUT_RETURN_KEY);
       window.location.assign(body.url);
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Checkout could not be started.");

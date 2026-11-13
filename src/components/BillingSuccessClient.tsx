@@ -22,6 +22,7 @@ import { useApi } from "@/lib/useApi";
 import {
   BILLING_CHECKOUT_SCOPE_KEY,
   BILLING_CHECKOUT_SESSION_KEY,
+  BILLING_CHECKOUT_RETURN_KEY,
   type CheckoutScope,
   apiErrorDetail,
   apiErrorMessage,
@@ -192,8 +193,10 @@ export function BillingSuccessClient() {
     if (!sessionResolved || checkoutScope !== "organization" || !isLoaded || !isSignedIn || !orgId || !isAdmin) return;
     window.sessionStorage.removeItem(BILLING_CHECKOUT_SESSION_KEY);
     window.sessionStorage.removeItem(BILLING_CHECKOUT_SCOPE_KEY);
+    const returnTo = window.sessionStorage.getItem(BILLING_CHECKOUT_RETURN_KEY);
+    window.sessionStorage.removeItem(BILLING_CHECKOUT_RETURN_KEY);
     window.dispatchEvent(new Event("billing:refresh"));
-    router.replace("/settings/billing?checkout=success");
+    router.replace(returnTo === "/" ? "/" : "/settings/billing?checkout=success");
   }, [checkoutScope, isAdmin, isLoaded, isSignedIn, orgId, router, sessionResolved]);
 
   useEffect(() => {

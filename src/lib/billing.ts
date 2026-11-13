@@ -5,6 +5,7 @@ export type CheckoutScope = "organization" | "public_signup";
 
 export const BILLING_CHECKOUT_SESSION_KEY = "billing:pending-checkout-session";
 export const BILLING_CHECKOUT_SCOPE_KEY = "billing:pending-checkout-scope";
+export const BILLING_CHECKOUT_RETURN_KEY = "billing:post-checkout-return";
 export type SubscriptionStatus =
   | "none"
   | "incomplete"
